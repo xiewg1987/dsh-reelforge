@@ -412,18 +412,23 @@ function durationCandidates(value) {
 
 /**
  * 由章节与分镜推导章节状态。
+ *
+ * ⚠️ 这里**只给机器值**（`queued` / `running` / `failed` / `done`），不给中文标签 ——
+ * 显示文案由客户端按当前语言取（`RF.labelOf('chapter.status', …)`），
+ * 宿主半不产出中文标签，en 界面才不会露出中文。
+ *
  * @param {object} chapter 章节状态。
- * @returns {{ status: string, statusLabel: string, progress: number }} 结论。
+ * @returns {{ status: string, progress: number }} 结论。
  */
 function chapterStatus(chapter) {
   const shots = Array.isArray(chapter.shots) ? chapter.shots : [];
-  if (shots.length === 0) return { status: 'queued', statusLabel: '待写分镜', progress: 0 };
+  if (shots.length === 0) return { status: 'queued', progress: 0 };
   const statuses = shots.map((shot) => String(shot.status ?? 'pending'));
-  if (statuses.includes('failed')) return { status: 'failed', statusLabel: '有分镜失败', progress: 0 };
-  if (statuses.includes('generating')) return { status: 'running', statusLabel: '生成中', progress: 0.5 };
+  if (statuses.includes('failed')) return { status: 'failed', progress: 0 };
+  if (statuses.includes('generating')) return { status: 'running', progress: 0.5 };
   const done = statuses.filter((status) => status === 'done').length;
-  if (done === shots.length) return { status: 'done', statusLabel: '已完成', progress: 1 };
-  return { status: 'queued', statusLabel: '待生成', progress: done / shots.length };
+  if (done === shots.length) return { status: 'done', progress: 1 };
+  return { status: 'queued', progress: done / shots.length };
 }
 
 /**
@@ -476,7 +481,6 @@ export function buildWireView(state, options = {}) {
       shotCount: shots.length,
       durationSec: shots.reduce((sum, shot) => sum + (Number(shot.duration) || 0), 0),
       status: derived.status,
-      statusLabel: derived.statusLabel,
       stages: chapterStages(chapter),
       progress: derived.progress,
     };

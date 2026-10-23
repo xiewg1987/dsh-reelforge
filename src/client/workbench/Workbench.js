@@ -122,14 +122,29 @@
       twoColumns,
     };
 
-    const statusLabel = project.runPosition === 'local' ? t('status.local') : t('status.cloud');
+    // 面板头副标题：项目摘要（没有项目时退回到一句话说明工作台是干什么的）。
+    const summary = RF.projectSummary(project, t);
+    // 运行位置没选之前不能说「云端运行」——那是撒谎。
+    const position = String(project.runPosition ?? '');
+    const provider = String(project.provider ?? '');
+    const runPositionLabel = position === ''
+      ? ''
+      : (position === 'local' || position === 'cloud' ? t(`status.${position}`) : position);
+    const statusLabel = position === ''
+      ? t('status.idle')
+      : `${runPositionLabel}${provider === '' ? '' : ` · ${RF.labelOf('provider', provider, t)}`}`;
+    // 底栏第二行：当前跑到第几章的第几镜。
+    const current = RF.currentPosition(project);
+    const positionLabel = current === null
+      ? t('footer.idle')
+      : t('footer.position', current);
 
     return h('section', { className: `${RF.CLS}-root`, ref: shellRef },
       h('header', { className: `${RF.CLS}-header` },
         h('div', { className: `${RF.CLS}-header__logo`, 'aria-hidden': true }),
         h('div', { className: `${RF.CLS}-header__text` },
           h('div', { className: `${RF.CLS}-header__title` }, t('title')),
-          h('div', { className: `${RF.CLS}-header__subtitle` }, project.subtitle || t('subtitle'))),
+          h('div', { className: `${RF.CLS}-header__subtitle` }, summary || t('subtitle'))),
         h('span', { className: `${RF.CLS}-header__status` }, statusLabel)),
       h('nav', { className: `${RF.CLS}-stagebar`, 'aria-label': t('title') },
         RF.STAGE_STEPS.map((step, index) => {
@@ -157,9 +172,10 @@
             spent: RF.formatMoney(project.cost?.spent ?? 0),
             cap: RF.formatMoney(project.cost?.cap ?? 0),
           })),
-          h('div', { className: `${RF.CLS}-footer__value` }, project.subtitle || t('subtitle'))),
+          // 底栏第二行说**当前进度**，不再重复面板头那句（截图里两处一模一样）。
+          h('div', { className: `${RF.CLS}-footer__value` }, positionLabel)),
         h(RF.ui.Button, {
-          label: t('tab.output'),
+          label: t('action.viewOutput'),
           variant: 'primary',
           onClick: () => setActiveTab('output'),
         })));

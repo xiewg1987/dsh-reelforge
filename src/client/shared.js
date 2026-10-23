@@ -109,6 +109,67 @@
   };
 
   /**
+   * 项目摘要（面板头副标题）。
+   *
+   * ⚠️ **不要**用 `project.subtitle`：它是 `project.idea`，可能就是一整段小说正文 ——
+   * 塞进副标题会把面板头撑爆。这里按设计稿口径拼「名字 · N 章 · N 镜」。
+   *
+   * @param {object} project - 投影视图。
+   * @param {function} t - translate 函数。
+   * @returns {string} 摘要文本；没有项目时返回空串。
+   */
+  RF.projectSummary = function projectSummary(project, t) {
+    const chapters = Array.isArray(project?.chapters) ? project.chapters : [];
+    if (chapters.length === 0) return '';
+    const shots = chapters.reduce((sum, chapter) => sum + (Number(chapter.shotCount) || 0), 0);
+    const name = String(project?.name ?? '').trim() || t('project.unnamed');
+    return t('project.summary', { name, chapters: chapters.length, shots });
+  };
+
+  /**
+   * 按 `{prefix}.{value}` 取本地化词条。
+   *
+   * 词条不存在时**原样返回 value**：宁可显示 `pending` 或 `online-api`，
+   * 也不要显示 `shot.status.pending` 这种键名（宿主查不到 locale 就回键名）。
+   *
+   * @param {string} prefix - 词条前缀（`chapter.status` / `asset.category` …）。
+   * @param {string} value - 机器值。
+   * @param {function} t - translate 函数。
+   * @returns {string} 显示名。
+   */
+  RF.labelOf = function labelOf(prefix, value, t) {
+    const raw = String(value ?? '').trim();
+    if (raw === '') return '';
+    const key = `${prefix}.${raw}`;
+    const known = RF.locale && RF.locale.zh ? RF.locale.zh[key] !== undefined : false;
+    return known ? t(key) : raw;
+  };
+
+  /**
+   * 当前进度：第几章的第几镜（底栏第二行）。
+   *
+   * 规则：先找正在跑的那一章；没有就找第一个还没完成的；都没有就取最后一章。
+   * 章内镜号 = 已完成镜数 + 1（上限不超过总镜数）。
+   *
+   * @param {object} project - 投影视图。
+   * @returns {{ chapter: number, shot: number, shots: number } | null} 进度；没有章节时返回 null。
+   */
+  RF.currentPosition = function currentPosition(project) {
+    const chapters = Array.isArray(project?.chapters) ? project.chapters : [];
+    if (chapters.length === 0) return null;
+    const shots = Array.isArray(project?.shots) ? project.shots : [];
+    const running = chapters.find(chapter => chapter.status === 'running');
+    const pending = chapters.find(chapter => chapter.status !== 'done');
+    const target = running ?? pending ?? chapters[chapters.length - 1];
+    const prefix = `${target.id}-`;
+    const chapterShots = shots.filter(shot => String(shot.id ?? '').startsWith(prefix));
+    const total = Number(target.shotCount) || chapterShots.length || 0;
+    const done = chapterShots.filter(shot => shot.status === 'done').length;
+    const index = total > 0 ? Math.min(done + 1, total) : 0;
+    return { chapter: target.id, shot: index, shots: total };
+  };
+
+  /**
    * 格式化成人类可读的字节数。
    * @param {number} bytes - 字节数。
    * @returns {string} 文本。
@@ -158,5 +219,25 @@
     return String(template).replace(/\{(\w+)\}/g, (whole, key) => (
       Object.prototype.hasOwnProperty.call(values, key) ? String(values[key]) : whole
     ));
+  };
+
+  /**
+   * 安全取词：宿主 `t` 还没绑定时不至于吐键名、也不抛异常。
+   *
+   * 背景：`RF.t` 是 `RF.apply` 里 `ctx.locale.bind(ns)` 的结果，
+   * 而通知重放（`retryPending`）、快捷键注册这些路径**不保证**先跑过 `apply`；
+   * 宿主查不到 locale 时 `translate` 直接回键名（`locale/index.ts`）。
+   * ⇒ 宁可退回**本地词典**（中文兜底），也不让用户看见 `notice.undelivered` 这种串。
+   *
+   * @param {string} key - 词条键。
+   * @param {Record<string, string | number>} [params] - 插值参数。
+   * @returns {string} 文案。
+   */
+  RF.tr = function tr(key, params) {
+    if (typeof RF.t === 'function') return RF.t(key, params);
+    const dictionary = RF.locale && RF.locale.zh ? RF.locale.zh : {};
+    const template = dictionary[key];
+    if (typeof template !== 'string') return key;
+    return params === undefined ? template : RF.interpolate(template, params);
   };
 })(RF);

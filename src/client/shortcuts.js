@@ -60,7 +60,7 @@
    * @returns {void}
    */
   RF.registerShortcuts = function registerShortcuts(ctx) {
-    const t = typeof RF.t === 'function' ? RF.t : (key) => key;
+    const t = (key, values) => RF.tr(key, values);
     for (const command of RF.SHORTCUT_COMMANDS) {
       ctx.effect(() => ctx.shortcuts.register({
         id: command.id,

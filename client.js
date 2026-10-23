@@ -181,6 +181,17 @@ window.__ModuleLoader__.load({
  *
  * 键是扁平的点分串；`locale/{en,zh}.json` 的 `ui` 段是同一份映射的静态副本，
  * `src/client/__tests__/t5-client.test.js` 会逐键比对两边是否一致。
+ *
+ * ── 文案纪律（2026-10-23 改版）───────────────────────────────────────────────
+ *
+ * 1. **不裸露技术词**：`llm 阶段`、`image 阶段`、`bible`、`reelforge.update_shot`
+ *    这类内部名不进中文界面 —— 阶段名用 `stages.*`，上下文键用 `context.section.*`，
+ *    工具用 `tool.*.label`。
+ * 2. **不重复**：面板头副标题与底栏第二行曾经是同一句；底栏改说「当前进度」。
+ * 3. **不撒谎**：运行位置没选时不能说「云端运行」（`status.idle` 现在接上了）；
+ *    工作台不再显示整段小说正文（`project.idea` 可能就是一整章）。
+ * 4. **与新链路一致**：用户在对话框里说的话会被自动截获写进工作台，
+ *    所以「去对话框里让助手带你走下一步」这类把人推回去的引导语要改掉。
  * ─────────────────────────────────────────────────────────────────────────── */
 ;(function (RF) {
   'use strict';
@@ -188,10 +199,15 @@ window.__ModuleLoader__.load({
   RF.locale = {
     zh: {
       'title': 'ReelForge 工作台',
-      'subtitle': '章节 · 分镜 · 资产 · 上下文 · 技能 · 成片 · 日志',
-      'status.local': '本地运行',
-      'status.cloud': '云端运行',
+      'subtitle': '把小说做成按章交付的短剧',
+      'project.summary': '{name} · {chapters} 章 · {shots} 镜',
+      'project.unnamed': '未命名项目',
+      'status.local': '本地',
+      'status.cloud': '云端',
       'status.idle': '待开始',
+      'provider.runninghub': 'RunningHub',
+      'provider.online-api': 'Online API',
+      'provider.dsh': 'DSH',
       'stage.requirement': '需求',
       'stage.run': '运行',
       'stage.plan': '方案',
@@ -207,8 +223,11 @@ window.__ModuleLoader__.load({
       'tab.output': '成片',
       'tab.log': '日志',
       'cost': '已用 {spent} / 上限 {cap}',
-      'captured.label': '对话输入（自动截获）',
-      'captured.empty': '你在对话框里说的话会自动写到这里。',
+      'footer.position': '第 {chapter} 章 · 第 {shot} / {shots} 镜',
+      'footer.idle': '还没有开始生成',
+      'action.viewOutput': '查看成片',
+      'captured.label': '你的需求（自动捕获）',
+      'captured.empty': '在中间的对话框里写下你想做的事，它会原样落在这里。',
       'common.confirm': '确认',
       'common.cancel': '取消',
       'common.retry': '重试',
@@ -222,14 +241,14 @@ window.__ModuleLoader__.load({
       'common.loading': '加载中…',
       'common.unknown': '未知',
       'empty.generic': '这里还是空的。{hint}',
-      'empty.chapters': '还没有章节。导入小说即可自动拆章。',
-      'empty.shots': '还没有分镜。跑一次 llm 阶段写出分镜表。',
-      'empty.assets': '还没有资产。跑 image 阶段生成参考图。',
-      'empty.context': '上下文是空的。保存人物圣经、风格指南或连续性记录。',
-      'empty.skills': '还没有安装技能。装一个技能包，或生成一个。',
+      'empty.chapters': '还没有章节。把小说正文粘到对话框，这里会自动拆章。',
+      'empty.shots': '还没有分镜。助手会按上面的需求生成分镜表。',
+      'empty.assets': '还没有参考图。助手会按需生成人物、场景与道具图。',
+      'empty.context': '上下文是空的。让人物圣经、风格指南或连续性记录先落一笔。',
+      'empty.skills': '还没有技能。装一个技能包，或让助手自建一个。',
       'empty.output': '还没有成片。合成一章即可出片。',
       'empty.log': '还没有变更。',
-      'empty.hint': '在对话里让助手带你走下一步。',
+      'empty.hint': '下一步：把需求写全，下面就会往下走。',
       'stages.llm': '剧本与提示词',
       'stages.image': '参考图',
       'stages.tts': '音色样本',
@@ -243,6 +262,38 @@ window.__ModuleLoader__.load({
       'chat.assets': '资产卡',
       'chat.deliver': '成片与交付物',
       'chat.changelog': '变更日志',
+      'chat.expand': '展开',
+      'chat.collapse': '收起',
+      'chat.progress.stage': '阶段',
+      'chat.progress.chapter': '章节',
+      'chat.progress.shot': '镜头',
+      'chat.progress.elapsed': '耗时',
+      'unit.chapter': '章',
+      'unit.shot': '镜',
+      'chat.summary.chapters': '{chapters} 章 · {shots} 镜',
+      'chat.summary.shots': '{shots} 镜',
+      'chat.summary.plan': '{kind} · {position}',
+      'shot.status.pending': '待生成',
+      'shot.status.generating': '生成中',
+      'shot.status.done': '已完成',
+      'shot.status.failed': '失败',
+      'chapter.status.queued': '待写分镜',
+      'chapter.status.failed': '有分镜失败',
+      'chapter.status.running': '生成中',
+      'chapter.status.done': '已完成',
+      'asset.category.character': '人物',
+      'asset.category.scene': '场景',
+      'asset.category.prop': '道具',
+      'asset.category.costume': '服装',
+      'asset.category.age': '年龄变体',
+      'asset.category.voice': '音色',
+      'asset.category.music': '配乐',
+      'asset.category.sfx': '音效',
+      'asset.category.video': '视频',
+      'asset.category.other': '其他',
+      'context.section.bible': '人物圣经',
+      'context.section.style': '风格指南',
+      'context.section.continuity': '连续性记录',
       'skills.bundled': '内置',
       'skills.installed': '已装',
       'skills.generated': '自建',
@@ -299,14 +350,49 @@ window.__ModuleLoader__.load({
       'workflow.sizeNodes': '尺寸节点',
       'workflow.textCandidates': '文本候选',
       'workflow.hasVideoFields': '含视频字段',
-      'shortcut.noSession': 'no session surface is mounted',
+      'tool.importNovel.label': '导入小说',
+      'tool.importNovel.say': '导入这本小说',
+      'tool.setStoryboard.label': '设置分镜表',
+      'tool.setStoryboard.say': '用这份分镜表',
+      'tool.saveContext.label': '保存上下文',
+      'tool.saveContext.say': '把这段存进人物圣经',
+      'tool.updateShot.label': '修改分镜',
+      'tool.updateShot.say': '把第 3 镜的时长改成 5 秒',
+      'tool.createAsset.label': '新建资产',
+      'tool.createAsset.say': '新建一个角色参考图',
+      'tool.updateAsset.label': '修改资产',
+      'tool.updateAsset.say': '更新角色参考图',
+      'tool.bindAsset.label': '绑定资产',
+      'tool.bindAsset.say': '把参考图绑到第 3 镜',
+      'tool.updatePlan.label': '更新执行方案',
+      'tool.updatePlan.say': '把执行方案换成 i2i',
+      'tool.runStage.label': '跑阶段',
+      'tool.runStage.say': '跑 image 阶段',
+      'tool.regenerateShot.label': '重生成镜头',
+      'tool.regenerateShot.say': '重生成第 3 镜',
+      'tool.assembleChapter.label': '合成章节',
+      'tool.assembleChapter.say': '合成第 1 章',
+      'tool.setChapterMusic.label': '设置章节配乐',
+      'tool.setChapterMusic.say': '给第 1 章配乐',
+      'tool.rollback.label': '回滚',
+      'tool.rollback.say': '回滚到第 2 章',
+      'notice.undelivered': '这次「{label}」没生效：工作台还没接上工具通道。可重试，或在对话框里说「{say}」。',
+      'notice.unknownTool': '未知的操作',
+      'notice.sayFallback': '直接说出你要做的操作',
+      'notice.replayed': '已重放 {count} 条待办请求。',
+      'notice.stillPending': '仍有 {count} 条请求投递不出去：工作台还没接上工具通道。',
     },
     en: {
       'title': 'ReelForge Workbench',
-      'subtitle': 'Chapters · Shots · Assets · Context · Skills · Output · Log',
+      'subtitle': 'Turn a novel into a short film, delivered one chapter at a time',
+      'project.summary': '{name} · {chapters} chapters · {shots} shots',
+      'project.unnamed': 'Untitled project',
       'status.local': 'Local',
       'status.cloud': 'Cloud',
-      'status.idle': 'Idle',
+      'status.idle': 'Not started',
+      'provider.runninghub': 'RunningHub',
+      'provider.online-api': 'Online API',
+      'provider.dsh': 'DSH',
       'stage.requirement': 'Requirement',
       'stage.run': 'Run',
       'stage.plan': 'Plan',
@@ -322,8 +408,11 @@ window.__ModuleLoader__.load({
       'tab.output': 'Output',
       'tab.log': 'Log',
       'cost': 'Spent {spent} / cap {cap}',
-      'captured.label': 'Captured input (auto)',
-      'captured.empty': 'What you type in the chat box lands here automatically.',
+      'footer.position': 'Ch. {chapter} · shot {shot} / {shots}',
+      'footer.idle': 'Nothing generated yet',
+      'action.viewOutput': 'View output',
+      'captured.label': 'Your brief (auto-captured)',
+      'captured.empty': 'Type what you want in the chat box and it lands here verbatim.',
       'common.confirm': 'Confirm',
       'common.cancel': 'Cancel',
       'common.retry': 'Retry',
@@ -337,14 +426,14 @@ window.__ModuleLoader__.load({
       'common.loading': 'Loading…',
       'common.unknown': 'Unknown',
       'empty.generic': 'This is empty. {hint}',
-      'empty.chapters': 'No chapters yet. Import a novel and it splits them for you.',
-      'empty.shots': 'No shots yet. Run the llm stage to write the storyboard.',
-      'empty.assets': 'No assets yet. Run the image stage to produce reference images.',
-      'empty.context': 'Context is empty. Save a bible, a style guide or a continuity record.',
-      'empty.skills': 'No skill installed. Install a skill pack, or generate one.',
+      'empty.chapters': 'No chapters yet. Paste the novel in the chat box and it splits here.',
+      'empty.shots': 'No shots yet. The assistant writes the storyboard from the brief above.',
+      'empty.assets': 'No reference images yet. The assistant makes character, scene and prop images as needed.',
+      'empty.context': 'Context is empty. Start a bible, a style guide or a continuity note.',
+      'empty.skills': 'No skill yet. Install a pack, or let the assistant build one.',
       'empty.output': 'No output yet. Assemble a chapter to get a film.',
       'empty.log': 'No change yet.',
-      'empty.hint': 'Ask the assistant in the conversation to take the next step.',
+      'empty.hint': 'Next: complete the brief and the pipeline continues.',
       'stages.llm': 'Script & prompts',
       'stages.image': 'Reference images',
       'stages.tts': 'Voice samples',
@@ -358,6 +447,38 @@ window.__ModuleLoader__.load({
       'chat.assets': 'Asset cards',
       'chat.deliver': 'Film & deliverables',
       'chat.changelog': 'Changelog',
+      'chat.expand': 'Expand',
+      'chat.collapse': 'Collapse',
+      'chat.progress.stage': 'Stage',
+      'chat.progress.chapter': 'Chapter',
+      'chat.progress.shot': 'Shot',
+      'chat.progress.elapsed': 'Elapsed',
+      'unit.chapter': 'chapters',
+      'unit.shot': 'shots',
+      'chat.summary.chapters': '{chapters} chapters · {shots} shots',
+      'chat.summary.shots': '{shots} shots',
+      'chat.summary.plan': '{kind} · {position}',
+      'shot.status.pending': 'Not generated',
+      'shot.status.generating': 'Generating',
+      'shot.status.done': 'Done',
+      'shot.status.failed': 'Failed',
+      'chapter.status.queued': 'No storyboard yet',
+      'chapter.status.failed': 'A shot failed',
+      'chapter.status.running': 'Generating',
+      'chapter.status.done': 'Done',
+      'asset.category.character': 'Character',
+      'asset.category.scene': 'Scene',
+      'asset.category.prop': 'Prop',
+      'asset.category.costume': 'Costume',
+      'asset.category.age': 'Age variant',
+      'asset.category.voice': 'Voice',
+      'asset.category.music': 'Music',
+      'asset.category.sfx': 'SFX',
+      'asset.category.video': 'Video',
+      'asset.category.other': 'Other',
+      'context.section.bible': 'Character bible',
+      'context.section.style': 'Style guide',
+      'context.section.continuity': 'Continuity notes',
       'skills.bundled': 'Bundled',
       'skills.installed': 'Installed',
       'skills.generated': 'Generated',
@@ -414,7 +535,37 @@ window.__ModuleLoader__.load({
       'workflow.sizeNodes': 'Size nodes',
       'workflow.textCandidates': 'Text candidates',
       'workflow.hasVideoFields': 'Has video fields',
-      'shortcut.noSession': 'no session surface is mounted',
+      'tool.importNovel.label': 'Import novel',
+      'tool.importNovel.say': 'import this novel',
+      'tool.setStoryboard.label': 'Set storyboard',
+      'tool.setStoryboard.say': 'use this storyboard',
+      'tool.saveContext.label': 'Save context',
+      'tool.saveContext.say': 'save this into the character bible',
+      'tool.updateShot.label': 'Edit shot',
+      'tool.updateShot.say': 'set shot 3 to 5 seconds',
+      'tool.createAsset.label': 'New asset',
+      'tool.createAsset.say': 'create a character reference image',
+      'tool.updateAsset.label': 'Edit asset',
+      'tool.updateAsset.say': 'update the character reference image',
+      'tool.bindAsset.label': 'Bind asset',
+      'tool.bindAsset.say': 'bind the reference image to shot 3',
+      'tool.updatePlan.label': 'Update execution plan',
+      'tool.updatePlan.say': 'switch the execution plan to i2i',
+      'tool.runStage.label': 'Run stage',
+      'tool.runStage.say': 'run the image stage',
+      'tool.regenerateShot.label': 'Regenerate shot',
+      'tool.regenerateShot.say': 'regenerate shot 3',
+      'tool.assembleChapter.label': 'Assemble chapter',
+      'tool.assembleChapter.say': 'assemble chapter 1',
+      'tool.setChapterMusic.label': 'Set chapter music',
+      'tool.setChapterMusic.say': 'add music to chapter 1',
+      'tool.rollback.label': 'Roll back',
+      'tool.rollback.say': 'roll back to chapter 2',
+      'notice.undelivered': '“{label}” did not go through: the workbench has no tool channel yet. Retry, or say “{say}” in the chat box.',
+      'notice.unknownTool': 'Unknown action',
+      'notice.sayFallback': 'what you want done',
+      'notice.replayed': 'Replayed {count} queued request(s).',
+      'notice.stillPending': '{count} request(s) still cannot be delivered: the workbench has no tool channel yet.',
     },
   };
 })(RF);
@@ -531,6 +682,67 @@ window.__ModuleLoader__.load({
   };
 
   /**
+   * 项目摘要（面板头副标题）。
+   *
+   * ⚠️ **不要**用 `project.subtitle`：它是 `project.idea`，可能就是一整段小说正文 ——
+   * 塞进副标题会把面板头撑爆。这里按设计稿口径拼「名字 · N 章 · N 镜」。
+   *
+   * @param {object} project - 投影视图。
+   * @param {function} t - translate 函数。
+   * @returns {string} 摘要文本；没有项目时返回空串。
+   */
+  RF.projectSummary = function projectSummary(project, t) {
+    const chapters = Array.isArray(project?.chapters) ? project.chapters : [];
+    if (chapters.length === 0) return '';
+    const shots = chapters.reduce((sum, chapter) => sum + (Number(chapter.shotCount) || 0), 0);
+    const name = String(project?.name ?? '').trim() || t('project.unnamed');
+    return t('project.summary', { name, chapters: chapters.length, shots });
+  };
+
+  /**
+   * 按 `{prefix}.{value}` 取本地化词条。
+   *
+   * 词条不存在时**原样返回 value**：宁可显示 `pending` 或 `online-api`，
+   * 也不要显示 `shot.status.pending` 这种键名（宿主查不到 locale 就回键名）。
+   *
+   * @param {string} prefix - 词条前缀（`chapter.status` / `asset.category` …）。
+   * @param {string} value - 机器值。
+   * @param {function} t - translate 函数。
+   * @returns {string} 显示名。
+   */
+  RF.labelOf = function labelOf(prefix, value, t) {
+    const raw = String(value ?? '').trim();
+    if (raw === '') return '';
+    const key = `${prefix}.${raw}`;
+    const known = RF.locale && RF.locale.zh ? RF.locale.zh[key] !== undefined : false;
+    return known ? t(key) : raw;
+  };
+
+  /**
+   * 当前进度：第几章的第几镜（底栏第二行）。
+   *
+   * 规则：先找正在跑的那一章；没有就找第一个还没完成的；都没有就取最后一章。
+   * 章内镜号 = 已完成镜数 + 1（上限不超过总镜数）。
+   *
+   * @param {object} project - 投影视图。
+   * @returns {{ chapter: number, shot: number, shots: number } | null} 进度；没有章节时返回 null。
+   */
+  RF.currentPosition = function currentPosition(project) {
+    const chapters = Array.isArray(project?.chapters) ? project.chapters : [];
+    if (chapters.length === 0) return null;
+    const shots = Array.isArray(project?.shots) ? project.shots : [];
+    const running = chapters.find(chapter => chapter.status === 'running');
+    const pending = chapters.find(chapter => chapter.status !== 'done');
+    const target = running ?? pending ?? chapters[chapters.length - 1];
+    const prefix = `${target.id}-`;
+    const chapterShots = shots.filter(shot => String(shot.id ?? '').startsWith(prefix));
+    const total = Number(target.shotCount) || chapterShots.length || 0;
+    const done = chapterShots.filter(shot => shot.status === 'done').length;
+    const index = total > 0 ? Math.min(done + 1, total) : 0;
+    return { chapter: target.id, shot: index, shots: total };
+  };
+
+  /**
    * 格式化成人类可读的字节数。
    * @param {number} bytes - 字节数。
    * @returns {string} 文本。
@@ -580,6 +792,26 @@ window.__ModuleLoader__.load({
     return String(template).replace(/\{(\w+)\}/g, (whole, key) => (
       Object.prototype.hasOwnProperty.call(values, key) ? String(values[key]) : whole
     ));
+  };
+
+  /**
+   * 安全取词：宿主 `t` 还没绑定时不至于吐键名、也不抛异常。
+   *
+   * 背景：`RF.t` 是 `RF.apply` 里 `ctx.locale.bind(ns)` 的结果，
+   * 而通知重放（`retryPending`）、快捷键注册这些路径**不保证**先跑过 `apply`；
+   * 宿主查不到 locale 时 `translate` 直接回键名（`locale/index.ts`）。
+   * ⇒ 宁可退回**本地词典**（中文兜底），也不让用户看见 `notice.undelivered` 这种串。
+   *
+   * @param {string} key - 词条键。
+   * @param {Record<string, string | number>} [params] - 插值参数。
+   * @returns {string} 文案。
+   */
+  RF.tr = function tr(key, params) {
+    if (typeof RF.t === 'function') return RF.t(key, params);
+    const dictionary = RF.locale && RF.locale.zh ? RF.locale.zh : {};
+    const template = dictionary[key];
+    if (typeof template !== 'string') return key;
+    return params === undefined ? template : RF.interpolate(template, params);
   };
 })(RF);
 
@@ -1150,8 +1382,8 @@ window.__ModuleLoader__.load({
         h('div', { className: `${RF.CLS}-row` },
           h('div', { className: `${RF.CLS}-row__main` },
             h('div', { className: `${RF.CLS}-row__title` }, chapter.title ?? ''),
-            h('div', { className: `${RF.CLS}-row__sub` }, `${chapter.shotCount ?? 0} 镜 · ${RF.formatDuration(chapter.durationSec ?? 0)}`)),
-          h(RF.ui.Pill, { label: chapter.statusLabel ?? props.t('common.unknown'), tone: chapter.status ?? 'queued' })),
+            h('div', { className: `${RF.CLS}-row__sub` }, `${chapter.shotCount ?? 0} ${props.t('unit.shot')} · ${RF.formatDuration(chapter.durationSec ?? 0)}`)),
+          h(RF.ui.Pill, { label: RF.labelOf('chapter.status', chapter.status, props.t), tone: chapter.status ?? 'queued' })),
         h('div', { className: `${RF.CLS}-row` }, RF.STAGES.map(stage => h(RF.ui.Pill, {
           key: stage,
           label: props.t(`stages.${stage}`),
@@ -1219,7 +1451,7 @@ window.__ModuleLoader__.load({
         type: 'button',
         className: `${RF.CLS}-tabs__item${category === filter ? ` ${RF.CLS}-tabs__item--active` : ''}`,
         onClick: () => props.state.setAssetCategory(category),
-      }, category === 'all' ? props.t('tab.assets') : category))),
+      }, category === 'all' ? props.t('tab.assets') : RF.labelOf('asset.category', category, props.t)))),
       grid,
       h('div', { className: `${RF.CLS}-note` }, props.t('assets.variants')),
       h('div', { className: `${RF.CLS}-note` }, props.t('assets.priority')));
@@ -1239,7 +1471,7 @@ window.__ModuleLoader__.load({
       keys.map(key => h(RF.ui.Card, { key },
         h('div', { className: `${RF.CLS}-row` },
           h('div', { className: `${RF.CLS}-row__main` },
-            h('div', { className: `${RF.CLS}-row__title` }, key),
+            h('div', { className: `${RF.CLS}-row__title` }, RF.labelOf('context.section', key, props.t)),
             h('div', { className: `${RF.CLS}-row__sub` }, String(context[key] ?? '').slice(0, 240))),
           h(RF.ui.Pill, {
             label: props.t(RF.CONTEXT_WRITE_MODE[key] === 'append' ? 'context.append' : 'context.overwrite'),
@@ -1503,14 +1735,29 @@ window.__ModuleLoader__.load({
       twoColumns,
     };
 
-    const statusLabel = project.runPosition === 'local' ? t('status.local') : t('status.cloud');
+    // 面板头副标题：项目摘要（没有项目时退回到一句话说明工作台是干什么的）。
+    const summary = RF.projectSummary(project, t);
+    // 运行位置没选之前不能说「云端运行」——那是撒谎。
+    const position = String(project.runPosition ?? '');
+    const provider = String(project.provider ?? '');
+    const runPositionLabel = position === ''
+      ? ''
+      : (position === 'local' || position === 'cloud' ? t(`status.${position}`) : position);
+    const statusLabel = position === ''
+      ? t('status.idle')
+      : `${runPositionLabel}${provider === '' ? '' : ` · ${RF.labelOf('provider', provider, t)}`}`;
+    // 底栏第二行：当前跑到第几章的第几镜。
+    const current = RF.currentPosition(project);
+    const positionLabel = current === null
+      ? t('footer.idle')
+      : t('footer.position', current);
 
     return h('section', { className: `${RF.CLS}-root`, ref: shellRef },
       h('header', { className: `${RF.CLS}-header` },
         h('div', { className: `${RF.CLS}-header__logo`, 'aria-hidden': true }),
         h('div', { className: `${RF.CLS}-header__text` },
           h('div', { className: `${RF.CLS}-header__title` }, t('title')),
-          h('div', { className: `${RF.CLS}-header__subtitle` }, project.subtitle || t('subtitle'))),
+          h('div', { className: `${RF.CLS}-header__subtitle` }, summary || t('subtitle'))),
         h('span', { className: `${RF.CLS}-header__status` }, statusLabel)),
       h('nav', { className: `${RF.CLS}-stagebar`, 'aria-label': t('title') },
         RF.STAGE_STEPS.map((step, index) => {
@@ -1538,9 +1785,10 @@ window.__ModuleLoader__.load({
             spent: RF.formatMoney(project.cost?.spent ?? 0),
             cap: RF.formatMoney(project.cost?.cap ?? 0),
           })),
-          h('div', { className: `${RF.CLS}-footer__value` }, project.subtitle || t('subtitle'))),
+          // 底栏第二行说**当前进度**，不再重复面板头那句（截图里两处一模一样）。
+          h('div', { className: `${RF.CLS}-footer__value` }, positionLabel)),
         h(RF.ui.Button, {
-          label: t('tab.output'),
+          label: t('action.viewOutput'),
           variant: 'primary',
           onClick: () => setActiveTab('output'),
         })));
@@ -1579,8 +1827,20 @@ window.__ModuleLoader__.load({
           className: `${RF.CLS}-chatrow__toggle`,
           'aria-expanded': open ? 'true' : 'false',
           onClick: () => setOpen(value => !value),
-        }, open ? '收起' : '展开')),
+        }, open ? RF.chatRows.t('chat.collapse') : RF.chatRows.t('chat.expand'))),
       h('div', { className: `${RF.CLS}-chatrow__body` }, open ? props.children : props.summary));
+  }
+
+  /**
+   * 把若干段拼成摘要，空段不占位（`第 2 章 · S02-07 · 已跑 04:12`）。
+   * @param {...unknown} parts - 片段。
+   * @returns {string} 摘要。
+   */
+  function joinParts(...parts) {
+    return parts
+      .map(part => String(part ?? '').trim())
+      .filter(part => part !== '')
+      .join(' · ');
   }
 
   /** 行数据：宿主事件定义物化出来的 `node.data`。 */
@@ -1596,17 +1856,20 @@ window.__ModuleLoader__.load({
    */
   RF.chatRowProgress = function chatRowProgress(props) {
     const data = dataOf(props);
-    const summary = `${data.stage ?? ''} · ${data.chapter ?? ''} · ${data.shot ?? ''} · ${data.elapsed ?? ''}`;
+    // 阶段值是内部 id（`image` / `tts` …）：走 `stages.*` 词条，
+    // 查不到就原样显示 —— 既不裸奔技术词，也不吐 `stages.image` 这种键名。
+    const stage = RF.labelOf('stages', String(data.stage ?? ''), RF.chatRows.t);
+    const summary = joinParts(stage, data.chapter, data.shot, data.elapsed);
     return disclosure({
       React: RF.React,
       kind: 'reelforge-progress',
       title: RF.chatRows.t('chat.progress'),
       summary,
       children: h('div', null,
-        h(RF.ui.MetaRow, { label: 'stage', value: String(data.stage ?? '') }),
-        h(RF.ui.MetaRow, { label: 'chapter', value: String(data.chapter ?? '') }),
-        h(RF.ui.MetaRow, { label: 'shot', value: String(data.shot ?? '') }),
-        h(RF.ui.MetaRow, { label: 'elapsed', value: String(data.elapsed ?? '') })),
+        h(RF.ui.MetaRow, { label: RF.chatRows.t('chat.progress.stage'), value: stage }),
+        h(RF.ui.MetaRow, { label: RF.chatRows.t('chat.progress.chapter'), value: String(data.chapter ?? '') }),
+        h(RF.ui.MetaRow, { label: RF.chatRows.t('chat.progress.shot'), value: String(data.shot ?? '') }),
+        h(RF.ui.MetaRow, { label: RF.chatRows.t('chat.progress.elapsed'), value: String(data.elapsed ?? '') })),
     });
   };
 
@@ -1618,7 +1881,8 @@ window.__ModuleLoader__.load({
   RF.chatRowChapters = function chatRowChapters(props) {
     const data = dataOf(props);
     const chapters = Array.isArray(data.chapters) ? data.chapters : [];
-    const summary = `${chapters.length} 章`;
+    const shots = chapters.reduce((sum, chapter) => sum + (Number(chapter.shotCount) || 0), 0);
+    const summary = RF.chatRows.t('chat.summary.chapters', { chapters: chapters.length, shots });
     return disclosure({
       React: RF.React,
       kind: 'reelforge-chapters',
@@ -1627,8 +1891,8 @@ window.__ModuleLoader__.load({
       children: h('div', null, chapters.map(chapter => h('div', { key: chapter.id, className: `${RF.CLS}-row` },
         h('div', { className: `${RF.CLS}-row__main` },
           h('div', { className: `${RF.CLS}-row__title` }, chapter.title ?? ''),
-          h('div', { className: `${RF.CLS}-row__sub` }, `${chapter.shotCount ?? 0} 镜 · ${RF.formatDuration(chapter.durationSec ?? 0)}`)),
-        h(RF.ui.Pill, { label: chapter.status ?? '', tone: chapter.tone ?? 'queued' })))),
+          h('div', { className: `${RF.CLS}-row__sub` }, `${chapter.shotCount ?? 0} ${RF.chatRows.t('unit.shot')} · ${RF.formatDuration(chapter.durationSec ?? 0)}`)),
+        h(RF.ui.Pill, { label: RF.labelOf('chapter.status', chapter.status, RF.chatRows.t), tone: chapter.tone ?? 'queued' })))),
     });
   };
 
@@ -1640,7 +1904,7 @@ window.__ModuleLoader__.load({
   RF.chatRowStoryboard = function chatRowStoryboard(props) {
     const data = dataOf(props);
     const shots = Array.isArray(data.shots) ? data.shots : [];
-    const summary = `${shots.length} 镜`;
+    const summary = RF.chatRows.t('chat.summary.shots', { shots: shots.length });
     return disclosure({
       React: RF.React,
       kind: 'reelforge-storyboard',
@@ -1650,7 +1914,7 @@ window.__ModuleLoader__.load({
         h('div', { className: `${RF.CLS}-row__main` },
           h('div', { className: `${RF.CLS}-row__title` }, shot.label ?? shot.id),
           h('div', { className: `${RF.CLS}-row__sub` }, `${RF.formatDuration(shot.duration ?? 0)} · ${shot.dialogue ?? ''}`)),
-        h(RF.ui.Pill, { label: shot.status ?? '', tone: shot.tone ?? 'queued' })))),
+        h(RF.ui.Pill, { label: RF.labelOf('shot.status', shot.status, RF.chatRows.t), tone: shot.tone ?? 'queued' })))),
     });
   };
 
@@ -1670,7 +1934,7 @@ window.__ModuleLoader__.load({
       h('div', { className: `${RF.CLS}-chatrow__body` },
         h('div', { className: `${RF.CLS}-row` },
           h('div', { className: `${RF.CLS}-row__main` },
-            h('div', { className: `${RF.CLS}-row__title` }, `${data.kind ?? ''} · ${data.position ?? ''}`),
+            h('div', { className: `${RF.CLS}-row__title` }, RF.chatRows.t('chat.summary.plan', { kind: data.kind ?? '', position: data.position ?? '' })),
             h('div', { className: `${RF.CLS}-row__sub` }, data.provider ?? ''))),
         h('div', { className: `${RF.CLS}-row` }, candidates.map(candidate => h(RF.ui.Button, {
           key: `${candidate.kind}-${candidate.position}`,
@@ -1697,7 +1961,7 @@ window.__ModuleLoader__.load({
           h('div', { className: `${RF.CLS}-row__main` },
             h('div', { className: `${RF.CLS}-row__title` }, asset.name ?? ''),
             h('div', { className: `${RF.CLS}-row__sub` }, asset.description ?? '')),
-          h(RF.ui.Pill, { label: asset.category ?? '', tone: 'queued' })))));
+          h(RF.ui.Pill, { label: RF.labelOf('asset.category', asset.category, RF.chatRows.t), tone: 'queued' })))));
   };
 
   /**
@@ -1715,7 +1979,7 @@ window.__ModuleLoader__.load({
       h('div', { className: `${RF.CLS}-chatrow__body` },
         chapters.map(chapter => h('div', { key: chapter.id },
           h('div', { className: `${RF.CLS}-row__title` }, chapter.title ?? ''),
-          h('div', { className: `${RF.CLS}-row__sub` }, `${chapter.shotCount ?? 0} 镜 · ${RF.formatDuration(chapter.durationSec ?? 0)}`),
+          h('div', { className: `${RF.CLS}-row__sub` }, `${chapter.shotCount ?? 0} ${RF.chatRows.t('unit.shot')} · ${RF.formatDuration(chapter.durationSec ?? 0)}`),
           (chapter.deliverables ?? []).map(item => h('div', { key: `${item.kind}-${item.path}`, className: `${RF.CLS}-row` },
             h('div', { className: `${RF.CLS}-row__main` },
               h('div', { className: `${RF.CLS}-row__sub` }, `${item.label ?? item.kind} · ${RF.formatBytes(item.bytes ?? 0)}`)),
@@ -1903,7 +2167,7 @@ window.__ModuleLoader__.load({
    * @returns {void}
    */
   RF.registerShortcuts = function registerShortcuts(ctx) {
-    const t = typeof RF.t === 'function' ? RF.t : (key) => key;
+    const t = (key, values) => RF.tr(key, values);
     for (const command of RF.SHORTCUT_COMMANDS) {
       ctx.effect(() => ctx.shortcuts.register({
         id: command.id,
@@ -1981,26 +2245,27 @@ window.__ModuleLoader__.load({
   };
 
   /**
-   * 工具 id → { label, say }：通知文案里「这次点的是啥」与「改怎么手动说」。
+   * 工具 id → locale 词条前缀（`tool.<name>.label` / `tool.<name>.say`）。
    *
-   * 为什么这份小表不放在 locale：locale 的键集被单测**逐键**比对
-   * `locale/zh.json` 与 `locale/en.json`，加键就得同步改那两份 JSON ——
-   * 而文案表的归属不在本次改动范围内，所以留在客户端入口里。
+   * ⚠️ 这里只存**词条键**，不存文案：文案在 locale 里，en 界面要跟着切。
+   * （早先这里存的是中文，en 界面整段中文 —— 现在收归 locale。）
+   *
+   * @type {Record<string, string>}
    */
-  const TOOL_HINTS = {
-    'reelforge.regenerate_shot': { label: '重生成镜头', say: '重生成第 3 镜' },
-    'reelforge.rollback': { label: '回滚', say: '回滚到第 2 章' },
-    'reelforge.run_stage': { label: '跑阶段', say: '跑 image 阶段' },
-    'reelforge.assemble_chapter': { label: '合成章节', say: '合成第 1 章' },
-    'reelforge.update_shot': { label: '修改分镜', say: '把第 3 镜的时长改成 5 秒' },
-    'reelforge.update_plan': { label: '更新执行方案', say: '把执行方案换成 i2i' },
-    'reelforge.update_asset': { label: '修改资产', say: '更新角色参考图' },
-    'reelforge.create_asset': { label: '新建资产', say: '新建一个角色参考图' },
-    'reelforge.bind_asset': { label: '绑定资产', say: '把参考图绑到第 3 镜' },
-    'reelforge.save_context': { label: '保存上下文', say: '把这段存进人物圣经' },
-    'reelforge.set_storyboard': { label: '设置分镜表', say: '用这份分镜表' },
-    'reelforge.import_novel': { label: '导入小说', say: '导入这本小说' },
-    'reelforge.set_chapter_music': { label: '设置章节配乐', say: '给第 1 章配乐' },
+  const TOOL_HINT_KEYS = {
+    'reelforge.regenerate_shot': 'tool.regenerateShot',
+    'reelforge.rollback': 'tool.rollback',
+    'reelforge.run_stage': 'tool.runStage',
+    'reelforge.assemble_chapter': 'tool.assembleChapter',
+    'reelforge.update_shot': 'tool.updateShot',
+    'reelforge.update_plan': 'tool.updatePlan',
+    'reelforge.update_asset': 'tool.updateAsset',
+    'reelforge.create_asset': 'tool.createAsset',
+    'reelforge.bind_asset': 'tool.bindAsset',
+    'reelforge.save_context': 'tool.saveContext',
+    'reelforge.set_storyboard': 'tool.setStoryboard',
+    'reelforge.import_novel': 'tool.importNovel',
+    'reelforge.set_chapter_music': 'tool.setChapterMusic',
   };
 
   /**
@@ -2115,10 +2380,10 @@ window.__ModuleLoader__.load({
      * @returns {string} 文案。
      */
     describeUndelivered(request) {
-      const hint = TOOL_HINTS[request.toolId];
-      const label = hint?.label ?? request.toolId;
-      const say = hint?.say ?? '在对话里直接说出你要做的操作';
-      return `当前客户端没有可直调工具的通道，本次「${label}」没有生效。可重试，或在对话里直接说「${say}」。`;
+      const prefix = TOOL_HINT_KEYS[request.toolId];
+      const label = prefix === undefined ? RF.tr('notice.unknownTool') : RF.tr(`${prefix}.label`);
+      const say = prefix === undefined ? RF.tr('notice.sayFallback') : RF.tr(`${prefix}.say`);
+      return RF.tr('notice.undelivered', { label, say });
     },
 
     /**
@@ -2143,12 +2408,12 @@ window.__ModuleLoader__.load({
       RF.actions.pending.length = 0;
       for (const entry of remaining) RF.actions.pending.push(entry);
       if (delivered > 0) {
-        RF.notify({ level: 'info', message: `已重放 ${delivered} 条待办请求。` });
+        RF.notify({ level: 'info', message: RF.tr('notice.replayed', { count: delivered }) });
       }
       if (remaining.length > 0) {
         RF.notify({
           level: 'error',
-          message: `仍有 ${remaining.length} 条请求投递不出去：当前客户端没有可直调工具的通道。`,
+          message: RF.tr('notice.stillPending', { count: remaining.length }),
         });
       }
       return { delivered, remaining: remaining.length };
@@ -2237,9 +2502,14 @@ window.__ModuleLoader__.load({
       locale: RF.NAMESPACE,
     }, RF.Workbench)), 'reelforge: workbench body');
 
+    // ⚠️ `locale: RF.NAMESPACE` **不能少**：宿主只在注册声明了 `locale:` 时
+    // 才往组件 props 里注入 `t`（`packages/client/ui-renderer/.../scoped-slots.tsx`）。
+    // 少了这一行，`RF.WorkbenchTitle` 就退到 `(key) => key` 的兜底，
+    // 右栏页签胶囊上会显示字面量 **title** 而不是「ReelForge 工作台」。
     ctx.effect(() => ctx.slots.inject('sidebar.right.pane.tab.title', () => ctx.slots.register({
       name: 'sidebar.right.pane.tab.title',
       key: RF.TAB_TYPE_ID,
+      locale: RF.NAMESPACE,
     }, RF.WorkbenchTitle)), 'reelforge: workbench title');
 
     // ── 7 类对话消息行：视图注册在 `conversation.chat.node`，键为事件定义的 kind ──

@@ -29,8 +29,20 @@
           className: `${RF.CLS}-chatrow__toggle`,
           'aria-expanded': open ? 'true' : 'false',
           onClick: () => setOpen(value => !value),
-        }, open ? '收起' : '展开')),
+        }, open ? RF.chatRows.t('chat.collapse') : RF.chatRows.t('chat.expand'))),
       h('div', { className: `${RF.CLS}-chatrow__body` }, open ? props.children : props.summary));
+  }
+
+  /**
+   * 把若干段拼成摘要，空段不占位（`第 2 章 · S02-07 · 已跑 04:12`）。
+   * @param {...unknown} parts - 片段。
+   * @returns {string} 摘要。
+   */
+  function joinParts(...parts) {
+    return parts
+      .map(part => String(part ?? '').trim())
+      .filter(part => part !== '')
+      .join(' · ');
   }
 
   /** 行数据：宿主事件定义物化出来的 `node.data`。 */
@@ -46,17 +58,20 @@
    */
   RF.chatRowProgress = function chatRowProgress(props) {
     const data = dataOf(props);
-    const summary = `${data.stage ?? ''} · ${data.chapter ?? ''} · ${data.shot ?? ''} · ${data.elapsed ?? ''}`;
+    // 阶段值是内部 id（`image` / `tts` …）：走 `stages.*` 词条，
+    // 查不到就原样显示 —— 既不裸奔技术词，也不吐 `stages.image` 这种键名。
+    const stage = RF.labelOf('stages', String(data.stage ?? ''), RF.chatRows.t);
+    const summary = joinParts(stage, data.chapter, data.shot, data.elapsed);
     return disclosure({
       React: RF.React,
       kind: 'reelforge-progress',
       title: RF.chatRows.t('chat.progress'),
       summary,
       children: h('div', null,
-        h(RF.ui.MetaRow, { label: 'stage', value: String(data.stage ?? '') }),
-        h(RF.ui.MetaRow, { label: 'chapter', value: String(data.chapter ?? '') }),
-        h(RF.ui.MetaRow, { label: 'shot', value: String(data.shot ?? '') }),
-        h(RF.ui.MetaRow, { label: 'elapsed', value: String(data.elapsed ?? '') })),
+        h(RF.ui.MetaRow, { label: RF.chatRows.t('chat.progress.stage'), value: stage }),
+        h(RF.ui.MetaRow, { label: RF.chatRows.t('chat.progress.chapter'), value: String(data.chapter ?? '') }),
+        h(RF.ui.MetaRow, { label: RF.chatRows.t('chat.progress.shot'), value: String(data.shot ?? '') }),
+        h(RF.ui.MetaRow, { label: RF.chatRows.t('chat.progress.elapsed'), value: String(data.elapsed ?? '') })),
     });
   };
 
@@ -68,7 +83,8 @@
   RF.chatRowChapters = function chatRowChapters(props) {
     const data = dataOf(props);
     const chapters = Array.isArray(data.chapters) ? data.chapters : [];
-    const summary = `${chapters.length} 章`;
+    const shots = chapters.reduce((sum, chapter) => sum + (Number(chapter.shotCount) || 0), 0);
+    const summary = RF.chatRows.t('chat.summary.chapters', { chapters: chapters.length, shots });
     return disclosure({
       React: RF.React,
       kind: 'reelforge-chapters',
@@ -77,8 +93,8 @@
       children: h('div', null, chapters.map(chapter => h('div', { key: chapter.id, className: `${RF.CLS}-row` },
         h('div', { className: `${RF.CLS}-row__main` },
           h('div', { className: `${RF.CLS}-row__title` }, chapter.title ?? ''),
-          h('div', { className: `${RF.CLS}-row__sub` }, `${chapter.shotCount ?? 0} 镜 · ${RF.formatDuration(chapter.durationSec ?? 0)}`)),
-        h(RF.ui.Pill, { label: chapter.status ?? '', tone: chapter.tone ?? 'queued' })))),
+          h('div', { className: `${RF.CLS}-row__sub` }, `${chapter.shotCount ?? 0} ${RF.chatRows.t('unit.shot')} · ${RF.formatDuration(chapter.durationSec ?? 0)}`)),
+        h(RF.ui.Pill, { label: RF.labelOf('chapter.status', chapter.status, RF.chatRows.t), tone: chapter.tone ?? 'queued' })))),
     });
   };
 
@@ -90,7 +106,7 @@
   RF.chatRowStoryboard = function chatRowStoryboard(props) {
     const data = dataOf(props);
     const shots = Array.isArray(data.shots) ? data.shots : [];
-    const summary = `${shots.length} 镜`;
+    const summary = RF.chatRows.t('chat.summary.shots', { shots: shots.length });
     return disclosure({
       React: RF.React,
       kind: 'reelforge-storyboard',
@@ -100,7 +116,7 @@
         h('div', { className: `${RF.CLS}-row__main` },
           h('div', { className: `${RF.CLS}-row__title` }, shot.label ?? shot.id),
           h('div', { className: `${RF.CLS}-row__sub` }, `${RF.formatDuration(shot.duration ?? 0)} · ${shot.dialogue ?? ''}`)),
-        h(RF.ui.Pill, { label: shot.status ?? '', tone: shot.tone ?? 'queued' })))),
+        h(RF.ui.Pill, { label: RF.labelOf('shot.status', shot.status, RF.chatRows.t), tone: shot.tone ?? 'queued' })))),
     });
   };
 
@@ -120,7 +136,7 @@
       h('div', { className: `${RF.CLS}-chatrow__body` },
         h('div', { className: `${RF.CLS}-row` },
           h('div', { className: `${RF.CLS}-row__main` },
-            h('div', { className: `${RF.CLS}-row__title` }, `${data.kind ?? ''} · ${data.position ?? ''}`),
+            h('div', { className: `${RF.CLS}-row__title` }, RF.chatRows.t('chat.summary.plan', { kind: data.kind ?? '', position: data.position ?? '' })),
             h('div', { className: `${RF.CLS}-row__sub` }, data.provider ?? ''))),
         h('div', { className: `${RF.CLS}-row` }, candidates.map(candidate => h(RF.ui.Button, {
           key: `${candidate.kind}-${candidate.position}`,
@@ -147,7 +163,7 @@
           h('div', { className: `${RF.CLS}-row__main` },
             h('div', { className: `${RF.CLS}-row__title` }, asset.name ?? ''),
             h('div', { className: `${RF.CLS}-row__sub` }, asset.description ?? '')),
-          h(RF.ui.Pill, { label: asset.category ?? '', tone: 'queued' })))));
+          h(RF.ui.Pill, { label: RF.labelOf('asset.category', asset.category, RF.chatRows.t), tone: 'queued' })))));
   };
 
   /**
@@ -165,7 +181,7 @@
       h('div', { className: `${RF.CLS}-chatrow__body` },
         chapters.map(chapter => h('div', { key: chapter.id },
           h('div', { className: `${RF.CLS}-row__title` }, chapter.title ?? ''),
-          h('div', { className: `${RF.CLS}-row__sub` }, `${chapter.shotCount ?? 0} 镜 · ${RF.formatDuration(chapter.durationSec ?? 0)}`),
+          h('div', { className: `${RF.CLS}-row__sub` }, `${chapter.shotCount ?? 0} ${RF.chatRows.t('unit.shot')} · ${RF.formatDuration(chapter.durationSec ?? 0)}`),
           (chapter.deliverables ?? []).map(item => h('div', { key: `${item.kind}-${item.path}`, className: `${RF.CLS}-row` },
             h('div', { className: `${RF.CLS}-row__main` },
               h('div', { className: `${RF.CLS}-row__sub` }, `${item.label ?? item.kind} · ${RF.formatBytes(item.bytes ?? 0)}`)),

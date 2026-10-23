@@ -37,26 +37,27 @@
   };
 
   /**
-   * 工具 id → { label, say }：通知文案里「这次点的是啥」与「改怎么手动说」。
+   * 工具 id → locale 词条前缀（`tool.<name>.label` / `tool.<name>.say`）。
    *
-   * 为什么这份小表不放在 locale：locale 的键集被单测**逐键**比对
-   * `locale/zh.json` 与 `locale/en.json`，加键就得同步改那两份 JSON ——
-   * 而文案表的归属不在本次改动范围内，所以留在客户端入口里。
+   * ⚠️ 这里只存**词条键**，不存文案：文案在 locale 里，en 界面要跟着切。
+   * （早先这里存的是中文，en 界面整段中文 —— 现在收归 locale。）
+   *
+   * @type {Record<string, string>}
    */
-  const TOOL_HINTS = {
-    'reelforge.regenerate_shot': { label: '重生成镜头', say: '重生成第 3 镜' },
-    'reelforge.rollback': { label: '回滚', say: '回滚到第 2 章' },
-    'reelforge.run_stage': { label: '跑阶段', say: '跑 image 阶段' },
-    'reelforge.assemble_chapter': { label: '合成章节', say: '合成第 1 章' },
-    'reelforge.update_shot': { label: '修改分镜', say: '把第 3 镜的时长改成 5 秒' },
-    'reelforge.update_plan': { label: '更新执行方案', say: '把执行方案换成 i2i' },
-    'reelforge.update_asset': { label: '修改资产', say: '更新角色参考图' },
-    'reelforge.create_asset': { label: '新建资产', say: '新建一个角色参考图' },
-    'reelforge.bind_asset': { label: '绑定资产', say: '把参考图绑到第 3 镜' },
-    'reelforge.save_context': { label: '保存上下文', say: '把这段存进人物圣经' },
-    'reelforge.set_storyboard': { label: '设置分镜表', say: '用这份分镜表' },
-    'reelforge.import_novel': { label: '导入小说', say: '导入这本小说' },
-    'reelforge.set_chapter_music': { label: '设置章节配乐', say: '给第 1 章配乐' },
+  const TOOL_HINT_KEYS = {
+    'reelforge.regenerate_shot': 'tool.regenerateShot',
+    'reelforge.rollback': 'tool.rollback',
+    'reelforge.run_stage': 'tool.runStage',
+    'reelforge.assemble_chapter': 'tool.assembleChapter',
+    'reelforge.update_shot': 'tool.updateShot',
+    'reelforge.update_plan': 'tool.updatePlan',
+    'reelforge.update_asset': 'tool.updateAsset',
+    'reelforge.create_asset': 'tool.createAsset',
+    'reelforge.bind_asset': 'tool.bindAsset',
+    'reelforge.save_context': 'tool.saveContext',
+    'reelforge.set_storyboard': 'tool.setStoryboard',
+    'reelforge.import_novel': 'tool.importNovel',
+    'reelforge.set_chapter_music': 'tool.setChapterMusic',
   };
 
   /**
@@ -171,10 +172,10 @@
      * @returns {string} 文案。
      */
     describeUndelivered(request) {
-      const hint = TOOL_HINTS[request.toolId];
-      const label = hint?.label ?? request.toolId;
-      const say = hint?.say ?? '在对话里直接说出你要做的操作';
-      return `当前客户端没有可直调工具的通道，本次「${label}」没有生效。可重试，或在对话里直接说「${say}」。`;
+      const prefix = TOOL_HINT_KEYS[request.toolId];
+      const label = prefix === undefined ? RF.tr('notice.unknownTool') : RF.tr(`${prefix}.label`);
+      const say = prefix === undefined ? RF.tr('notice.sayFallback') : RF.tr(`${prefix}.say`);
+      return RF.tr('notice.undelivered', { label, say });
     },
 
     /**
@@ -199,12 +200,12 @@
       RF.actions.pending.length = 0;
       for (const entry of remaining) RF.actions.pending.push(entry);
       if (delivered > 0) {
-        RF.notify({ level: 'info', message: `已重放 ${delivered} 条待办请求。` });
+        RF.notify({ level: 'info', message: RF.tr('notice.replayed', { count: delivered }) });
       }
       if (remaining.length > 0) {
         RF.notify({
           level: 'error',
-          message: `仍有 ${remaining.length} 条请求投递不出去：当前客户端没有可直调工具的通道。`,
+          message: RF.tr('notice.stillPending', { count: remaining.length }),
         });
       }
       return { delivered, remaining: remaining.length };
@@ -293,9 +294,14 @@
       locale: RF.NAMESPACE,
     }, RF.Workbench)), 'reelforge: workbench body');
 
+    // ⚠️ `locale: RF.NAMESPACE` **不能少**：宿主只在注册声明了 `locale:` 时
+    // 才往组件 props 里注入 `t`（`packages/client/ui-renderer/.../scoped-slots.tsx`）。
+    // 少了这一行，`RF.WorkbenchTitle` 就退到 `(key) => key` 的兜底，
+    // 右栏页签胶囊上会显示字面量 **title** 而不是「ReelForge 工作台」。
     ctx.effect(() => ctx.slots.inject('sidebar.right.pane.tab.title', () => ctx.slots.register({
       name: 'sidebar.right.pane.tab.title',
       key: RF.TAB_TYPE_ID,
+      locale: RF.NAMESPACE,
     }, RF.WorkbenchTitle)), 'reelforge: workbench title');
 
     // ── 7 类对话消息行：视图注册在 `conversation.chat.node`，键为事件定义的 kind ──

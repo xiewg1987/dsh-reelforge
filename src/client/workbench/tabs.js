@@ -33,8 +33,8 @@
         h('div', { className: `${RF.CLS}-row` },
           h('div', { className: `${RF.CLS}-row__main` },
             h('div', { className: `${RF.CLS}-row__title` }, chapter.title ?? ''),
-            h('div', { className: `${RF.CLS}-row__sub` }, `${chapter.shotCount ?? 0} 镜 · ${RF.formatDuration(chapter.durationSec ?? 0)}`)),
-          h(RF.ui.Pill, { label: chapter.statusLabel ?? props.t('common.unknown'), tone: chapter.status ?? 'queued' })),
+            h('div', { className: `${RF.CLS}-row__sub` }, `${chapter.shotCount ?? 0} ${props.t('unit.shot')} · ${RF.formatDuration(chapter.durationSec ?? 0)}`)),
+          h(RF.ui.Pill, { label: RF.labelOf('chapter.status', chapter.status, props.t), tone: chapter.status ?? 'queued' })),
         h('div', { className: `${RF.CLS}-row` }, RF.STAGES.map(stage => h(RF.ui.Pill, {
           key: stage,
           label: props.t(`stages.${stage}`),
@@ -102,7 +102,7 @@
         type: 'button',
         className: `${RF.CLS}-tabs__item${category === filter ? ` ${RF.CLS}-tabs__item--active` : ''}`,
         onClick: () => props.state.setAssetCategory(category),
-      }, category === 'all' ? props.t('tab.assets') : category))),
+      }, category === 'all' ? props.t('tab.assets') : RF.labelOf('asset.category', category, props.t)))),
       grid,
       h('div', { className: `${RF.CLS}-note` }, props.t('assets.variants')),
       h('div', { className: `${RF.CLS}-note` }, props.t('assets.priority')));
@@ -122,7 +122,7 @@
       keys.map(key => h(RF.ui.Card, { key },
         h('div', { className: `${RF.CLS}-row` },
           h('div', { className: `${RF.CLS}-row__main` },
-            h('div', { className: `${RF.CLS}-row__title` }, key),
+            h('div', { className: `${RF.CLS}-row__title` }, RF.labelOf('context.section', key, props.t)),
             h('div', { className: `${RF.CLS}-row__sub` }, String(context[key] ?? '').slice(0, 240))),
           h(RF.ui.Pill, {
             label: props.t(RF.CONTEXT_WRITE_MODE[key] === 'append' ? 'context.append' : 'context.overwrite'),
