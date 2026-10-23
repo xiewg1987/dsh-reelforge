@@ -44,6 +44,9 @@ const TASK_DOCS = [
  * - 证据缺失：映射表声明了自动化来源，但文件不存在或找不到匹配的测试名。
  * - 仅声称：文档说「单测」，但映射表里没有对应的自动化来源。
  * - 实机待补：「怎么验」列明确是实机 / 截图 / 贴输出 / 录屏 / 浏览器这类人工项。
+ * - 实机通过：已在真实宿主里跑过，且**原始观察记录落进了 `docs/开发任务/实机/`**；
+ *   判定脚本会读那份记录，逐条断言「必须出现的事实」都在，缺一条就退回「证据缺失」。
+ *   （不是把结论写死在映射表里 —— 映射表只声明「要看到什么」，看到没看到由脚本核对原始记录。）
  * - N/A：该验收项在本仓库的实现路线下不适用（见映射表备注）。
  */
 export const STATUS = {
@@ -51,6 +54,7 @@ export const STATUS = {
   MISSING: '证据缺失',
   CLAIMED: '仅声称',
   MANUAL: '实机待补',
+  LIVE: '实机通过',
   NA: 'N/A',
 };
 
@@ -65,6 +69,7 @@ export const STATUS = {
  *
  * kind:
  *   'manual' → 实机待补（人工项）
+ *   'live'   → 实机通过（`live` 字段声明：原始记录文件 + 必须出现的事实）
  *   'na'     → N/A（本仓库路线下不适用）
  *   省略      → 按 files/names/cmd/scan 判定
  *
@@ -73,9 +78,39 @@ export const STATUS = {
  */
 export const ACCEPTANCE_MAP = [
   // ── T1 · 契约与骨架 ─────────────────────────────────────────────────────
-  { task: 'T1', id: 'A1', kind: 'manual', note: '需 DSH 实机：装上插件 → 右栏出现 ReelForge Tab → 点开看到面板' },
+  {
+    task: 'T1',
+    id: 'A1',
+    kind: 'live',
+    live: {
+      file: 'docs/开发任务/实机/dsh-0.2.1-alpha.1.md',
+      mustContain: [
+        'data-sidebar-right-guide-entry="reelforge-workbench"',
+        '<section class="rf-root">',
+        '还没有章节。导入小说即可自动拆章。',
+        '0.2.1-alpha.1-5badb15',
+      ],
+    },
+    note: 'DSH 0.2.1-alpha.1 实机：插件装上 → 右栏出现「ReelForge 工作台」入口（kind = reelforge-workbench）→ 点开看到完整面板',
+  },
   { task: 'T1', id: 'A2', cmd: { argv: ['node', 'scripts/check-package-identity.mjs'] }, note: 'package.json.name / cordis.patch.yml name / client.js load({id}) 三处并排比对' },
-  { task: 'T1', id: 'A3', kind: 'manual', note: 'cordis_inspect_query --service Tool：本机无该 CLI，贴输出仍待实机' },
+  {
+    task: 'T1',
+    id: 'A3',
+    kind: 'live',
+    live: {
+      file: 'docs/开发任务/实机/dsh-0.2.1-alpha.1.md',
+      mustContain: [
+        '向宿主 tools.register 提交的工具：15 个',
+        '· reelforge.import_novel',
+        '· reelforge.update_plan',
+        '· skill_reference',
+        '✓ 15 个预期工具全部注册到位',
+        '没有** `1 entry did not activate` 告警',
+      ],
+    },
+    note: '等价证据：cordis_inspect_query 在 DSH 0.2.1-alpha.1 里是给模型用的宿主工具（非本机 CLI），本机无 LLM 通道无法由模型发起；改用 scripts/list-registered-tools.mjs 列出 apply 后提交给宿主的 15 个工具（13 ReelForge + 2 技能），配套真机事实「宿主激活无 1 entry did not activate 告警」',
+  },
   { task: 'T1', id: 'A4', files: ['src/host/__tests__/t1-gate.test.js', 'src/host/__tests__/tools-execute.test.js'], names: ['产物字段被明确拒绝', 'import_novel：产物字段（status）进不来'], note: '实机调用一次仍待补' },
   { task: 'T1', id: 'A5', files: ['src/host/__tests__/t1-gate.test.js'], names: ['白名单外字段报错'], note: '' },
   { task: 'T1', id: 'A6', files: ['src/host/__tests__/t1-gate.test.js'], names: ['数组元素必须是字符串'], note: '' },
@@ -136,7 +171,22 @@ export const ACCEPTANCE_MAP = [
 
   // ── T4 · 合成交付与回滚 ─────────────────────────────────────────────────
   { task: 'T4', id: 'A1', files: ['src/media/__tests__/assemble-e2e.test.js'], names: ['exports/ch01', '一章一条成片'], note: 'pending：媒体集成端到端单测尚未落地；实跑需 ffmpeg' },
-  { task: 'T4', id: 'A2', kind: 'manual', note: 'ffprobe 贴输出：需真实成片（本机 ffmpeg 探测结果见合流摘要）' },
+  {
+    task: 'T4',
+    id: 'A2',
+    kind: 'live',
+    live: {
+      file: 'docs/开发任务/实机/dsh-0.2.1-alpha.1.md',
+      mustContain: [
+        'codec_name=h264',
+        'codec_name=aac',
+        'pix_fmt=yuv420p',
+        'r_frame_rate=24/1',
+        'moov` 偏移 **36**',
+      ],
+    },
+    note: '真 ffmpeg 9.0.2 现场合成后跑真 ffprobe，原始输出与 faststart 盒偏移判定都在证据档里',
+  },
   { task: 'T4', id: 'A3', files: ['src/media/__tests__/assemble.test.js', 'src/media/__tests__/assemble-e2e.test.js'], names: ['assembleChapter：正常路径产出带字幕 + 无字幕两版', '无字幕版是重封装'], note: '生成日志 / 实跑仍待补' },
   { task: 'T4', id: 'A4', files: ['src/media/__tests__/srt.test.js'], names: ['buildSrt 生成合法 SRT，且字幕里已经没有角色名前缀'], note: '目视抽一镜仍待补' },
   { task: 'T4', id: 'A5', files: ['src/media/__tests__/assemble.test.js'], names: ['assembleChapter：enable_subtitles 关时不烧录'], note: '' },
@@ -159,12 +209,41 @@ export const ACCEPTANCE_MAP = [
   { task: 'T4', id: 'A22', files: ['src/core/__tests__/deliverPayload.test.js', 'src/core/__tests__/changelogPayload.test.js'], names: ['payload 形状与 T5 §2.4.4 冻结形状'], note: '样例 JSON 见 reports/samples/' },
 
   // ── T5 · 工作台与技能工厂 ───────────────────────────────────────────────
-  { task: 'T5', id: 'A1', files: ['src/client/__tests__/t5-client.test.js'], names: ['插槽 key 用 definition.id 而不是 kind'], note: 'kind = reelforge-workbench 由此单测守住；实机截图仍待补' },
+  {
+    task: 'T5',
+    id: 'A1',
+    kind: 'live',
+    live: {
+      file: 'docs/开发任务/实机/dsh-0.2.1-alpha.1.md',
+      mustContain: [
+        'data-sidebar-right-guide-entry="reelforge-workbench"',
+        'data-sidebar-right-tab="tab2"',
+        'class="rf-root"',
+      ],
+      files: ['src/client/__tests__/t5-client.test.js'],
+      names: ['插槽 key 用 definition.id 而不是 kind'],
+    },
+    note: 'DSH 0.2.1-alpha.1 实机：右栏出现「ReelForge 工作台」入口（kind = reelforge-workbench），点开渲染出 rf-root 面板',
+  },
   { task: 'T5', id: 'A2', files: ['src/client/__tests__/render.test.js'], names: ['Workbench 壳层：四层骨架齐全', '底栏'], note: 'render 层已守住四层骨架与唯一滚动容器；注入超长内容的实机截图仍待补' },
   { task: 'T5', id: 'A3', files: ['src/client/__tests__/t5-client.test.js', 'src/client/workbench/__tests__/workbench-structure.test.js', 'src/client/__tests__/render.test.js'], names: ['滚动容器：页面只有一个滚动容器', 'Workbench：唯一滚动层', 'Workbench 壳层：有且仅有一个滚动容器'], note: '' },
-  { task: 'T5', id: 'A4', kind: 'manual', note: '四档宽度截图：需浏览器实机' },
+  { task: 'T5', id: 'A4', kind: 'manual', note: '实机已测 326px（宿主默认右栏）与 782px（面板全屏）两档均不破版，并修掉了窄栏下「成片」按钮被压成两行、副标题折三行的问题；但 900 / 1150 两档在本宿主窗口下物理不可达（右栏上限 = 视口 × RIGHTBAR_MAX_RATIO = 782 × 0.7 = 547px，要 900px 需视口 ≥1286px、1150px 需 ≥1643px），仍需更大视口补测' },
   { task: 'T5', id: 'A5', files: ['src/client/__tests__/t5-client.test.js'], names: ['断点按实测宽度判'], note: '缩放窗口对照截图仍待补' },
-  { task: 'T5', id: 'A6', kind: 'manual', note: '明/暗主题截图：需浏览器实机' },
+  {
+    task: 'T5',
+    id: 'A6',
+    kind: 'live',
+    live: {
+      file: 'docs/开发任务/实机/dsh-0.2.1-alpha.1.md',
+      mustContain: [
+        'data-ds-theme-source="dark"',
+        'data-ds-dark-theme',
+        'var(--dsw-alias-bg-base)',
+        'var(--dsw-alias-brand-primary)',
+      ],
+    },
+    note: 'DSH 0.2.1-alpha.1 实机：宿主切深色（data-ds-theme-source=dark，持久化），面板 DOM 与浅色逐字相同、控制台 0 条；样式全部走宿主 CSS 变量，明暗由宿主重算',
+  },
   { task: 'T5', id: 'A7', files: ['src/client/__tests__/t5-client.test.js'], names: ['A7：样式里没有十六进制字面量'], note: '' },
   { task: 'T5', id: 'A8', files: ['src/client/__tests__/t5-client.test.js'], names: ['A8：无 iframe'], note: '' },
   { task: 'T5', id: 'A9', files: ['src/client/__tests__/t5-client.test.js'], names: ['客户端文案：zh / en 键集合一致'], note: '中/英两张截图仍待补' },
@@ -182,7 +261,23 @@ export const ACCEPTANCE_MAP = [
   { task: 'T5', id: 'A21', files: ['src/client/__tests__/t5-client.test.js'], names: ['快捷键 resolve：右栏未挂载会话时返回 blocked'], note: '' },
   { task: 'T5', id: 'A22', files: ['src/client/__tests__/t5-client.test.js'], names: ['快捷键：id 匹配 R12 正则'], note: '' },
   { task: 'T5', id: 'A23', files: ['src/client/__tests__/t5-client.test.js'], names: ['快捷键：id 匹配 R12 正则'], note: '同一断言同时守住「不声明 web:linux」' },
-  { task: 'T5', id: 'A24', kind: 'manual', note: '与宿主键位逐键对照：需查宿主键位表' },
+  {
+    task: 'T5',
+    id: 'A24',
+    kind: 'live',
+    live: {
+      file: 'docs/开发任务/实机/dsh-0.2.1-alpha.1.md',
+      mustContain: [
+        'ReelForge 工作台 | Ctrl + Alt + D',
+        'ReelForge 工作台 | Ctrl + Alt + S',
+        'ReelForge 工作台 | Ctrl + Alt + M',
+        '工作区文件 | Ctrl + Alt + P',
+        '刷新当前页面 | Ctrl + Alt + R',
+        '两组字母键集合不相交',
+      ],
+    },
+    note: 'DSH 0.2.1-alpha.1 实机：设置 → 快捷键速查面板逐键对照（宿主 18 条 + 本插件 3 条，同一面板共存即注册成功）',
+  },
   { task: 'T5', id: 'A25', files: ['src/core/__tests__/t5-analyzeWorkflow.test.js'], names: ['diagnostics 摆出 loaders'], note: '' },
   { task: 'T5', id: 'A26', files: ['src/core/__tests__/t5-analyzeWorkflow.test.js'], names: ['media 恒为 null，返回体没有 prune 字段'], note: '' },
   { task: 'T5', id: 'A27', kind: 'manual', note: 'UI 展示解析结果与 diagnostics：需浏览器截图' },
@@ -432,8 +527,63 @@ export function resolveEvidence(descriptor) {
   };
 }
 
-/* ────────────────────────────── 解析验收表 ────────────────────────────── */
+/**
+ * 判定「实机通过」：读**原始观察记录**，逐条断言必须出现的事实。
+ *
+ * 这条路径存在的理由：实机证据是一次性的人工/浏览器操作，不能靠脚本重跑，
+ * 但也**不能因此就把结论写死**。所以原始记录落进版本库（`docs/开发任务/实机/`），
+ * 映射表只声明「必须看到什么」，脚本负责核对记录里到底有没有 —— 记录被删或对不上，
+ * 状态就退回「证据缺失」。
+ *
+ * 可选的 `files` / `names` 再叠一层**自动化回归**（防止实机过了以后被改坏）：
+ * 两者都成立才算实机通过。
+ *
+ * @param {{ file: string, mustContain?: string[], files?: string[], names?: string[] }} descriptor
+ * @returns {{ status: string, evidence: string, problems: string[] }}
+ */
+export function resolveLiveEvidence(descriptor) {
+  if (!descriptor?.file) {
+    return { status: STATUS.MISSING, evidence: '—', problems: ['映射表没有声明实机证据文件'] };
+  }
+  const abs = path.join(ROOT, descriptor.file);
+  let content;
+  try {
+    content = readFileSync(abs, 'utf8');
+  } catch {
+    return { status: STATUS.MISSING, evidence: '—', problems: [`实机证据文件不存在：${descriptor.file}`] };
+  }
+  const mustContain = descriptor.mustContain ?? [];
+  if (!mustContain.length) {
+    return { status: STATUS.MISSING, evidence: '—', problems: [`实机证据文件存在但没声明必须出现的事实：${descriptor.file}`] };
+  }
+  const missing = mustContain.filter((token) => !content.includes(token));
+  if (missing.length) {
+    return {
+      status: STATUS.MISSING,
+      evidence: '—',
+      problems: [`实机证据文件 ${descriptor.file} 里没有出现：${missing.map((m) => `「${m}」`).join('、')}`],
+    };
+  }
 
+  const evidence = [`实机原始记录 ${descriptor.file}（${mustContain.length} 项事实全部命中）`];
+  const problems = [];
+
+  if (descriptor.files?.length) {
+    const auto = resolveEvidence({ files: descriptor.files, names: descriptor.names });
+    if (auto.status !== STATUS.PASS) {
+      problems.push(...auto.problems);
+    } else {
+      evidence.push(auto.evidence);
+    }
+  }
+
+  if (problems.length) {
+    return { status: STATUS.MISSING, evidence: '—', problems };
+  }
+  return { status: STATUS.LIVE, evidence: evidence.join('；'), problems: [] };
+}
+
+/* ────────────────────────────── 解析验收表 ────────────────────────────── */
 /**
  * 解析 T1–T5 任务书 §5 的验收表。
  * @returns {{ task: string, id: string, desc: string, how: string }[]}
@@ -516,6 +666,11 @@ export function runAcceptance() {
     } else if (row.kind === 'na') {
       status = STATUS.NA;
       note = row.note || item.how;
+    } else if (row.kind === 'live') {
+      const verdict = resolveLiveEvidence(row.live);
+      status = verdict.status;
+      evidence = verdict.evidence;
+      note = [row.note, ...verdict.problems].filter(Boolean).join('；');
     } else {
       const verdict = resolveEvidence(row);
       status = verdict.status;
@@ -535,7 +690,7 @@ export function runAcceptance() {
     };
   });
 
-  const counts = { [STATUS.PASS]: 0, [STATUS.MISSING]: 0, [STATUS.CLAIMED]: 0, [STATUS.MANUAL]: 0, [STATUS.NA]: 0 };
+  const counts = { [STATUS.PASS]: 0, [STATUS.MISSING]: 0, [STATUS.CLAIMED]: 0, [STATUS.MANUAL]: 0, [STATUS.LIVE]: 0, [STATUS.NA]: 0 };
   for (const item of items) counts[item.status] = (counts[item.status] ?? 0) + 1;
   const gaps = counts[STATUS.MISSING] + counts[STATUS.CLAIMED];
 
@@ -593,6 +748,7 @@ export function renderAcceptanceReport(result) {
     '',
     `- 验收项总数：**${result.total}**（T1 12 / T2 21 / T3 23 / T4 22 / T5 38）`,
     `- ${STATUS.PASS}：**${result.counts[STATUS.PASS]}**`,
+    `- ${STATUS.LIVE}：**${result.counts[STATUS.LIVE]}**`,
     `- ${STATUS.MISSING}：**${result.counts[STATUS.MISSING]}**`,
     `- ${STATUS.CLAIMED}：**${result.counts[STATUS.CLAIMED]}**`,
     `- ${STATUS.MANUAL}：**${result.counts[STATUS.MANUAL]}**`,

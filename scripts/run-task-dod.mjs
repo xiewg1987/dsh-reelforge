@@ -372,6 +372,7 @@ const shared = sharedDodBlock(cordis, acceptance, {
 const acceptanceCounts = acceptance.counts;
 const gapItems = acceptance.items.filter((i) => i.status === STATUS.MISSING || i.status === STATUS.CLAIMED);
 const manualItems = acceptance.items.filter((i) => i.status === STATUS.MANUAL);
+const liveItems = acceptance.items.filter((i) => i.status === STATUS.LIVE);
 
 /* ── T1 ── */
 writeReport('T1-报告.md', `# T1 · 契约与骨架 — 任务报告
@@ -494,8 +495,9 @@ const perTaskRows = ['T1', 'T2', 'T3', 'T4', 'T5']
     const missing = items.filter((i) => i.status === STATUS.MISSING).length;
     const claimed = items.filter((i) => i.status === STATUS.CLAIMED).length;
     const manual = items.filter((i) => i.status === STATUS.MANUAL).length;
+    const live = items.filter((i) => i.status === STATUS.LIVE).length;
     const na = items.filter((i) => i.status === STATUS.NA).length;
-    return `| ${task} | ${items.length} | ${pass} | ${missing} | ${claimed} | ${manual} | ${na} |`;
+    return `| ${task} | ${items.length} | ${pass} | ${live} | ${missing} | ${claimed} | ${manual} | ${na} |`;
   })
   .join('\n');
 
@@ -505,6 +507,10 @@ const gapBlock = gapItems.length
 
 const manualBlock = manualItems.length
   ? manualItems.map((i) => `- **${i.task} ${i.id}** ${i.desc} —— ${i.how}`).join('\n')
+  : '无。';
+
+const liveBlock = liveItems.length
+  ? liveItems.map((i) => `- **${i.task} ${i.id}** ${i.desc} —— ${i.note}`).join('\n')
   : '无。';
 
 writeReport('00-合流摘要.md', `# ReelForge T1–T5 合流摘要
@@ -530,14 +536,15 @@ writeReport('00-合流摘要.md', `# ReelForge T1–T5 合流摘要
 | 状态 | 条数 |
 | --- | --- |
 | ${STATUS.PASS} | ${acceptanceCounts[STATUS.PASS]} |
+| ${STATUS.LIVE} | ${acceptanceCounts[STATUS.LIVE]} |
 | ${STATUS.MISSING} | ${acceptanceCounts[STATUS.MISSING]} |
 | ${STATUS.CLAIMED} | ${acceptanceCounts[STATUS.CLAIMED]} |
 | ${STATUS.MANUAL} | ${acceptanceCounts[STATUS.MANUAL]} |
 | ${STATUS.NA} | ${acceptanceCounts[STATUS.NA]} |
 | **合计** | **${acceptance.total}** |
 
-| 任务 | 验收项 | ${STATUS.PASS} | ${STATUS.MISSING} | ${STATUS.CLAIMED} | ${STATUS.MANUAL} | ${STATUS.NA} |
-| --- | --- | --- | --- | --- | --- | --- |
+| 任务 | 验收项 | ${STATUS.PASS} | ${STATUS.LIVE} | ${STATUS.MISSING} | ${STATUS.CLAIMED} | ${STATUS.MANUAL} | ${STATUS.NA} |
+| --- | --- | --- | --- | --- | --- | --- | --- |
 ${perTaskRows}
 
 ### 证据缺口（${gapItems.length} 条 —— 这些项**不能**算「通过」）
@@ -547,6 +554,12 @@ ${gapBlock}
 ### 仍需 DSH 实机人工补证（${manualItems.length} 条）
 
 ${manualBlock}
+
+### 已在 DSH 实机验证通过（${liveItems.length} 条）
+
+原始观察记录见 \`docs/开发任务/实机/\`；判定脚本逐条核对记录里「必须出现的事实」，缺一条就退回「证据缺失」。
+
+${liveBlock}
 
 ## 覆盖率门槛
 
@@ -575,7 +588,8 @@ console.log(`Reports written to ${path.relative(ROOT, REPORT_DIR)}`);
 console.log(`Automation: ${automationOk ? 'PASS' : 'FAIL'} (tests ${passTests}/${failTests})`);
 console.log(
   `Acceptance: ${acceptance.total} items — ` +
-  `${STATUS.PASS} ${acceptanceCounts[STATUS.PASS]} / ${STATUS.MISSING} ${acceptanceCounts[STATUS.MISSING]} / ` +
+  `${STATUS.PASS} ${acceptanceCounts[STATUS.PASS]} / ${STATUS.LIVE} ${acceptanceCounts[STATUS.LIVE]} / ` +
+  `${STATUS.MISSING} ${acceptanceCounts[STATUS.MISSING]} / ` +
   `${STATUS.CLAIMED} ${acceptanceCounts[STATUS.CLAIMED]} / ${STATUS.MANUAL} ${acceptanceCounts[STATUS.MANUAL]} / ` +
   `${STATUS.NA} ${acceptanceCounts[STATUS.NA]} (gaps ${acceptance.gaps})`,
 );

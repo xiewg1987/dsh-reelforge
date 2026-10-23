@@ -134,8 +134,22 @@
   border-top: 1px solid var(--dsw-alias-border-l2);
 }
 .rf-footer__text { min-width: 0; flex: 1 1 auto; }
-.rf-footer__label { font-size: 11px; color: var(--dsw-alias-label-caption); }
-.rf-footer__value { font-size: 12px; color: var(--dsw-alias-label-primary); }
+.rf-footer__label {
+  font-size: 11px;
+  color: var(--dsw-alias-label-caption);
+  /* 成本位是单行数据，不能被挤成两行 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rf-footer__value {
+  font-size: 12px;
+  color: var(--dsw-alias-label-primary);
+  /* 副标题在窄栏里单行截断（header 里还有一份全文），不要折成三行把底栏撑高 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .rf-grid { display: grid; gap: 12px; grid-template-columns: 1fr; }
 .rf-grid--two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .rf-section {
@@ -156,6 +170,9 @@
   border-radius: 8px;
   border: 1px solid var(--dsw-alias-border-l2);
   padding: 6px 12px;
+  /* 按钮文字不许被 flex 压扁折行（窄栏下会变成「成／片」两行） */
+  white-space: nowrap;
+  flex: 0 0 auto;
   font-size: 12px;
   cursor: pointer;
   background: var(--dsw-alias-bg-layer-3);
