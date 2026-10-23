@@ -44,8 +44,6 @@
     "!src/**/__tests__/**",
     "skills/**",
     "workflows/**",
-    "docs/**",
-    "!docs/开发任务/reports/**",
     "scripts/check-package-identity.mjs",
     "scripts/sync-locale.mjs",
     "scripts/verify-bundle.mjs",

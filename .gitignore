@@ -11,9 +11,12 @@ pnpm-lock.yaml
 # `npm pack` 产出的包（local-reelforge-<version>.tgz）
 *.tgz
 
-# ── 临时渲染产物 ───────────────────────────────────────────────
-# design/_tmp 是渲染工具的临时输出（PNG 截图）。
-# 正式设计稿在 design/ 根目录（design/*.png / design/*.svg），**不**忽略。
+# ── 本地设计 / 文档 / 参考图（不进 GitHub）──────────────────────
+design/
+docs/
+references/
+
+# design/_tmp 是渲染工具的临时输出（已在 design/ 忽略范围内）
 design/_tmp/
 
 # exports/ 是端到端测试把「工作区」指向仓库根时产出的交付物
@@ -43,8 +46,4 @@ yarn-error.log*
 *.temp
 
 # ── 明确**不**忽略的交付物（这里只做提醒，别手滑加进来）────────
-#   docs/开发任务/reports/ —— 交付报告，要提交
 #   client.js              —— 客户端构建产物（**是**被发布的产物），要提交
-#   design/*.png / *.svg   —— 设计稿，要提交
-#   references/            —— 第三方参考图（huaban / pinterest），不擅自忽略或删除；
-#                             版权与体积影响由 owner 判断
