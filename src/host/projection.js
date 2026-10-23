@@ -384,10 +384,16 @@ function chapterStages(chapter) {
  * 引用变了就会触发一次无谓的下发。
  *
  * @param {object} state 投影状态。
+ * @param {{ budgetLimitCny?: number }} [options] 来自 `Config` 的运行参数。
+ *   `budgetLimitCny` 是**预算上限**（元），设计 T1 §config：上限走 Config、不硬编码。
+ *   不传时按 0 处理（没有 Config 的纯投影场景）。
  * @returns {object} 客户端视图。
  */
-export function buildWireView(state) {
+export function buildWireView(state, options = {}) {
   const current = state ?? initialState();
+  const budgetLimitCny = Number.isFinite(options.budgetLimitCny) && options.budgetLimitCny >= 0
+    ? options.budgetLimitCny
+    : 0;
   const project = current.project ?? {};
   const assets = Array.isArray(current.assets) ? current.assets : [];
   const chapters = Array.isArray(current.chapters) ? current.chapters : [];
@@ -473,7 +479,9 @@ export function buildWireView(state) {
       entries: Array.isArray(changelog.entries) ? changelog.entries : [],
       modes: [...ROLLBACK_MODES],
     },
-    cost: { spent: 0, cap: 0 },
+    // `spent`：成本记账尚未接入会话事件（R1 只认 `tool/result` 补丁），
+    // 所以实际花费恒为 0；`cap` 必须来自 Config，不能写死 —— 否则工作台显示「上限 ¥0.00」。
+    cost: { spent: 0, cap: budgetLimitCny },
     budget: {},
   };
 }

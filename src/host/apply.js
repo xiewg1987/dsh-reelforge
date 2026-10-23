@@ -84,7 +84,8 @@ export function applyReelForge(ctx, rawConfig) {
       apply: (state, event) => applyEvent(state, event),
       wire: {
         viewSchema: { parse: assertPlainObject },
-        view: (state) => buildWireView(state),
+        // `budgetLimitCny` 来自 Config：工作台要显示真实预算上限，不能写死 0。
+        view: (state) => buildWireView(state, { budgetLimitCny: config.budgetLimitCny }),
       },
       stateVersion: STATE_VERSION,
     }));
@@ -173,7 +174,7 @@ function registerRoutes(ctx, store, config) {
       const state = sessionId
         ? store.stateOf(sessionId)
         : store.stateOf(store.lastSessionId());
-      return Response.json(buildWireView(state), { headers: NO_STORE });
+      return Response.json(buildWireView(state, { budgetLimitCny: config.budgetLimitCny }), { headers: NO_STORE });
     },
   }));
 
