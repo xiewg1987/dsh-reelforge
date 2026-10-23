@@ -200,7 +200,7 @@ window.__ModuleLoader__.load({
     zh: {
       'title': 'ReelForge 工作台',
       'subtitle': '把小说做成按章交付的短剧',
-      'project.summary': '{name} · {chapters} 章 · {shots} 镜',
+      'project.summary': '{name}· {chapters} 章 · {shots} 镜',
       'project.unnamed': '未命名项目',
       'status.local': '本地',
       'status.cloud': '云端',
@@ -222,10 +222,54 @@ window.__ModuleLoader__.load({
       'tab.skills': '技能',
       'tab.output': '成片',
       'tab.log': '日志',
-      'cost': '已用 {spent} / 上限 {cap}',
       'footer.position': '第 {chapter} 章 · 第 {shot} / {shots} 镜',
       'footer.idle': '还没有开始生成',
       'action.viewOutput': '查看成片',
+      // ── 按屏外壳（Header 胶囊 / Footer 三件套）──
+      // 设计稿 17 块板每块都不同；owner 裁决「按屏变化」（Q1 / Q3）。
+      'chrome.chapters.footerLabel': '当前阶段',
+      'chrome.shots.title': '分镜表',
+      'chrome.shots.subtitle': '第 {chapter} 章 · {name} · {shots} 镜',
+      'chrome.shots.subtitleEmpty': '还没有分镜表',
+      'chrome.shots.capsule': '章 {current} / {total}',
+      'chrome.shots.footerLabel': '下一步',
+      'chrome.shots.footerValue': '跑 video 阶段出片',
+      'chrome.shots.action': '生成第 1 章',
+      'chrome.assets.title': '资产库',
+      'chrome.assets.subtitle': '10 类资产，变体挂在父资产下',
+      'chrome.assets.capsule': '{count} 项资产',
+      'chrome.assets.footerLabel': '下一步',
+      'chrome.assets.footerValue': '逐镜写分镜',
+      'chrome.assets.action': '继续',
+      'chrome.context.title': '上下文',
+      'chrome.context.subtitle': '一致性锚点：圣经 / 风格 / 连续性',
+      'chrome.context.capsule': '{count} 个分区',
+      'chrome.context.footerLabel': '下一步',
+      'chrome.context.footerValue': '生成资产参考图',
+      'chrome.context.action': '继续',
+      'chrome.skills.title': '技能',
+      'chrome.skills.subtitle': '写作规范以技能形式装载',
+      'chrome.skills.capsule': '{count} 个来源',
+      'chrome.skills.footerLabel': '技能来源',
+      'chrome.skills.footerValue': '内置 {bundled} · 已装 {installed} · 自建 {generated}',
+      'chrome.skills.action': '安装技能包',
+      'chrome.skills.disabledHint': '技能包安装走对话框：请说「安装技能包 <名称>」',
+      'chrome.output.title': '成片',
+      'chrome.output.subtitle': '第 {chapter} 章 {name} · {shots} 镜 · {duration}s',
+      'chrome.output.subtitleEmpty': '还没有成片',
+      'chrome.output.capsule': '{position}渲染',
+      'chrome.output.footerLabel': '本集用时',
+      'chrome.output.footerValue': '成本 {cost} · {status}',
+      'chrome.output.statusPending': '还在渲染',
+      'chrome.output.statusDone': '渲染完成',
+      'chrome.output.action': '交付物',
+      'chrome.log.title': '变更日志',
+      'chrome.log.subtitle': '谁在什么时候改了什么，可回滚',
+      'chrome.log.capsule': '{count} 条',
+      'chrome.log.footerLabel': '全项目',
+      'chrome.log.footerValue': '{count} 条',
+      'chrome.log.action': '导出日志',
+      'chrome.stat.row': '{position} · 已用 {spent} / 上限 {cap}',
       'captured.label': '你的需求（自动捕获）',
       'captured.empty': '在中间的对话框里写下你想做的事，它会原样落在这里。',
       'common.confirm': '确认',
@@ -385,7 +429,7 @@ window.__ModuleLoader__.load({
     en: {
       'title': 'ReelForge Workbench',
       'subtitle': 'Turn a novel into a short film, delivered one chapter at a time',
-      'project.summary': '{name} · {chapters} chapters · {shots} shots',
+      'project.summary': '{name}· {chapters} chapters · {shots} shots',
       'project.unnamed': 'Untitled project',
       'status.local': 'Local',
       'status.cloud': 'Cloud',
@@ -407,10 +451,54 @@ window.__ModuleLoader__.load({
       'tab.skills': 'Skills',
       'tab.output': 'Output',
       'tab.log': 'Log',
-      'cost': 'Spent {spent} / cap {cap}',
       'footer.position': 'Ch. {chapter} · shot {shot} / {shots}',
       'footer.idle': 'Nothing generated yet',
       'action.viewOutput': 'View output',
+    // ── Per-screen chrome (header capsule / footer trio) ──
+      // Every board in the design has its own; owner ruled "per screen" (Q1 / Q3).
+      'chrome.chapters.footerLabel': 'Current stage',
+      'chrome.shots.title': 'Storyboard',
+      'chrome.shots.subtitle': 'Chapter {chapter} · {name} · {shots} shots',
+      'chrome.shots.subtitleEmpty': 'No storyboard yet',
+      'chrome.shots.capsule': 'Chapter {current} / {total}',
+      'chrome.shots.footerLabel': 'Next',
+      'chrome.shots.footerValue': 'Run the video stage',
+      'chrome.shots.action': 'Generate chapter 1',
+      'chrome.assets.title': 'Assets',
+      'chrome.assets.subtitle': '10 asset types; variants hang off a parent asset',
+      'chrome.assets.capsule': '{count} assets',
+      'chrome.assets.footerLabel': 'Next',
+      'chrome.assets.footerValue': 'Write the storyboard shot by shot',
+      'chrome.assets.action': 'Continue',
+      'chrome.context.title': 'Context',
+      'chrome.context.subtitle': 'Continuity anchors: bible / style / continuity',
+      'chrome.context.capsule': '{count} sections',
+      'chrome.context.footerLabel': 'Next',
+      'chrome.context.footerValue': 'Generate asset reference images',
+      'chrome.context.action': 'Continue',
+      'chrome.skills.title': 'Skills',
+      'chrome.skills.subtitle': 'Writing rules loaded as skills',
+      'chrome.skills.capsule': '{count} sources',
+      'chrome.skills.footerLabel': 'Skill sources',
+      'chrome.skills.footerValue': 'Bundled {bundled} · installed {installed} · self-made {generated}',
+      'chrome.skills.action': 'Install skill pack',
+      'chrome.skills.disabledHint': 'Skill packs are installed from the chat: say "install skill pack <name>"',
+      'chrome.output.title': 'Output',
+      'chrome.output.subtitle': 'Chapter {chapter} {name} · {shots} shots · {duration}s',
+      'chrome.output.subtitleEmpty': 'No output yet',
+      'chrome.output.capsule': '{position} render',
+      'chrome.output.footerLabel': 'This episode took',
+      'chrome.output.footerValue': 'Cost {cost} · {status}',
+      'chrome.output.statusPending': 'still rendering',
+      'chrome.output.statusDone': 'render complete',
+      'chrome.output.action': 'Deliverables',
+      'chrome.log.title': 'Changelog',
+      'chrome.log.subtitle': 'Who changed what, when — and how to roll it back',
+      'chrome.log.capsule': '{count} entries',
+      'chrome.log.footerLabel': 'Whole project',
+      'chrome.log.footerValue': '{count} entries',
+      'chrome.log.action': 'Export log',
+      'chrome.stat.row': '{position} · spent {spent} / cap {cap}',
       'captured.label': 'Your brief (auto-captured)',
       'captured.empty': 'Type what you want in the chat box and it lands here verbatim.',
       'common.confirm': 'Confirm',
@@ -691,24 +779,6 @@ window.__ModuleLoader__.load({
    */
   RF.useProjection = function useProjection(React) {
     return React.useSyncExternalStore(RF.store.subscribe, RF.store.getSnapshot, RF.store.getSnapshot);
-  };
-
-  /**
-   * 项目摘要（面板头副标题）。
-   *
-   * ⚠️ **不要**用 `project.subtitle`：它是 `project.idea`，可能就是一整段小说正文 ——
-   * 塞进副标题会把面板头撑爆。这里按设计稿口径拼「名字 · N 章 · N 镜」。
-   *
-   * @param {object} project - 投影视图。
-   * @param {function} t - translate 函数。
-   * @returns {string} 摘要文本；没有项目时返回空串。
-   */
-  RF.projectSummary = function projectSummary(project, t) {
-    const chapters = Array.isArray(project?.chapters) ? project.chapters : [];
-    if (chapters.length === 0) return '';
-    const shots = chapters.reduce((sum, chapter) => sum + (Number(chapter.shotCount) || 0), 0);
-    const name = String(project?.name ?? '').trim() || t('project.unnamed');
-    return t('project.summary', { name, chapters: chapters.length, shots });
   };
 
   /**
@@ -1086,6 +1156,286 @@ window.__ModuleLoader__.load({
    */
   RF.isCardFlow = function isCardFlow(width) {
     return RF.breakpointFor(width) === 'narrow';
+  };
+})(RF);
+
+/* ── src/client/workbench/chrome.js ───────────────────────────── */
+/* ─────────────────────────────────────────────────────────────────────────────
+ * 工作台外壳的**按屏定义**：Header 三件套（标题 / 副标 / 胶囊）+ Footer 三件套
+ * （标签 / 值 / 按钮）。
+ *
+ * 背景：设计稿 17 块板的 Header 胶囊与 Footer 文案**每块都不同** ——
+ *   01 工作台    云端 · RunningHub   |  当前阶段 / 阶段三 tts · 角色音色样本 | 查看成片
+ *   07 上下文    3 个分区             |  下一步 / 生成资产参考图             | 继续
+ *   08 资产库    24 项资产            |  下一步 / 逐镜写分镜                 | 继续
+ *   09 分镜表    章 1 / 3             |  下一步 / 跑 video 阶段出片          | 生成第 1 章
+ *   10 成片      云端渲染             |  本集用时 / 成本 ¥4.60 · 云端渲染完成 | 交付物
+ *   12 技能      3 个来源             |  技能来源 / 内置 3 · 已装 1 · 自建 1 | 安装技能包
+ *   13 变更日志  42 条                |  本章 6 条 / 全项目 42 条            | 导出日志
+ *
+ * 实现以前是**全局固定**的一套（恒为「运行位置 · provider」+「成本 + 进度 + 查看成片」）。
+ * owner 已裁决（Q1 底栏按屏变化 / Q3 胶囊显示当前屏摘要）：**按屏变化**。
+ *
+ * 本文件只回答「这一屏长什么样」；「怎么渲染」在 `Workbench.js`。
+ * 计数、章节号、成本这类动态部分由这里的函数从投影视图现算 —— 不写死。
+ * ───────────────────────────────────────────────────────────────────────────── */
+;(function (RF) {
+  'use strict';
+
+  /**
+   * 当前章：优先取客户端算出来的「正在跑」那一章，否则第一章。
+   *
+   * @param {object} project - 投影视图。
+   * @returns {object | null} 当前章（wire view 的 chapterViews 一项）；没有章时 null。
+   */
+  function currentChapter(project) {
+    const chapters = Array.isArray(project?.chapters) ? project.chapters : [];
+    if (chapters.length === 0) return null;
+    const position = RF.currentPosition(project);
+    const seq = position === null ? null : Number(position.chapter);
+    const hit = chapters.find(chapter => Number(chapter.id) === seq);
+    return hit ?? chapters[0];
+  }
+
+  /**
+   * 全项目镜数（各章镜数之和）。
+   *
+   * @param {object} project - 投影视图。
+   * @returns {number} 镜数。
+   */
+  function totalShots(project) {
+    const chapters = Array.isArray(project?.chapters) ? project.chapters : [];
+    return chapters.reduce((sum, chapter) => sum + (Number(chapter.shotCount) || 0), 0);
+  }
+
+  /**
+   * 运行位置标签。**没选位置时不能说「云端运行」** —— 那是撒谎。
+   *
+   * @param {object} project - 投影视图。
+   * @param {function} t - 翻译函数。
+   * @returns {string} 位置标签。
+   */
+  function positionLabel(project, t) {
+    const position = String(project?.runPosition ?? '');
+    if (position === '') return t('status.idle');
+    if (position === 'local' || position === 'cloud') return t(`status.${position}`);
+    return position;
+  }
+
+  /**
+   * 章节时长（秒）。
+   *
+   * @param {object | null} chapter - 当前章。
+   * @returns {number} 秒数。
+   */
+  function chapterDuration(chapter) {
+    return chapter === null ? 0 : (Number(chapter.durationSec) || 0);
+  }
+
+  /**
+   * 技能按来源分档计数。
+   *
+   * @param {object} project - 投影视图。
+   * @returns {{ bundled: number, installed: number, generated: number, sources: number }} 三档计数 + 来源档数。
+   */
+  function skillCounts(project) {
+    const skills = Array.isArray(project?.skills) ? project.skills : [];
+    const count = source => skills.filter(skill => String(skill.source ?? 'bundled') === source).length;
+    const bundled = count('bundled');
+    const installed = count('installed');
+    const generated = count('generated');
+    // 「几个来源」= 有技能的来源档数（bundled / installed / generated），**不是技能个数**。
+    // 设计稿 12 号板：胶囊「3 个来源」而底栏是「内置 3 · 已装 1 · 自建 1」（5 个技能、3 个来源）。
+    const sources = [bundled, installed, generated].filter(value => value > 0).length;
+    return { bundled, installed, generated, sources };
+  }
+
+  /**
+   * 静态文案包装成函数。
+   *
+   * 契约统一：外壳的 `subtitle` / `footerLabel` / `footerValue` **一律是函数**。
+   * 以前静态文案用 `xxxKey` 字符串、动态文案用 `xxx` 函数，调用方到处判类型 ——
+   * 漏判一处就是 `chrome.subtitle is not a function`（真出过）。
+   * 静态与动态的差别只该留在**这一层**，不该漏到渲染层。
+   *
+   * @param {string} key - 词条键。
+   * @returns {(project: object, t: function) => string} 取词条的函数。
+   */
+  function staticText(key) {
+    return (_project, t) => t(key);
+  }
+
+  /**
+   * 每屏的外壳描述。
+   *
+   * @typedef {object} TabChrome
+   * @property {string} titleKey Header 标题词条。
+   * @property {(project: object, t: function) => string} subtitle Header 副标题。
+   * @property {(project: object, t: function) => string} capsule Header 右侧胶囊。
+   * @property {(project: object, t: function) => string} footerLabel Footer 第一行标签。
+   * @property {(project: object, t: function) => string} footerValue Footer 第二行。
+   * @property {{ key: string, kind: string, tab?: string, tool?: string, params?: function }} footerAction Footer 按钮。
+   * @property {string} [disabledHintKey] 按钮不可用时的说明词条（说清缺什么、给什么替代）。
+   */
+
+  RF.TAB_CHROME = {
+    /**
+     * 01 工作台（基准板）：胶囊是全局运行状态，底栏第一行是「当前阶段」。
+     */
+    chapters: {
+      titleKey: 'title',
+      subtitle: (project, t) => {
+        // ⚠️ 只取 `name`，**不要**取 `subtitle` —— 后者可能是整段小说正文，
+        // 塞进面板头会把头撑爆（设计稿 01 号板副标是「《夜航船》· 3 章 · 24 镜」）。
+        const name = String(project?.name ?? '').trim() || t('project.unnamed');
+        const chapters = Array.isArray(project?.chapters) ? project.chapters : [];
+        return t('project.summary', {
+          name: `《${name}》`,
+          chapters: chapters.length,
+          shots: totalShots(project),
+        });
+      },
+      capsule: (project, t) => {
+        const position = positionLabel(project, t);
+        const provider = String(project?.provider ?? '');
+        if (position === t('status.idle') || provider === '') return position;
+        return `${position} · ${RF.labelOf('provider', provider, t)}`;
+      },
+      footerLabel: staticText('chrome.chapters.footerLabel'),
+      footerValue: (project, t) => {
+        const stageLabel = t(`stage.${RF.stageStep(project)}`);
+        const position = RF.currentPosition(project);
+        const positionText = position === null ? t('footer.idle') : t('footer.position', position);
+        return `${stageLabel} · ${positionText}`;
+      },
+      footerAction: { key: 'action.viewOutput', kind: 'tab', tab: 'output' },
+    },
+
+    /**
+     * 09 分镜表：胶囊是「章 N / 总数」，底栏指向下一步（跑 video 出片）。
+     */
+    shots: {
+      titleKey: 'chrome.shots.title',
+      subtitle: (project, t) => {
+        const chapter = currentChapter(project);
+        if (chapter === null) return t('chrome.shots.subtitleEmpty');
+        return t('chrome.shots.subtitle', {
+          chapter: chapter.id,
+          name: chapter.title,
+          shots: chapter.shotCount,
+        });
+      },
+      capsule: (project, t) => {
+        const chapters = Array.isArray(project?.chapters) ? project.chapters : [];
+        const chapter = currentChapter(project);
+        return t('chrome.shots.capsule', { current: chapter?.id ?? 1, total: chapters.length });
+      },
+      footerLabel: staticText('chrome.shots.footerLabel'),
+      footerValue: staticText('chrome.shots.footerValue'),
+      footerAction: {
+        key: 'chrome.shots.action',
+        kind: 'tool',
+        tool: RF.TOOL_IDS.runStage,
+        params: (project) => {
+          const chapter = currentChapter(project);
+          return { stage: 'video', ...(chapter === null ? {} : { seq: Number(chapter.id) || 1 }) };
+        },
+      },
+    },
+
+    /**
+     * 08 资产库：胶囊是资产件数，底栏指向下一步（逐镜写分镜）。
+     */
+    assets: {
+      titleKey: 'chrome.assets.title',
+      subtitle: staticText('chrome.assets.subtitle'),
+      capsule: (project, t) => t('chrome.assets.capsule', {
+        count: Array.isArray(project?.assets) ? project.assets.length : 0,
+      }),
+      footerLabel: staticText('chrome.assets.footerLabel'),
+      footerValue: staticText('chrome.assets.footerValue'),
+      footerAction: { key: 'chrome.assets.action', kind: 'tab', tab: 'shots' },
+    },
+
+    /**
+     * 07 上下文：胶囊是分区数，底栏指向下一步（生成资产参考图）。
+     */
+    context: {
+      titleKey: 'chrome.context.title',
+      subtitle: staticText('chrome.context.subtitle'),
+      capsule: (project, t) => t('chrome.context.capsule', { count: RF.CONTEXT_KEYS.length }),
+      footerLabel: staticText('chrome.context.footerLabel'),
+      footerValue: staticText('chrome.context.footerValue'),
+      footerAction: { key: 'chrome.context.action', kind: 'tab', tab: 'assets' },
+    },
+
+    /**
+     * 12 技能：胶囊是来源数，底栏第一行是来源构成。
+     */
+    skills: {
+      titleKey: 'chrome.skills.title',
+      subtitle: staticText('chrome.skills.subtitle'),
+      capsule: (project, t) => t('chrome.skills.capsule', { count: skillCounts(project).sources }),
+      footerLabel: staticText('chrome.skills.footerLabel'),
+      footerValue: (project, t) => {
+        const counts = skillCounts(project);
+        return t('chrome.skills.footerValue', counts);
+      },
+      footerAction: { key: 'chrome.skills.action', kind: 'none' },
+      disabledHintKey: 'chrome.skills.disabledHint',
+    },
+
+    /**
+     * 10 成片：胶囊是渲染位置，底栏第一行是本集用时。
+     */
+    output: {
+      titleKey: 'chrome.output.title',
+      subtitle: (project, t) => {
+        const chapter = currentChapter(project);
+        if (chapter === null) return t('chrome.output.subtitleEmpty');
+        return t('chrome.output.subtitle', {
+          chapter: chapter.id,
+          name: chapter.title,
+          shots: chapter.shotCount,
+          duration: chapterDuration(chapter).toFixed(1),
+        });
+      },
+      capsule: (project, t) => t('chrome.output.capsule', { position: positionLabel(project, t) }),
+      footerLabel: staticText('chrome.output.footerLabel'),
+      footerValue: (project, t) => {
+        const cost = RF.formatMoney(project?.cost?.spent ?? 0);
+        const deliverables = Array.isArray(project?.deliverables) ? project.deliverables : [];
+        const status = deliverables.length === 0 ? t('chrome.output.statusPending') : t('chrome.output.statusDone');
+        return t('chrome.output.footerValue', { cost, status });
+      },
+      footerAction: { key: 'chrome.output.action', kind: 'scroll', target: 'rf-deliverables' },
+    },
+
+    /**
+     * 13 变更日志：胶囊是条目数，底栏是条目构成。
+     */
+    log: {
+      titleKey: 'chrome.log.title',
+      subtitle: staticText('chrome.log.subtitle'),
+      capsule: (project, t) => t('chrome.log.capsule', {
+        count: Array.isArray(project?.changelog?.entries) ? project.changelog.entries.length : 0,
+      }),
+      footerLabel: staticText('chrome.log.footerLabel'),
+      footerValue: (project, t) => t('chrome.log.footerValue', {
+        count: Array.isArray(project?.changelog?.entries) ? project.changelog.entries.length : 0,
+      }),
+      footerAction: { key: 'chrome.log.action', kind: 'export' },
+    },
+  };
+
+  /**
+   * 取某屏的外壳描述（找不到就回落到工作台基准板）。
+   *
+   * @param {string} tabId - 页签 id。
+   * @returns {TabChrome} 外壳描述。
+   */
+  RF.tabChrome = function tabChrome(tabId) {
+    return RF.TAB_CHROME[tabId] ?? RF.TAB_CHROME.chapters;
   };
 })(RF);
 
@@ -1627,18 +1977,20 @@ window.__ModuleLoader__.load({
               onClick: () => props.state.toggle('bgm'),
             })))),
       h(RF.ui.SectionLabel, null, props.t('tab.output')),
-      deliverables.map(item => h(RF.ui.Card, { key: `${item.chapterId ?? ''}-${item.kind}` },
-        h('div', { className: `${RF.CLS}-row` },
-          h('div', { className: `${RF.CLS}-row__main` },
-            h('div', { className: `${RF.CLS}-row__title` }, item.label ?? item.kind),
-            h('div', { className: `${RF.CLS}-row__sub` }, RF.formatBytes(item.bytes ?? 0))),
-          item.path
-            ? h('a', {
-              className: `${RF.CLS}-btn ${RF.CLS}-btn--secondary`,
-              href: RF.deliverableUrl(item.path),
-              download: item.label ?? item.kind,
-            }, props.t('common.download'))
-            : h(RF.ui.Button, { label: props.t('common.download'), variant: 'secondary' })))),
+      // 交付物清单带锚点：底栏「交付物」按钮滚到这里（设计稿 10 号板的主按钮）。
+      h('div', { id: 'rf-deliverables' },
+        deliverables.map(item => h(RF.ui.Card, { key: `${item.chapterId ?? ''}-${item.kind}` },
+          h('div', { className: `${RF.CLS}-row` },
+            h('div', { className: `${RF.CLS}-row__main` },
+              h('div', { className: `${RF.CLS}-row__title` }, item.label ?? item.kind),
+              h('div', { className: `${RF.CLS}-row__sub` }, RF.formatBytes(item.bytes ?? 0))),
+            item.path
+              ? h('a', {
+                className: `${RF.CLS}-btn ${RF.CLS}-btn--secondary`,
+                href: RF.deliverableUrl(item.path),
+                download: item.label ?? item.kind,
+              }, props.t('common.download'))
+              : h(RF.ui.Button, { label: props.t('common.download'), variant: 'secondary' }))))),
       h('div', { className: `${RF.CLS}-note` }, props.t('deliver.binaryKept')));
   };
 
@@ -1803,30 +2155,66 @@ window.__ModuleLoader__.load({
       twoColumns,
     };
 
-    // 面板头副标题：项目摘要（没有项目时退回到一句话说明工作台是干什么的）。
-    const summary = RF.projectSummary(project, t);
-    // 运行位置没选之前不能说「云端运行」——那是撒谎。
-    const position = String(project.runPosition ?? '');
-    const provider = String(project.provider ?? '');
-    const runPositionLabel = position === ''
-      ? ''
-      : (position === 'local' || position === 'cloud' ? t(`status.${position}`) : position);
-    const statusLabel = position === ''
-      ? t('status.idle')
-      : `${runPositionLabel}${provider === '' ? '' : ` · ${RF.labelOf('provider', provider, t)}`}`;
-    // 底栏第二行：当前跑到第几章的第几镜。
+    // 底栏第二行：当前跑到第几章的第几镜（成本行已按 owner 裁决移进滚动区底部）。
     const current = RF.currentPosition(project);
     const positionLabel = current === null
       ? t('footer.idle')
       : t('footer.position', current);
 
+    // ── 按屏外壳（Header 三件套 + Footer 三件套）──
+    // owner 裁决「按屏变化」（Q1 底栏 / Q3 胶囊）：设计稿 17 块板的胶囊与底栏文案
+    // 每块都不同，以前实现是全局固定的一套。每屏长什么样在 `workbench/chrome.js`。
+    const chrome = RF.tabChrome(activeTab);
+    const chromeAction = chrome.footerAction ?? {};
+    const chromeTitle = chrome.titleKey === undefined ? '' : t(chrome.titleKey);
+    // 外壳契约：subtitle / capsule / footerLabel / footerValue **一律是函数**
+    // （静态文案在 chrome.js 里就包好了，渲染层不再判类型）。
+    const chromeSubtitle = chrome.subtitle(project, t);
+    const chromeCapsule = chrome.capsule(project, t);
+    const chromeLabel = chrome.footerLabel(project, t);
+    const chromeValue = chrome.footerValue(project, t);
+
+    // 「导出日志」：把变更日志导出成 JSON 文件（浏览器直接下载，不经过宿主）。
+    const exportChangelog = () => {
+      const entries = Array.isArray(project.changelog?.entries) ? project.changelog.entries : [];
+      const blob = new Blob([JSON.stringify({ entries }, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'reelforge-changelog.json';
+      link.click();
+      URL.revokeObjectURL(url);
+    };
+
+    // 底栏主按钮：切页签 / 调工具 / 导出文件 / 暂不可用。
+    const runChromeAction = () => {
+      const action = chromeAction;
+      if (action.kind === 'tab') {
+        setActiveTab(action.tab);
+        return;
+      }
+      if (action.kind === 'tool') {
+        const params = typeof action.params === 'function' ? action.params(project) : action.params;
+        RF.actions?.callTool?.(action.tool, params ?? {});
+        return;
+      }
+      if (action.kind === 'export') exportChangelog();
+      if (action.kind === 'scroll') {
+        // 「交付物」按钮：滚到本页的交付物清单（设计稿 10 号板的主按钮）。
+        const target = document.getElementById(action.target);
+        if (target !== null && typeof target.scrollIntoView === 'function') {
+          target.scrollIntoView({ block: 'start' });
+        }
+      }
+    };
+
     return h('section', { className: `${RF.CLS}-root`, ref: shellRef },
       h('header', { className: `${RF.CLS}-header` },
         h('div', { className: `${RF.CLS}-header__logo`, 'aria-hidden': true }),
         h('div', { className: `${RF.CLS}-header__text` },
-          h('div', { className: `${RF.CLS}-header__title` }, t('title')),
-          h('div', { className: `${RF.CLS}-header__subtitle` }, summary || t('subtitle'))),
-        h('span', { className: `${RF.CLS}-header__status` }, statusLabel)),
+          h('div', { className: `${RF.CLS}-header__title` }, chromeTitle),
+          h('div', { className: `${RF.CLS}-header__subtitle` }, chromeSubtitle)),
+        h('span', { className: `${RF.CLS}-header__status` }, chromeCapsule)),
       h('nav', { className: `${RF.CLS}-stagebar`, 'aria-label': t('title') },
         RF.STAGE_STEPS.map((step, index) => {
           const tone = index === stage.current ? 'current' : stage.passed.indexOf(index) >= 0 ? 'passed' : 'upcoming';
@@ -1846,19 +2234,32 @@ window.__ModuleLoader__.load({
         }, t(`tab.${tab.labelKey}`)))),
       h('div', { className: `${RF.CLS}-scroll` },
         RF.renderCapturedInput({ t, project }),
-        render({ t, project, state, width })),
-      h('footer', { className: `${RF.CLS}-footer` },
-        h('div', { className: `${RF.CLS}-footer__text` },
-          h('div', { className: `${RF.CLS}-footer__label` }, t('cost', {
+        render({ t, project, state, width }),
+        // 成本与进度**移进滚动区底部**（owner 裁决 Q2：设计稿 01 号板把它放在滚动区内，
+        // y=816；底栏只留「本屏标签 + 本屏主文案 + 本屏主按钮」）。
+        activeTab === 'chapters'
+          ? h('div', { className: `${RF.CLS}-note` }, t('chrome.stat.row', {
+            position: positionLabel,
             spent: RF.formatMoney(project.cost?.spent ?? 0),
             cap: RF.formatMoney(project.cost?.cap ?? 0),
-          })),
-          // 底栏第二行说**当前进度**，不再重复面板头那句（截图里两处一模一样）。
-          h('div', { className: `${RF.CLS}-footer__value` }, positionLabel)),
+          }))
+          : null,
+        // 底栏主按钮暂不可用时，**说清缺什么、给什么替代**（不静默做成死按钮）。
+        chromeAction.kind === 'none' && chrome.disabledHintKey !== undefined
+          ? h('div', { className: `${RF.CLS}-note ${RF.CLS}-note--warn` }, t(chrome.disabledHintKey))
+          : null),
+      h('footer', { className: `${RF.CLS}-footer` },
+        h('div', { className: `${RF.CLS}-footer__text` },
+          h('div', { className: `${RF.CLS}-footer__label` }, chromeLabel),
+          h('div', { className: `${RF.CLS}-footer__value` }, chromeValue)),
         h(RF.ui.Button, {
-          label: t('action.viewOutput'),
+          label: t(chromeAction.key),
           variant: 'primary',
-          onClick: () => setActiveTab('output'),
+          disabled: chromeAction.kind === 'none',
+          title: chromeAction.kind === 'none' && chrome.disabledHintKey !== undefined
+            ? t(chrome.disabledHintKey)
+            : undefined,
+          onClick: () => runChromeAction(),
         })));
   };
 })(RF);

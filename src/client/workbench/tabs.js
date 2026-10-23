@@ -265,18 +265,20 @@
               onClick: () => props.state.toggle('bgm'),
             })))),
       h(RF.ui.SectionLabel, null, props.t('tab.output')),
-      deliverables.map(item => h(RF.ui.Card, { key: `${item.chapterId ?? ''}-${item.kind}` },
-        h('div', { className: `${RF.CLS}-row` },
-          h('div', { className: `${RF.CLS}-row__main` },
-            h('div', { className: `${RF.CLS}-row__title` }, item.label ?? item.kind),
-            h('div', { className: `${RF.CLS}-row__sub` }, RF.formatBytes(item.bytes ?? 0))),
-          item.path
-            ? h('a', {
-              className: `${RF.CLS}-btn ${RF.CLS}-btn--secondary`,
-              href: RF.deliverableUrl(item.path),
-              download: item.label ?? item.kind,
-            }, props.t('common.download'))
-            : h(RF.ui.Button, { label: props.t('common.download'), variant: 'secondary' })))),
+      // 交付物清单带锚点：底栏「交付物」按钮滚到这里（设计稿 10 号板的主按钮）。
+      h('div', { id: 'rf-deliverables' },
+        deliverables.map(item => h(RF.ui.Card, { key: `${item.chapterId ?? ''}-${item.kind}` },
+          h('div', { className: `${RF.CLS}-row` },
+            h('div', { className: `${RF.CLS}-row__main` },
+              h('div', { className: `${RF.CLS}-row__title` }, item.label ?? item.kind),
+              h('div', { className: `${RF.CLS}-row__sub` }, RF.formatBytes(item.bytes ?? 0))),
+            item.path
+              ? h('a', {
+                className: `${RF.CLS}-btn ${RF.CLS}-btn--secondary`,
+                href: RF.deliverableUrl(item.path),
+                download: item.label ?? item.kind,
+              }, props.t('common.download'))
+              : h(RF.ui.Button, { label: props.t('common.download'), variant: 'secondary' }))))),
       h('div', { className: `${RF.CLS}-note` }, props.t('deliver.binaryKept')));
   };
 

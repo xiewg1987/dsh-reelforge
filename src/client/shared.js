@@ -121,24 +121,6 @@
   };
 
   /**
-   * 项目摘要（面板头副标题）。
-   *
-   * ⚠️ **不要**用 `project.subtitle`：它是 `project.idea`，可能就是一整段小说正文 ——
-   * 塞进副标题会把面板头撑爆。这里按设计稿口径拼「名字 · N 章 · N 镜」。
-   *
-   * @param {object} project - 投影视图。
-   * @param {function} t - translate 函数。
-   * @returns {string} 摘要文本；没有项目时返回空串。
-   */
-  RF.projectSummary = function projectSummary(project, t) {
-    const chapters = Array.isArray(project?.chapters) ? project.chapters : [];
-    if (chapters.length === 0) return '';
-    const shots = chapters.reduce((sum, chapter) => sum + (Number(chapter.shotCount) || 0), 0);
-    const name = String(project?.name ?? '').trim() || t('project.unnamed');
-    return t('project.summary', { name, chapters: chapters.length, shots });
-  };
-
-  /**
    * 按 `{prefix}.{value}` 取本地化词条。
    *
    * 词条不存在时**原样返回 value**：宁可显示 `pending` 或 `online-api`，

@@ -122,30 +122,66 @@
       twoColumns,
     };
 
-    // 面板头副标题：项目摘要（没有项目时退回到一句话说明工作台是干什么的）。
-    const summary = RF.projectSummary(project, t);
-    // 运行位置没选之前不能说「云端运行」——那是撒谎。
-    const position = String(project.runPosition ?? '');
-    const provider = String(project.provider ?? '');
-    const runPositionLabel = position === ''
-      ? ''
-      : (position === 'local' || position === 'cloud' ? t(`status.${position}`) : position);
-    const statusLabel = position === ''
-      ? t('status.idle')
-      : `${runPositionLabel}${provider === '' ? '' : ` · ${RF.labelOf('provider', provider, t)}`}`;
-    // 底栏第二行：当前跑到第几章的第几镜。
+    // 底栏第二行：当前跑到第几章的第几镜（成本行已按 owner 裁决移进滚动区底部）。
     const current = RF.currentPosition(project);
     const positionLabel = current === null
       ? t('footer.idle')
       : t('footer.position', current);
 
+    // ── 按屏外壳（Header 三件套 + Footer 三件套）──
+    // owner 裁决「按屏变化」（Q1 底栏 / Q3 胶囊）：设计稿 17 块板的胶囊与底栏文案
+    // 每块都不同，以前实现是全局固定的一套。每屏长什么样在 `workbench/chrome.js`。
+    const chrome = RF.tabChrome(activeTab);
+    const chromeAction = chrome.footerAction ?? {};
+    const chromeTitle = chrome.titleKey === undefined ? '' : t(chrome.titleKey);
+    // 外壳契约：subtitle / capsule / footerLabel / footerValue **一律是函数**
+    // （静态文案在 chrome.js 里就包好了，渲染层不再判类型）。
+    const chromeSubtitle = chrome.subtitle(project, t);
+    const chromeCapsule = chrome.capsule(project, t);
+    const chromeLabel = chrome.footerLabel(project, t);
+    const chromeValue = chrome.footerValue(project, t);
+
+    // 「导出日志」：把变更日志导出成 JSON 文件（浏览器直接下载，不经过宿主）。
+    const exportChangelog = () => {
+      const entries = Array.isArray(project.changelog?.entries) ? project.changelog.entries : [];
+      const blob = new Blob([JSON.stringify({ entries }, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'reelforge-changelog.json';
+      link.click();
+      URL.revokeObjectURL(url);
+    };
+
+    // 底栏主按钮：切页签 / 调工具 / 导出文件 / 暂不可用。
+    const runChromeAction = () => {
+      const action = chromeAction;
+      if (action.kind === 'tab') {
+        setActiveTab(action.tab);
+        return;
+      }
+      if (action.kind === 'tool') {
+        const params = typeof action.params === 'function' ? action.params(project) : action.params;
+        RF.actions?.callTool?.(action.tool, params ?? {});
+        return;
+      }
+      if (action.kind === 'export') exportChangelog();
+      if (action.kind === 'scroll') {
+        // 「交付物」按钮：滚到本页的交付物清单（设计稿 10 号板的主按钮）。
+        const target = document.getElementById(action.target);
+        if (target !== null && typeof target.scrollIntoView === 'function') {
+          target.scrollIntoView({ block: 'start' });
+        }
+      }
+    };
+
     return h('section', { className: `${RF.CLS}-root`, ref: shellRef },
       h('header', { className: `${RF.CLS}-header` },
         h('div', { className: `${RF.CLS}-header__logo`, 'aria-hidden': true }),
         h('div', { className: `${RF.CLS}-header__text` },
-          h('div', { className: `${RF.CLS}-header__title` }, t('title')),
-          h('div', { className: `${RF.CLS}-header__subtitle` }, summary || t('subtitle'))),
-        h('span', { className: `${RF.CLS}-header__status` }, statusLabel)),
+          h('div', { className: `${RF.CLS}-header__title` }, chromeTitle),
+          h('div', { className: `${RF.CLS}-header__subtitle` }, chromeSubtitle)),
+        h('span', { className: `${RF.CLS}-header__status` }, chromeCapsule)),
       h('nav', { className: `${RF.CLS}-stagebar`, 'aria-label': t('title') },
         RF.STAGE_STEPS.map((step, index) => {
           const tone = index === stage.current ? 'current' : stage.passed.indexOf(index) >= 0 ? 'passed' : 'upcoming';
@@ -165,19 +201,32 @@
         }, t(`tab.${tab.labelKey}`)))),
       h('div', { className: `${RF.CLS}-scroll` },
         RF.renderCapturedInput({ t, project }),
-        render({ t, project, state, width })),
-      h('footer', { className: `${RF.CLS}-footer` },
-        h('div', { className: `${RF.CLS}-footer__text` },
-          h('div', { className: `${RF.CLS}-footer__label` }, t('cost', {
+        render({ t, project, state, width }),
+        // 成本与进度**移进滚动区底部**（owner 裁决 Q2：设计稿 01 号板把它放在滚动区内，
+        // y=816；底栏只留「本屏标签 + 本屏主文案 + 本屏主按钮」）。
+        activeTab === 'chapters'
+          ? h('div', { className: `${RF.CLS}-note` }, t('chrome.stat.row', {
+            position: positionLabel,
             spent: RF.formatMoney(project.cost?.spent ?? 0),
             cap: RF.formatMoney(project.cost?.cap ?? 0),
-          })),
-          // 底栏第二行说**当前进度**，不再重复面板头那句（截图里两处一模一样）。
-          h('div', { className: `${RF.CLS}-footer__value` }, positionLabel)),
+          }))
+          : null,
+        // 底栏主按钮暂不可用时，**说清缺什么、给什么替代**（不静默做成死按钮）。
+        chromeAction.kind === 'none' && chrome.disabledHintKey !== undefined
+          ? h('div', { className: `${RF.CLS}-note ${RF.CLS}-note--warn` }, t(chrome.disabledHintKey))
+          : null),
+      h('footer', { className: `${RF.CLS}-footer` },
+        h('div', { className: `${RF.CLS}-footer__text` },
+          h('div', { className: `${RF.CLS}-footer__label` }, chromeLabel),
+          h('div', { className: `${RF.CLS}-footer__value` }, chromeValue)),
         h(RF.ui.Button, {
-          label: t('action.viewOutput'),
+          label: t(chromeAction.key),
           variant: 'primary',
-          onClick: () => setActiveTab('output'),
+          disabled: chromeAction.kind === 'none',
+          title: chromeAction.kind === 'none' && chrome.disabledHintKey !== undefined
+            ? t(chrome.disabledHintKey)
+            : undefined,
+          onClick: () => runChromeAction(),
         })));
   };
 })(RF);
