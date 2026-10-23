@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **仓库瘦身**：`design/`、`docs/`、`references/` 改为 `.gitignore`，仅本地保留；GitHub 远程不再跟踪设计稿、任务书与第三方参考图。`npm pack` 不再包含 `docs/**`。
+
 ### Added
 
 - **对话输入截获（§10.5）**：用户在 DSH 输入框里敲的原文，由宿主在 Agent 收到 prompt 前触发的

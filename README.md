@@ -16,14 +16,38 @@
 > **状态**：本包尚未发布到 npm（`package.json` 里 `private: true`）。当前只能用本地路径装载，见「安装」。
 > 已验证环境：DSH `0.2.1-alpha.1`（构建号 `5badb15`）、Node v22.22.3、Windows / PowerShell 7。
 
+### 开发进度（2026-10-23）
+
+T1–T5 共 **116** 条验收项（`npm run verify:acceptance`）：
+
+| 状态 | 数量 | 说明 |
+|---|---:|---|
+| 自动化通过 | 104 | 单测 / 命令 / 静态扫描 |
+| 实机通过 | 6 | 证据在本地 `docs/开发任务/实机/dsh-0.2.1-alpha.1.md`（**不进 GitHub**） |
+| 实机待补 | 3 | 见下表 |
+| N/A | 3 | 无客户端分片（单文件拼接构建） |
+| 证据缺口 | 0 | 无「仅声称 / 证据缺失」 |
+
+**仍待浏览器实机或更大视口**（不影响 CI；核心逻辑已有自动化覆盖）：
+
+| 项 | 内容 |
+|---|---|
+| T5 A4 | 900 / 1150 面板宽度：当前宿主右栏上限约 547px（782×0.7），需更大视口补测 |
+| T5 A19 | 成片播放器可播放、交付物可下载 |
+| T5 A27 | 导入后 UI 展示解析结果与 diagnostics（需截图） |
+
+**工程面**：`npm run verify:bundle` / `typecheck` / `test`（730 pass + 2 skip）/ `verify:coverage` 均可过；GitHub Actions CI 跑 bundle + 单测 + 覆盖率（不跑 acceptance）。
+
+**未发布变更**（见 [CHANGELOG](CHANGELOG.md) `[Unreleased]`）：对话输入截获（`agent/pre-step`）+ systemPrompt 工作流段落重写。
+
 ---
 
-## 截图
+## 界面预览
 
-> 下面是**设计稿**（FigCraft 画板导出的 SVG，`design/` 目录下 17 张 + 架构图 2 张，源文件可局部改），
-> **不是真实运行截图**。真机验证的原始观察记录在 `docs/开发任务/实机/dsh-0.2.1-alpha.1.md`。
+GitHub **不包含** `design/`、`docs/`、`references/`（仅本地保留，见 `.gitignore`）。
 
-![ReelForge 工作台（设计稿）](design/01-RF-Workbench.svg)
+- **设计稿**（非运行截图）：本地打开 `design/01-RF-Workbench.svg`（17 张界面 + 2 张架构图；FigCraft 源文件同目录）。
+- **实机观察记录**：本地 `docs/开发任务/实机/dsh-0.2.1-alpha.1.md`。
 
 ---
 
@@ -112,8 +136,7 @@ pnpm dsh web
 | `repository` / `homepage` / `bugs` | 无 | 指向本仓库的真实地址 |
 | `scripts.prepublishOnly` | 无 | `npm run verify:all`（发布前强制跑完整验证链） |
 
-> README 里的图片用的是**相对路径**（`design/*.svg`）。补上 `repository` 之后，npm 会自动把相对路径代理到
-> GitHub 上的对应文件；没补 `repository` 就直接发布，图片在 npm 页面上会显示不出来。
+> 设计稿与文档在**本地** `design/`、`docs/`，不在 Git 远程里；npm 页若要用图，需另配 `repository` + 可访问的静态资源，或把预览图放进仓库根目录（如 `icon.svg` 一类已跟踪文件）。
 
 `dsh.client.inject` 声明的是**客户端模块包名**（模块图预取边，宿主据此保证这些模块先加载）；
 **cordis 服务注入**来自客户端产物导出的 `inject`（`src/client/manifest.js` 的 `RF.CLIENT_INJECT`，是**服务名**清单）。
@@ -194,24 +217,22 @@ scripts/
 skills/            随包技能正文（5 个，各带 references/）
 workflows/         随包工作流模板（specs/ 5 种 kind + templates/）
 locale/            zh.json / en.json
-docs/              设计方案 + 开发任务（T1–T5）+ 交付报告 + 实机证据
-design/            画板（FigCraft 源 SVG + 导出 PNG）
-references/        第三方参考图（huaban / pinterest）
+docs/              （本地）设计方案 + T1–T5 任务书 + 实机证据 —— **未纳入 Git**
+design/            （本地）FigCraft 画板 SVG/PNG —— **未纳入 Git**
+references/        （本地）第三方 UI 参考图 —— **未纳入 Git**
 ```
 
 ### 产物体积
 
 | 项 | 值 |
 |---|---|
-| npm 包（tarball） | **416 kB** |
-| 解压后 | 1.3 MB |
-| 文件数 | 98 |
+| npm 包（tarball） | **~329 kB** |
+| 解压后 | ~1.1 MB |
+| 文件数 | 93 |
 | **运行时** npm 依赖 | **0**（`dependencies` / `peerDependencies` 都是空的） |
 
-`files` 排除了 `src/**/__tests__/**`（测试占 `src/` 体积的一半，不进包）
-与 `docs/开发任务/reports/**`（**自动生成**的 DoD 报告，仓库里提交、但不随包发布——
-它在内嵌的打包清单里会形成自引用，让包体积每次都变）。
-`design/`（13 MB 画板）与 `references/`（25 MB 第三方参考图）也**不进包**。
+`files` 排除了 `src/**/__tests__/**`（测试占 `src/` 体积的一半，不进包）。
+`design/`、`docs/`、`references/` 整目录忽略，**不进 Git 也不进 npm 包**。
 
 ### scripts
 
@@ -219,7 +240,7 @@ references/        第三方参考图（huaban / pinterest）
 npm run check:identity     # 包名三处一致（R7）
 npm run verify:bundle      # 装载验证 + R8 Config 三处一致
 npm run typecheck          # JSDoc 类型检查（tsc --checkJs）
-npm test                   # 708 条测试（有真 ffmpeg 时；没有时 697 条 + 2 条显式 skip）
+npm test                   # 732 条测试（730 pass；无 ffmpeg 时 2 条显式 skip）
 npm run verify:coverage    # 覆盖率门槛（4 个文件）
 npm run verify:acceptance  # 116 条验收项
 npm run verify:all         # 上面这些的组合（= prepublishOnly）
