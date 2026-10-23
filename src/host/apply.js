@@ -6,7 +6,7 @@
 import { PROJECTION_KEY, TRIGGER_TOOL_IDS } from '../core/constants.js';
 import { buildReelForgePromptSection } from '../core/promptSection.js';
 import { buildSkillPromptSection } from '../skills/route.js';
-import { buildSkillRegistry } from '../skills/skillTools.js';
+import { buildSkillRegistry, resolveSkillSource } from '../skills/skillTools.js';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -104,7 +104,11 @@ export function applyReelForge(ctx, rawConfig) {
       wire: {
         viewSchema: { parse: assertPlainObject },
         // `budgetLimitCny` 来自 Config：工作台要显示真实预算上限，不能写死 0。
-        view: (state) => buildWireView(state, { budgetLimitCny: config.budgetLimitCny }),
+        // `skills` 来自技能目录扫描：技能文件是磁盘上的只读资源，不是会话状态。
+        view: (state) => buildWireView(state, {
+          budgetLimitCny: config.budgetLimitCny,
+          skills: skillViews(),
+        }),
       },
       stateVersion: STATE_VERSION,
     }));
@@ -156,6 +160,39 @@ function assertPlainObject(value) {
 }
 
 /**
+ * 技能目录视图（喂给 wire view）。
+ *
+ * ## 为什么技能不进会话投影
+ *
+ * 技能文件是**磁盘上的只读资源**，不是会话状态 —— 它没有「从日志 fold 出来」这回事
+ * （R1 管的是会话状态）。所以走的是和 `budgetLimitCny` 同一条路：**宿主侧资源 → 视图**。
+ *
+ * ## 为什么每次现扫
+ *
+ * 新装/新生成的技能要能**立刻**出现在目录里（设计稿 12 号板：
+ * 「生成/安装的技能能出现在技能目录」）。技能目录很小，扫一次几毫秒。
+ *
+ * ## 扫不出来怎么办
+ *
+ * 返回空数组（技能页显示空态），并 `console.warn` 记下原因 ——
+ * 不静默假装「没有技能」，也不让一次目录故障把整个面板打不开。
+ *
+ * @returns {Array<object>} 技能视图。
+ */
+function skillViews() {
+  try {
+    const registry = buildSkillRegistry({ bundledDir: BUNDLED_SKILLS_DIR });
+    return registry.skills.map(skill => ({ ...skill, source: resolveSkillSource(skill) }));
+  } catch (error) {
+    console.warn(
+      '[reelforge] 技能目录扫描失败（技能页显示空态）：',
+      error instanceof Error ? error.message : String(error),
+    );
+    return [];
+  }
+}
+
+/**
  * 技能目录段落（systemPrompt 注入用）。
  *
  * 技能目录**随包只读**，扫一次就够，所以这里做进程内缓存；
@@ -203,7 +240,10 @@ function registerRoutes(ctx, store, config, sessionCwds) {
       const state = sessionId
         ? store.stateOf(sessionId)
         : store.stateOf(store.lastSessionId());
-      return Response.json(buildWireView(state, { budgetLimitCny: config.budgetLimitCny }), { headers: NO_STORE });
+      return Response.json(buildWireView(state, {
+        budgetLimitCny: config.budgetLimitCny,
+        skills: skillViews(),
+      }), { headers: NO_STORE });
     },
   }));
 

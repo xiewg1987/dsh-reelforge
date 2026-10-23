@@ -129,6 +129,15 @@ export function createHostChangelog({ store, sessionId, cwd, config, commit }) {
   let lastBadLines = [];
 
   /**
+   * **本次回滚写回的补丁**（给工具回给日志层用）。
+   *
+   * 回滚改了内容行 ⇒ 那些补丁必须进会话日志，否则**重放日志回不到回滚后的状态**
+   * （R1：状态完全可从日志重建）。以前回滚工具返回 `patch: []`，
+   * 写回只落在内存投影里 ⇒ 重启/重放后回滚「消失」。
+   */
+  let writtenPatches = [];
+
+  /**
    * 读整个日志文件。
    *
    * **坏行不静默丢**：每一行都要有说法——要么解析成合法条目，要么进 `badLines` 记账
@@ -222,7 +231,7 @@ export function createHostChangelog({ store, sessionId, cwd, config, commit }) {
         },
         readRows: async () => readRows(store.stateOf(sessionId)),
         writeRow: async (_projectId, layer, rowId, value) => {
-          await writeRow({ store, sessionId, commit, layer, rowId, value });
+          await writeRow({ store, sessionId, commit, layer, rowId, value, written: writtenPatches });
         },
         // 序号接着文件里已有的最大序号走 → 重启后新条目排在旧条目之后
         // （`list` 的排序与整批回滚的 seq 倒序都靠它）。
@@ -262,6 +271,7 @@ export function createHostChangelog({ store, sessionId, cwd, config, commit }) {
      */
     async rollback(request = {}) {
       const core = await boot();
+      writtenPatches = [];
 
       // ① reference 层：没有能写回投影的补丁 → 明确报「该层不支持回滚」。
       //    项目创建 / 删除的硬约束优先级更高（那是核心引擎的 403），这里不抢。
@@ -298,6 +308,8 @@ export function createHostChangelog({ store, sessionId, cwd, config, commit }) {
           result.message = `${result.message}（${detail}）`;
         }
       }
+      // ④ 写回的补丁：给工具回给日志层（R1：回滚后的状态也要能从日志重建）。
+      result.patches = [...writtenPatches];
       return result;
     },
 
@@ -355,9 +367,16 @@ export function readRows(state) {
  * 把回滚结果写回投影。
  *
  * @param {object} options
+ * @param {import('./projection.js').ProjectionStore} options.store 投影存储。
+ * @param {string} options.sessionId 会话 id。
+ * @param {(sessionId: string, patches: object[]) => Promise<void>} options.commit 提交补丁。
+ * @param {string} options.layer 内容表层。
+ * @param {string} options.rowId 行 id。
+ * @param {object | null} options.value 行值（行快照；`null` = 该行不存在）。
+ * @param {object[]} [options.written] 收集写回补丁的数组（给日志层用）。
  * @returns {Promise<void>} 完成。
  */
-async function writeRow({ store, sessionId, commit, layer, rowId, value }) {
+async function writeRow({ store, sessionId, commit, layer, rowId, value, written }) {
   const patches = [];
 
   if (layer === 'project') {
@@ -375,6 +394,7 @@ async function writeRow({ store, sessionId, commit, layer, rowId, value }) {
     throw new Error(`变更日志回滚不支持内容表层：${layer}`);
   }
 
+  if (Array.isArray(written)) written.push(...patches);
   store.applyPatches(sessionId, patches);
   if (typeof commit === 'function') await commit(sessionId, patches);
 }

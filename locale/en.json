@@ -221,6 +221,7 @@
     "skills.generated": "Generated",
     "skills.emptyDescription": "An empty description disables both routing and the skill directory.",
     "skills.notDistributed": "The plugin ships no third-party skill bodies; install upstream packs yourself.",
+    "skills.previewTitle": "Body preview",
     "button.primary": "Primary button",
     "button.secondary": "Secondary button",
     "button.disabled": "Disabled button",

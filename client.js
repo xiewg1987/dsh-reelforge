@@ -343,6 +343,7 @@ window.__ModuleLoader__.load({
       'skills.generated': '自建',
       'skills.emptyDescription': 'description 为空会让技能既不可路由也不出现在目录里。',
       'skills.notDistributed': '插件不分发第三方技能正文，用户自行安装上游技能包。',
+      'skills.previewTitle': '正文预览',
       'button.primary': '主要按钮',
       'button.secondary': '次要按钮',
       'button.disabled': '禁用按钮',
@@ -572,6 +573,7 @@ window.__ModuleLoader__.load({
       'skills.generated': 'Generated',
       'skills.emptyDescription': 'An empty description disables both routing and the skill directory.',
       'skills.notDistributed': 'The plugin ships no third-party skill bodies; install upstream packs yourself.',
+      'skills.previewTitle': 'Body preview',
       'button.primary': 'Primary button',
       'button.secondary': 'Secondary button',
       'button.disabled': 'Disabled button',
@@ -684,7 +686,7 @@ window.__ModuleLoader__.load({
     context: { bible: '', style: '', continuity: '' },
     skills: [],
     deliverables: [],
-    changelog: { entries: [], modes: ['single', 'batch', 'timepoint'] },
+    changelog: { entries: [], total: 0, modes: ['single', 'batch', 'timepoint'] },
     // 对话输入截获（§10.5）：用户在 DSH 输入框里敲的原文，由宿主钩子写进状态。
     input: { text: '' },
     cost: { spent: 0, cap: 0 },
@@ -851,6 +853,41 @@ window.__ModuleLoader__.load({
     const value = Number(amount);
     if (!Number.isFinite(value)) return '¥0.00';
     return `¥${value.toFixed(2)}`;
+  };
+
+  /**
+   * 格式化成日期文本（`YYYY-MM-DD`）。
+   *
+   * 设计稿 12 号板要技能行右侧显示「3.4 KB · 2026-10-22」。
+   * 读不出来就返回空串 —— 显示 `Invalid Date` 比不显示更糟。
+   *
+   * @param {string} value - ISO 时间串。
+   * @returns {string} 日期文本。
+   */
+  RF.formatDate = function formatDate(value) {
+    const text = String(value ?? '').trim();
+    if (text === '') return '';
+    const date = new Date(text);
+    if (Number.isNaN(date.getTime())) return '';
+    const pad = part => String(part).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  };
+
+  /**
+   * 格式化成日期时间文本（`YYYY-MM-DD HH:mm`）。
+   *
+   * 变更日志要回答「谁在**什么时候**改了什么」—— 只给日期不够。
+   *
+   * @param {string} value - ISO 时间串。
+   * @returns {string} 文本。
+   */
+  RF.formatDateTime = function formatDateTime(value) {
+    const text = String(value ?? '').trim();
+    if (text === '') return '';
+    const date = new Date(text);
+    if (Number.isNaN(date.getTime())) return '';
+    const pad = part => String(part).padStart(2, '0');
+    return `${RF.formatDate(text)} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
   };
 
   /**
@@ -1266,6 +1303,22 @@ window.__ModuleLoader__.load({
   }
 
   /**
+   * 变更日志条数。
+   *
+   * 用 `total`（宿主报的真实总数）而不是 `entries.length` ——
+   * 投影里条目有上限截断时，真实总数才不会被截断数冒充。
+   *
+   * @param {object} project - 投影视图。
+   * @returns {number} 条数。
+   */
+  function logCount(project) {
+    const changelog = project?.changelog ?? {};
+    const entries = Array.isArray(changelog.entries) ? changelog.entries.length : 0;
+    const total = Number(changelog.total);
+    return Number.isFinite(total) && total > 0 ? total : entries;
+  }
+
+  /**
    * 每屏的外壳描述。
    *
    * @typedef {object} TabChrome
@@ -1417,13 +1470,9 @@ window.__ModuleLoader__.load({
     log: {
       titleKey: 'chrome.log.title',
       subtitle: staticText('chrome.log.subtitle'),
-      capsule: (project, t) => t('chrome.log.capsule', {
-        count: Array.isArray(project?.changelog?.entries) ? project.changelog.entries.length : 0,
-      }),
+      capsule: (project, t) => t('chrome.log.capsule', { count: logCount(project) }),
       footerLabel: staticText('chrome.log.footerLabel'),
-      footerValue: (project, t) => t('chrome.log.footerValue', {
-        count: Array.isArray(project?.changelog?.entries) ? project.changelog.entries.length : 0,
-      }),
+      footerValue: (project, t) => t('chrome.log.footerValue', { count: logCount(project) }),
       footerAction: { key: 'chrome.log.action', kind: 'export' },
     },
   };
@@ -1910,15 +1959,39 @@ window.__ModuleLoader__.load({
             h('div', { className: `${RF.CLS}-row__title` }, skill.name ?? ''),
             h('div', { className: `${RF.CLS}-row__sub` }, skill.description ?? '')),
           h(RF.ui.Pill, { label: props.t(`skills.${skill.source ?? 'bundled'}`), tone: 'running' })),
+        // 右侧「3.4 KB · 2026-10-22」（设计稿 12 号板）：体积 + 最近修改日期。
+        h('div', { className: `${RF.CLS}-row__sub` }, skillMeta(skill)),
         String(skill.description ?? '').trim() === ''
           ? h('div', { className: `${RF.CLS}-note ${RF.CLS}-note--warn` }, props.t('skills.emptyDescription'))
           : null)),
       selected === undefined ? null : h(RF.ui.Card, null,
-        h(RF.ui.SectionLabel, null, `${props.t('tab.skills')} · ${selected.name}`),
-        h('div', { className: `${RF.CLS}-row__sub` }, String(selected.body ?? '').slice(0, 400)),
-        (selected.references ?? []).map(reference => h(RF.ui.MetaRow, { key: reference.name, label: reference.name, value: reference.preview ?? '' }))),
+        // 卡片标题是「正文预览 · {技能名}」（设计稿 12 号板），不是「技能 · {技能名}」。
+        h(RF.ui.SectionLabel, null, `${props.t('skills.previewTitle')} · ${selected.name}`),
+        // 正文**预览**（宿主只送预览，不送整篇正文）。
+        h('div', { className: `${RF.CLS}-row__sub` }, String(selected.bodyPreview ?? '').slice(0, 400)),
+        (selected.references ?? []).map(reference => h(RF.ui.MetaRow, {
+          key: reference.file ?? '',
+          label: reference.file ?? '',
+          value: reference.preview ?? '',
+        }))),
       h('div', { className: `${RF.CLS}-note` }, props.t('skills.notDistributed')));
   };
+
+  /**
+   * 技能行的「体积 · 日期」副行（设计稿 12 号板）。
+   *
+   * 两样都没有就返回空串 —— 不拼一个假的「0 B」出来。
+   *
+   * @param {object} skill 技能视图。
+   * @returns {string} 文本。
+   */
+  function skillMeta(skill) {
+    const parts = [];
+    if (Number(skill?.bytes) > 0) parts.push(RF.formatBytes(skill.bytes));
+    const date = RF.formatDate(skill?.updatedAt ?? '');
+    if (date !== '') parts.push(date);
+    return parts.join(' · ');
+  }
 
   /**
    * 成片页：播放器（章节刻度 / 倍速 / 字幕音轨开关）+ 交付物下载。
@@ -2015,9 +2088,11 @@ window.__ModuleLoader__.load({
       entries.map(entry => h(RF.ui.Card, { key: entry.id },
         h('div', { className: `${RF.CLS}-row` },
           h('div', { className: `${RF.CLS}-row__main` },
-            h('div', { className: `${RF.CLS}-row__sub` }, entry.at ?? ''),
+            h('div', { className: `${RF.CLS}-row__sub` }, RF.formatDateTime(entry.at ?? '')),
             h('div', { className: `${RF.CLS}-row__title` }, entry.summary ?? ''),
-            h('div', { className: `${RF.CLS}-row__sub` }, entry.field ?? '')),
+            // 字段 + 批次（设计稿 13 号板：行内标签含「批次 batch_7f3a」）。
+            h('div', { className: `${RF.CLS}-row__sub` },
+              [entry.field ?? '', entry.batchId ?? ''].filter(Boolean).join(' · '))),
           h(RF.ui.Button, {
             label: props.t('common.rollback'),
             variant: 'secondary',

@@ -221,6 +221,7 @@
     "skills.generated": "自建",
     "skills.emptyDescription": "description 为空会让技能既不可路由也不出现在目录里。",
     "skills.notDistributed": "插件不分发第三方技能正文，用户自行安装上游技能包。",
+    "skills.previewTitle": "正文预览",
     "button.primary": "主要按钮",
     "button.secondary": "次要按钮",
     "button.disabled": "禁用按钮",

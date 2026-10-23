@@ -511,6 +511,18 @@ export const DEGRADE_KINDS = Object.freeze({
 /** 三级回滚模式（§6.6）。 */
 export const ROLLBACK_MODES = Object.freeze(['single', 'batch', 'timepoint']);
 
+/**
+ * 变更日志投影里保留的条目条数上限。
+ *
+ * 变更日志**文件**可以一直长，但投影状态是要被宿主持久化的（每次工具结果都带一份），
+ * 不设上限的话长会话会把状态撑大。超出后保留**最新**的这些条，
+ * 并在 wire view 里带上 `total`（真实总数）——**不静默丢**：界面能说清「只显示最近 N 条」。
+ */
+export const CHANGELOG_VIEW_LIMIT = 500;
+
+/** 技能正文预览的字符数（wire view 只带预览，不带整篇正文）。 */
+export const SKILL_BODY_PREVIEW_CHARS = 400;
+
 // ─────────────────────────────────────────────────────────────
 // 体积上限
 // ─────────────────────────────────────────────────────────────

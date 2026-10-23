@@ -23,7 +23,7 @@
     context: { bible: '', style: '', continuity: '' },
     skills: [],
     deliverables: [],
-    changelog: { entries: [], modes: ['single', 'batch', 'timepoint'] },
+    changelog: { entries: [], total: 0, modes: ['single', 'batch', 'timepoint'] },
     // 对话输入截获（§10.5）：用户在 DSH 输入框里敲的原文，由宿主钩子写进状态。
     input: { text: '' },
     cost: { spent: 0, cap: 0 },
@@ -190,6 +190,41 @@
     const value = Number(amount);
     if (!Number.isFinite(value)) return '¥0.00';
     return `¥${value.toFixed(2)}`;
+  };
+
+  /**
+   * 格式化成日期文本（`YYYY-MM-DD`）。
+   *
+   * 设计稿 12 号板要技能行右侧显示「3.4 KB · 2026-10-22」。
+   * 读不出来就返回空串 —— 显示 `Invalid Date` 比不显示更糟。
+   *
+   * @param {string} value - ISO 时间串。
+   * @returns {string} 日期文本。
+   */
+  RF.formatDate = function formatDate(value) {
+    const text = String(value ?? '').trim();
+    if (text === '') return '';
+    const date = new Date(text);
+    if (Number.isNaN(date.getTime())) return '';
+    const pad = part => String(part).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  };
+
+  /**
+   * 格式化成日期时间文本（`YYYY-MM-DD HH:mm`）。
+   *
+   * 变更日志要回答「谁在**什么时候**改了什么」—— 只给日期不够。
+   *
+   * @param {string} value - ISO 时间串。
+   * @returns {string} 文本。
+   */
+  RF.formatDateTime = function formatDateTime(value) {
+    const text = String(value ?? '').trim();
+    if (text === '') return '';
+    const date = new Date(text);
+    if (Number.isNaN(date.getTime())) return '';
+    const pad = part => String(part).padStart(2, '0');
+    return `${RF.formatDate(text)} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
   };
 
   /**

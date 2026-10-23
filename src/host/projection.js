@@ -26,6 +26,7 @@
  * 并由 `src/host/routes.js` 把投影结果通过 Connection 认证通道交给浏览器半。
  */
 import {
+  CHANGELOG_VIEW_LIMIT,
   CONTEXT_KEYS,
   ROLLBACK_MODES,
   SHOT_DURATION_DEFAULT,
@@ -53,7 +54,7 @@ export function initialState() {
     plan: null,
     workflowAnalysis: null,
     deliverables: [],
-    changelog: { entries: [] },
+    changelog: { entries: [], total: 0 },
     input: { text: '' },
   };
 }
@@ -293,8 +294,29 @@ export function applyPatch(state, patch) {
     }
 
     case 'changelog.set': {
-      const entries = Array.isArray(patch.value?.entries) ? patch.value.entries : [];
-      return { ...state, changelog: { entries } };
+      // **按 id 合并**（幂等 upsert），不是整份替换。
+      //
+      // 为什么要合并：变更日志条目是**增量**产出的（每条工具结果只带新增的那几条），
+      // 整份替换的话，工具结果里必须塞完整列表 ⇒ 会话日志按工具调用次数**平方增长**。
+      // 合并后每条工具结果只带增量，日志与状态都是线性增长。
+      //
+      // 同一个 id 再来一次就**覆盖**（幂等）：重放同一条日志不会产生重复条目。
+      const incoming = Array.isArray(patch.value?.entries) ? patch.value.entries : [];
+      const existing = Array.isArray(state.changelog?.entries) ? state.changelog.entries : [];
+      const byId = new Map(existing.map(entry => [entry?.id ?? null, entry]));
+      for (const entry of incoming) byId.set(entry?.id ?? null, entry);
+      const merged = [...byId.values()];
+      // 超出上限时保留**最新**的那些；真实总数由 wire view 的 `total` 给出（不静默丢）。
+      const capped = merged.length > CHANGELOG_VIEW_LIMIT
+        ? merged.slice(merged.length - CHANGELOG_VIEW_LIMIT)
+        : merged;
+      // 真实总数：宿主报的就用，没报就按手上的条数算。**上限截断不静默** ——
+      // 界面能说「共 N 条（只带最近 M 条）」。
+      const reported = Number(patch.value?.total);
+      const total = Number.isFinite(reported) && reported > 0
+        ? Math.max(reported, capped.length)
+        : capped.length;
+      return { ...state, changelog: { ...(state.changelog ?? {}), entries: capped, total } };
     }
 
     case 'input.set': {
@@ -462,9 +484,13 @@ function chapterStages(chapter) {
  * 引用变了就会触发一次无谓的下发。
  *
  * @param {object} state 投影状态。
- * @param {{ budgetLimitCny?: number }} [options] 来自 `Config` 的运行参数。
+ * @param {{ budgetLimitCny?: number, skills?: Array<object> }} [options] 来自 `Config` 的运行参数
+ *   与宿主侧的只读资源。
  *   `budgetLimitCny` 是**预算上限**（元），设计 T1 §config：上限走 Config、不硬编码。
  *   不传时按 0 处理（没有 Config 的纯投影场景）。
+ *   `skills` 是**技能目录**（磁盘上的只读资源，不是会话状态）——技能文件本来就是
+ *   磁盘上的事实源，没有「从日志 fold 出来」这回事，所以由宿主侧扫描后注入。
+ *   不传时按空数组处理（技能页显示空态，而不是假装有技能）。
  * @returns {object} 客户端视图。
  */
 export function buildWireView(state, options = {}) {
@@ -472,6 +498,7 @@ export function buildWireView(state, options = {}) {
   const budgetLimitCny = Number.isFinite(options.budgetLimitCny) && options.budgetLimitCny >= 0
     ? options.budgetLimitCny
     : 0;
+  const skills = Array.isArray(options.skills) ? options.skills : [];
   const project = current.project ?? {};
   const assets = Array.isArray(current.assets) ? current.assets : [];
   const chapters = Array.isArray(current.chapters) ? current.chapters : [];
@@ -555,7 +582,21 @@ export function buildWireView(state, options = {}) {
         ? current.context.continuity.join('\n')
         : current.context?.continuity ?? '',
     },
-    skills: [],
+    skills: skills.map(skill => ({
+      name: skill.name ?? '',
+      description: skill.description ?? '',
+      source: skill.source ?? 'bundled',
+      version: skill.version ?? '',
+      bytes: Number(skill.bytes) || 0,
+      updatedAt: skill.updatedAt ?? '',
+      // 只带**正文预览**，不带整篇正文（正文动辄上万字，撑爆会话投影）。
+      bodyPreview: skill.bodyPreview ?? '',
+      references: (Array.isArray(skill.references) ? skill.references : []).map(reference => ({
+        file: reference.file ?? '',
+        chars: Number(reference.chars) || 0,
+        preview: reference.preview ?? '',
+      })),
+    })),
     deliverables: deliverables.map((item) => ({
       chapterId: item.chapterId ?? null,
       kind: item.kind ?? '',
@@ -565,6 +606,8 @@ export function buildWireView(state, options = {}) {
     })),
     changelog: {
       entries: Array.isArray(changelog.entries) ? changelog.entries : [],
+      // 真实总数（可能大于 `entries.length` —— 上限截断时由宿主报真实值）。
+      total: Math.max(Number(changelog.total) || 0, Array.isArray(changelog.entries) ? changelog.entries.length : 0),
       modes: [...ROLLBACK_MODES],
     },
     // 对话输入截获（§10.5）：用户在对话框里敲的原文，由钩子写进状态、日志重放可重建。

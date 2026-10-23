@@ -20,6 +20,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 
 import {
+  SKILL_BODY_PREVIEW_CHARS,
   SKILL_CN_FILENAME,
   SKILL_EN_FILENAME,
   SKILL_NAME_FORBIDDEN,
@@ -177,6 +178,68 @@ export function listSkillReferences(skillDir) {
 }
 
 /**
+ * 量一个技能目录的体积与最近修改时间。
+ *
+ * 设计稿 12 号板要求技能行右侧有「3.4 KB · 2026-10-22」——
+ * 扫描器以前只给 name / description / source / version，**没有体积也没有日期**。
+ *
+ * 量的是**这个技能自己的文件**：正文文件 + `references/` 下的参考文件。
+ * 读不到的文件**记账报错**，不静默当成 0 字节（那会让界面显示一个假的体积）。
+ *
+ * @param {string} skillDir 技能目录。
+ * @returns {{ bytes: number, updatedAt: string, errors: Array<{code: string, message: string}> }}
+ *   体积（字节）、最近修改时间（ISO）、读不到的文件的诊断。
+ */
+export function measureSkillDir(skillDir) {
+  const errors = [];
+  let bytes = 0;
+  let newest = 0;
+
+  /**
+   * 累加一个目录里的文件。
+   * @param {string} dir 目录。
+   */
+  const visit = (dir) => {
+    let entries = [];
+    try {
+      entries = readdirSync(dir, { withFileTypes: true });
+    } catch (error) {
+      errors.push({
+        code: 'skill_dir_unreadable',
+        message: `技能目录读不到：${dir}（${error instanceof Error ? error.message : String(error)}）`,
+        dir,
+      });
+      return;
+    }
+    for (const entry of entries) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        visit(full);
+        continue;
+      }
+      try {
+        const stat = statSync(full);
+        bytes += Number(stat.size) || 0;
+        if (Number(stat.mtimeMs) > newest) newest = Number(stat.mtimeMs);
+      } catch (error) {
+        errors.push({
+          code: 'skill_file_unreadable',
+          message: `技能文件读不到：${full}（${error instanceof Error ? error.message : String(error)}）`,
+          file: full,
+        });
+      }
+    }
+  };
+
+  visit(skillDir);
+  return {
+    bytes,
+    updatedAt: newest > 0 ? new Date(newest).toISOString() : '',
+    errors,
+  };
+}
+
+/**
  * 扫描一个技能目录。
  *
  * @param {string} dir 技能目录（**路径由调用方传入**，本模块不碰宿主 ctx）
@@ -249,6 +312,10 @@ export function scanSkills(dir, options = {}) {
     }
     seenNames.set(name, skillDir);
 
+    // 体积与最近修改时间（设计稿 12 号板要的「3.4 KB · 2026-10-22」）。
+    const measured = measureSkillDir(skillDir);
+    for (const error of measured.errors) errors.push(error);
+
     const skill = {
       name,
       description,
@@ -258,7 +325,12 @@ export function scanSkills(dir, options = {}) {
       file,
       dirName: entry.name,
       source: options.source ?? null,
+      bytes: measured.bytes,
+      updatedAt: measured.updatedAt,
       references: listSkillReferences(skillDir),
+      // 正文**预览**（前 N 字）。整篇正文不进 wire view —— 技能正文动辄上万字，
+      // 全量塞进会话投影会把状态撑爆；`includeBody` 才给完整正文。
+      bodyPreview: String(body ?? '').replace(/^\s+/, '').slice(0, SKILL_BODY_PREVIEW_CHARS),
     };
     if (options.includeBody) skill.body = body;
     skills.push(skill);

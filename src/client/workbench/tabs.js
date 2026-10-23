@@ -198,15 +198,39 @@
             h('div', { className: `${RF.CLS}-row__title` }, skill.name ?? ''),
             h('div', { className: `${RF.CLS}-row__sub` }, skill.description ?? '')),
           h(RF.ui.Pill, { label: props.t(`skills.${skill.source ?? 'bundled'}`), tone: 'running' })),
+        // 右侧「3.4 KB · 2026-10-22」（设计稿 12 号板）：体积 + 最近修改日期。
+        h('div', { className: `${RF.CLS}-row__sub` }, skillMeta(skill)),
         String(skill.description ?? '').trim() === ''
           ? h('div', { className: `${RF.CLS}-note ${RF.CLS}-note--warn` }, props.t('skills.emptyDescription'))
           : null)),
       selected === undefined ? null : h(RF.ui.Card, null,
-        h(RF.ui.SectionLabel, null, `${props.t('tab.skills')} · ${selected.name}`),
-        h('div', { className: `${RF.CLS}-row__sub` }, String(selected.body ?? '').slice(0, 400)),
-        (selected.references ?? []).map(reference => h(RF.ui.MetaRow, { key: reference.name, label: reference.name, value: reference.preview ?? '' }))),
+        // 卡片标题是「正文预览 · {技能名}」（设计稿 12 号板），不是「技能 · {技能名}」。
+        h(RF.ui.SectionLabel, null, `${props.t('skills.previewTitle')} · ${selected.name}`),
+        // 正文**预览**（宿主只送预览，不送整篇正文）。
+        h('div', { className: `${RF.CLS}-row__sub` }, String(selected.bodyPreview ?? '').slice(0, 400)),
+        (selected.references ?? []).map(reference => h(RF.ui.MetaRow, {
+          key: reference.file ?? '',
+          label: reference.file ?? '',
+          value: reference.preview ?? '',
+        }))),
       h('div', { className: `${RF.CLS}-note` }, props.t('skills.notDistributed')));
   };
+
+  /**
+   * 技能行的「体积 · 日期」副行（设计稿 12 号板）。
+   *
+   * 两样都没有就返回空串 —— 不拼一个假的「0 B」出来。
+   *
+   * @param {object} skill 技能视图。
+   * @returns {string} 文本。
+   */
+  function skillMeta(skill) {
+    const parts = [];
+    if (Number(skill?.bytes) > 0) parts.push(RF.formatBytes(skill.bytes));
+    const date = RF.formatDate(skill?.updatedAt ?? '');
+    if (date !== '') parts.push(date);
+    return parts.join(' · ');
+  }
 
   /**
    * 成片页：播放器（章节刻度 / 倍速 / 字幕音轨开关）+ 交付物下载。
@@ -303,9 +327,11 @@
       entries.map(entry => h(RF.ui.Card, { key: entry.id },
         h('div', { className: `${RF.CLS}-row` },
           h('div', { className: `${RF.CLS}-row__main` },
-            h('div', { className: `${RF.CLS}-row__sub` }, entry.at ?? ''),
+            h('div', { className: `${RF.CLS}-row__sub` }, RF.formatDateTime(entry.at ?? '')),
             h('div', { className: `${RF.CLS}-row__title` }, entry.summary ?? ''),
-            h('div', { className: `${RF.CLS}-row__sub` }, entry.field ?? '')),
+            // 字段 + 批次（设计稿 13 号板：行内标签含「批次 batch_7f3a」）。
+            h('div', { className: `${RF.CLS}-row__sub` },
+              [entry.field ?? '', entry.batchId ?? ''].filter(Boolean).join(' · '))),
           h(RF.ui.Button, {
             label: props.t('common.rollback'),
             variant: 'secondary',

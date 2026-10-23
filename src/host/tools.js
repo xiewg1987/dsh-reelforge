@@ -21,7 +21,7 @@
  */
 import { ASSET_CATEGORIES, ASSET_CONTENT_FIELDS, CONTEXT_KEYS, GENERATION_KINDS, RUN_POSITIONS, SHOT_DURATION_MAX, SHOT_DURATION_MIN, TOOL_IDS, VARIANT_ASSET_CATEGORIES } from '../core/constants.js';
 import { createAsset, updateAsset } from '../core/assets.js';
-import { CHANGELOG_LAYERS, sameRow } from '../core/changelog.js';
+import { CHANGELOG_LAYERS, detectDrift, sameRow } from '../core/changelog.js';
 import { buildChangelogPayload } from '../core/changelogPayload.js';
 import { writeContext } from '../core/consistency.js';
 import { materializeProject } from '../core/projectSchema.js';
@@ -303,6 +303,38 @@ async function materialize(state, cwd, config) {
 }
 
 /**
+ * 把一条变更日志条目转成**给客户端看的视图**。
+ *
+ * ## 为什么裁字段
+ *
+ * 条目原文带 `before` / `after` 两份**完整行快照**（项目行里可能有整段小说正文）。
+ * 这些是回滚的依据，留在 JSONL 里；**进会话投影的必须是裁过的视图** ——
+ * 否则每条工具结果都会拖着整段正文，状态会被撑爆。
+ *
+ * 裁掉的字段： `before` / `after`（回滚依据，不给界面）/ `projectId`（界面上用不上）。
+ *
+ * @param {object} entry 变更日志条目。
+ * @param {Record<string, object|null>} rows 当前行索引（算漂移用）。
+ * @returns {object} 客户端视图。
+ */
+function changelogView(entry, rows) {
+  const key = `${entry.layer}:${entry.rowId}`;
+  const current = rows[key] ?? null;
+  return {
+    id: entry.id,
+    at: entry.at ?? null,
+    seq: Number(entry.seq) || 0,
+    batchId: entry.batchId ?? null,
+    layer: entry.layer,
+    rowId: entry.rowId,
+    op: entry.op,
+    field: entry.field ?? '*',
+    summary: entry.summary ?? '',
+    drifted: detectDrift(entry, current),
+  };
+}
+
+/**
  * 生成全部工具定义。
  *
  * @param {{ store: import('./projection.js').ProjectionStore, config: object,
@@ -358,12 +390,13 @@ export function createToolDefinitions({ store, config, deps = {} }) {
    * @param {string} cwd 会话工作目录。
    * @param {Record<string, object|null>} before 写入前的行索引。
    * @param {Record<string, object|null>} after 写入后的行索引。
-   * @returns {Promise<void>} 完成。
+   * @returns {Promise<string[]>} 记了变更的行键（`layer:rowId`）；失败时是空数组。
    */
   const recordChanges = async (sessionId, cwd, before, after) => {
+    const changedKeys = [];
     try {
       const changes = diffRows(before, after);
-      if (changes.length === 0) return;
+      if (changes.length === 0) return changedKeys;
       const engine = changelogOf(sessionId, cwd);
       const projectId = projectIdOf(store.stateOf(sessionId), sessionId);
       const batchId = nextBatchId(sessionId);
@@ -371,6 +404,7 @@ export function createToolDefinitions({ store, config, deps = {} }) {
         const { layer, rowId } = splitRowKey(change.key);
         // 未知层不猜：变更日志只认 CHANGELOG_LAYERS 里的层。
         if (!CHANGELOG_LAYERS.includes(layer)) continue;
+        changedKeys.push(change.key);
         await engine.record({
           projectId,
           layer,
@@ -388,24 +422,94 @@ export function createToolDefinitions({ store, config, deps = {} }) {
         error?.message ?? error,
       );
     }
+    return changedKeys;
   };
 
   /**
-   * 应用补丁 + 记变更 + 物化落盘。
+   * 把变更日志同步进投影 —— **`changelog.set` 的产出方**（§7 B6）。
+   *
+   * ## 以前为什么日志页永远是空的
+   *
+   * `changelog.set` 这个 op 全仓库**只有定义（`projection.js`）没有产出方**：
+   * 变更记在工作区的 JSONL 里，但那份数据**从来没进过投影** ⇒ 客户端读到的
+   * `changelog.entries` 恒为空数组 ⇒ 日志页恒空态。
+   *
+   * ## 现在怎么做
+   *
+   * 凡是改了内容行 → 记一条变更 → 把**变更视图**追加成一条 `changelog.set` 补丁 →
+   * ① 落进投影（客户端立刻看得见）② **塞进工具返回的 `patch` 数组**
+   * （`presentationMeta` 会把它持久化到 `tool/result` 的 meta 上 ⇒ 重放日志也能重建，R1）。
+   *
+   * ## 为什么只带增量
+   *
+   * 每条工具结果都塞完整列表 ⇒ 会话日志按工具调用次数**平方增长**。
+   * 这里只带**新出现**的条目（按 id 去重）；投影侧 `changelog.set` 按 id 合并。
+   *
+   * ## 漂移标记
+   *
+   * `drifted` = 「这一行在快照之后又被改过」。它只在**这次动过的行**上重算 ——
+   * 对全部条目重算意味着每条快照都要做一次规范化 JSON 比对，长会话里太贵。
+   * 其余条目沿用上次判定（漂移是相对当下的事实，会变；这个近似有代价，已写明）。
+   *
+   * @param {string} sessionId 会话 id。
+   * @param {string} cwd 会话工作目录。
+   * @param {object[]} patches 工具的补丁数组（**原地追加**变更日志补丁）。
+   * @param {string[]} changedKeys 这次动过的行键。
+   * @returns {Promise<void>} 完成。
+   */
+  const syncChangelog = async (sessionId, cwd, patches, changedKeys) => {
+    try {
+      const engine = changelogOf(sessionId, cwd);
+      const projectId = projectIdOf(store.stateOf(sessionId), sessionId);
+      const entries = await engine.list(projectId);
+      if (entries.length === 0) return;
+      const state = store.stateOf(sessionId);
+      const known = new Set((state.changelog?.entries ?? []).map(item => item?.id));
+      const rows = readRows(state);
+      const touched = new Set(changedKeys);
+      const payload = [];
+      for (const entry of entries) {
+        const key = `${entry.layer}:${entry.rowId}`;
+        const isNew = !known.has(entry.id);
+        // 老条目只有在「这次动过的行」上才重算漂移；其余原样保留。
+        if (!isNew && !touched.has(key)) continue;
+        payload.push(changelogView(entry, rows));
+      }
+      if (payload.length === 0) return;
+      const patch = {
+        op: 'changelog.set',
+        value: { entries: payload, total: entries.length },
+      };
+      patches.push(patch);
+      store.applyPatches(sessionId, [patch]);
+    } catch (error) {
+      console.warn(
+        '[reelforge] 变更日志投影同步失败（不影响本次写入）：',
+        error?.message ?? error,
+      );
+    }
+  };
+
+  /**
+   * 应用补丁 + 记变更 + 同步变更日志 + 物化落盘。
    *
    * 顺序：**先记变更再落盘**——落盘失败时变更记录已经在了（回滚仍有依据）；
    * 记变更失败只 warn，不挡写入。
    *
+   * ⚠️ `patches` 会被**原地追加**一条 `changelog.set` 补丁。工具返回的是
+   * `patch: patches`（同一个数组引用），所以这条补丁会跟着进会话日志 ⇒ 可重放。
+   *
    * @param {string} sessionId 会话 id。
    * @param {string} cwd 会话工作目录。
    * @param {object[]} patches 状态补丁。
-   * @returns {Promise<object[]>} 补丁。
+   * @returns {Promise<object[]>} 补丁（含追加的变更日志补丁）。
    */
   const commit = async (sessionId, cwd, patches) => {
     const before = snapshotRows(readRows(store.stateOf(sessionId)));
     store.applyPatches(sessionId, patches);
     const after = snapshotRows(readRows(store.stateOf(sessionId)));
-    await recordChanges(sessionId, cwd, before, after);
+    const changedKeys = await recordChanges(sessionId, cwd, before, after);
+    await syncChangelog(sessionId, cwd, patches, changedKeys);
     await materialize(store.stateOf(sessionId), cwd, config);
     return patches;
   };
@@ -1064,6 +1168,12 @@ export function createToolDefinitions({ store, config, deps = {} }) {
           // 与记录变更时**同一个键**（见 `projectIdOf`）：两边对不上就查不到变更。
           projectId: projectIdOf(store.stateOf(context.sessionId), context.sessionId),
         });
+        const patches = Array.isArray(result.patches) ? result.patches : [];
+        // 回滚改了内容行 ⇒ 那些补丁必须进会话日志，否则**重放日志回不到回滚后的状态**
+        // （R1）。以前这里返回 `patch: []`，写回只落在内存投影里 ⇒ 重启后回滚「消失」。
+        // 顺带同步一份变更日志视图：回滚后漂移标记会变（当前行不再等于快照的 after）。
+        const touched = (result.rolledBack ?? []).map(item => `${item.layer ?? ''}:${item.rowId ?? ''}`);
+        await syncChangelog(context.sessionId, context.cwd, patches, touched);
         return {
           ok: result.ok !== false,
           status: result.status,
@@ -1075,7 +1185,7 @@ export function createToolDefinitions({ store, config, deps = {} }) {
           conflicts: result.conflicts ?? [],
           message: result.message ?? '',
           notice: result.notice ?? '',
-          patch: [],
+          patch: patches,
         };
       },
       chatKind: 'reelforge-changelog',

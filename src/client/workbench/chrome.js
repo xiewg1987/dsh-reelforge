@@ -104,6 +104,22 @@
   }
 
   /**
+   * 变更日志条数。
+   *
+   * 用 `total`（宿主报的真实总数）而不是 `entries.length` ——
+   * 投影里条目有上限截断时，真实总数才不会被截断数冒充。
+   *
+   * @param {object} project - 投影视图。
+   * @returns {number} 条数。
+   */
+  function logCount(project) {
+    const changelog = project?.changelog ?? {};
+    const entries = Array.isArray(changelog.entries) ? changelog.entries.length : 0;
+    const total = Number(changelog.total);
+    return Number.isFinite(total) && total > 0 ? total : entries;
+  }
+
+  /**
    * 每屏的外壳描述。
    *
    * @typedef {object} TabChrome
@@ -255,13 +271,9 @@
     log: {
       titleKey: 'chrome.log.title',
       subtitle: staticText('chrome.log.subtitle'),
-      capsule: (project, t) => t('chrome.log.capsule', {
-        count: Array.isArray(project?.changelog?.entries) ? project.changelog.entries.length : 0,
-      }),
+      capsule: (project, t) => t('chrome.log.capsule', { count: logCount(project) }),
       footerLabel: staticText('chrome.log.footerLabel'),
-      footerValue: (project, t) => t('chrome.log.footerValue', {
-        count: Array.isArray(project?.changelog?.entries) ? project.changelog.entries.length : 0,
-      }),
+      footerValue: (project, t) => t('chrome.log.footerValue', { count: logCount(project) }),
       footerAction: { key: 'chrome.log.action', kind: 'export' },
     },
   };
