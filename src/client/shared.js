@@ -31,6 +31,24 @@
     workflowAnalysis: null,
   });
 
+  /**
+   * 会话指令的请求 id。
+   *
+   * 宿主 `SessionPromptRequest.requestId` 要求**客户端铸造**一个唯一身份
+   * （宿主用它去重：同一个 requestId 重复投递只算一次）。
+   * 用 `crypto.randomUUID()`；老浏览器没有 `crypto` 时退回「时间戳 + 随机数」，
+   * 保证**每次调用都不一样**（重复 id 会被宿主当重放而丢掉）。
+   *
+   * @returns {string} 请求 id。
+   */
+  RF.newRequestId = function newRequestId() {
+    const cryptoRef = globalThis.crypto;
+    if (cryptoRef !== undefined && cryptoRef !== null && typeof cryptoRef.randomUUID === 'function') {
+      return cryptoRef.randomUUID();
+    }
+    return `rf-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+  };
+
   /** 交付物 / 成片文件的同源读取 URL（宿主 Connection 路由）。 */
   RF.deliverableUrl = function deliverableUrl(relativePath) {
     if (typeof relativePath !== 'string' || relativePath.length === 0) return '';

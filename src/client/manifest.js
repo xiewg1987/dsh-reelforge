@@ -157,5 +157,12 @@
     'shortcuts',        // 快捷键注册表（shortcuts）
     'uiConversation',   // 对话事件定义（ui-conversation）
     'remote',           // 宿主 RPC 面：写操作通道（connection）
+    // ⚠️ `remote.session` 是**独立的服务名**（不是 `remote` 的子属性）：
+    // 宿主把每个 Remote 命名空间各注册成一个服务键
+    // （`packages/api/session-controller/src/client/index.ts` 的 inject 清单：
+    // `remote` / `remote.commands` / `remote.session` / `remote.subagents`）。
+    // 不声明它，读 `ctx.remote.session` 会抛
+    // `cannot get property "remote.session" without inject` —— 写操作全废。
+    'remote.session',   // 会话指令通道：把 UI 写操作投进当前会话（session-controller）
   ];
 })(RF);

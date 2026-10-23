@@ -154,11 +154,29 @@ export function sameRow(a, b) {
 
 /**
  * 漂移检测：当前行与快照的 `after` 不一致 → 变更之后该行又被改过。
+ *
+ * ## 为什么要拿 `before` 一起比
+ *
+ * 漂移保护要挡住的是「**覆盖别人的改动**」：
+ * 当前行既不是这条变更写完后的样子（`after`），也不是这条变更动手前的样子（`before`），
+ * 说明这行后来被**别人**改成了第三个状态 ⇒ 回滚会抹掉那个改动 ⇒ 拒绝。
+ *
+ * 而「当前行 == `before`」有两种可能：
+ *   1. 这条变更还没落到这一行上；
+ *   2. 这条变更**已经被回滚掉了**（回滚就是把行写回 `before`）。
+ * 两种都不是「被别人改过」，再回滚一次只是把同一行再写一遍，不会覆盖任何东西 ⇒ 不算漂移。
+ *
+ * ⚠️ 不这么判的话：回滚「新建」之后那一行不存在（`current = null` = `before`），
+ * 会被误判成漂移 ⇒ 日志页挂出「已漂移」卡片，再点一次回滚还会撞 409。
+ *
  * @param {object} entry
  * @param {object|null} currentRow
  */
 export function detectDrift(entry, currentRow) {
-  return !sameRow(currentRow ?? null, entry?.after ?? null);
+  const current = currentRow ?? null;
+  if (sameRow(current, entry?.after ?? null)) return false;
+  if (sameRow(current, entry?.before ?? null)) return false;
+  return true;
 }
 
 /** 截短文本，给变更摘要用。 */

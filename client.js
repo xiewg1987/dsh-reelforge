@@ -169,6 +169,13 @@ window.__ModuleLoader__.load({
     'shortcuts',        // 快捷键注册表（shortcuts）
     'uiConversation',   // 对话事件定义（ui-conversation）
     'remote',           // 宿主 RPC 面：写操作通道（connection）
+    // ⚠️ `remote.session` 是**独立的服务名**（不是 `remote` 的子属性）：
+    // 宿主把每个 Remote 命名空间各注册成一个服务键
+    // （`packages/api/session-controller/src/client/index.ts` 的 inject 清单：
+    // `remote` / `remote.commands` / `remote.session` / `remote.subagents`）。
+    // 不声明它，读 `ctx.remote.session` 会抛
+    // `cannot get property "remote.session" without inject` —— 写操作全废。
+    'remote.session',   // 会话指令通道：把 UI 写操作投进当前会话（session-controller）
   ];
 })(RF);
 
@@ -232,9 +239,11 @@ window.__ModuleLoader__.load({
       'chrome.shots.subtitle': '第 {chapter} 章 · {name} · {shots} 镜',
       'chrome.shots.subtitleEmpty': '还没有分镜表',
       'chrome.shots.capsule': '章 {current} / {total}',
+      'chrome.shots.capsuleEmpty': '还没有章',
       'chrome.shots.footerLabel': '下一步',
       'chrome.shots.footerValue': '跑 video 阶段出片',
       'chrome.shots.action': '生成第 1 章',
+      'chrome.shots.disabledHint': '还没有分镜表：先把小说正文粘到对话框拆章，才能生成这一章。',
       'chrome.assets.title': '资产库',
       'chrome.assets.subtitle': '10 类资产，变体挂在父资产下',
       'chrome.assets.capsule': '{count} 项资产',
@@ -258,11 +267,14 @@ window.__ModuleLoader__.load({
       'chrome.output.subtitle': '第 {chapter} 章 {name} · {shots} 镜 · {duration}s',
       'chrome.output.subtitleEmpty': '还没有成片',
       'chrome.output.capsule': '{position}渲染',
+      'chrome.output.capsuleIdle': '还没开始渲染',
       'chrome.output.footerLabel': '本集用时',
       'chrome.output.footerValue': '成本 {cost} · {status}',
+      'chrome.output.statusIdle': '还没开始渲染',
       'chrome.output.statusPending': '还在渲染',
       'chrome.output.statusDone': '渲染完成',
       'chrome.output.action': '交付物',
+      'chrome.output.disabledHint': '还没有交付物：合成一章之后，这里会列出成片与素材。',
       'chrome.log.title': '变更日志',
       'chrome.log.subtitle': '谁在什么时候改了什么，可回滚',
       'chrome.log.capsule': '{count} 条',
@@ -384,6 +396,7 @@ window.__ModuleLoader__.load({
       'deliver.binaryKept': '媒体二进制不随回滚删除（视频与图片留在原地）',
       'log.drifted': '这条记录已漂移，回滚会覆盖后来的改动',
       'log.force': '强制回滚',
+      'log.projectLocked': '项目层不可回滚：本插件没有删除项目的 API',
       'log.single': '回滚单条',
       'log.batch': '回滚整批',
       'log.timepoint': '回滚到时间点',
@@ -422,6 +435,7 @@ window.__ModuleLoader__.load({
       'tool.rollback.label': '回滚',
       'tool.rollback.say': '回滚到第 2 章',
       'notice.undelivered': '这次「{label}」没生效：工作台还没接上工具通道。可重试，或在对话框里说「{say}」。',
+      'notice.hostRefused': '这次「{label}」没生效：宿主没接受这次调用{reason}。可以在对话框里说「{say}」。',
       'notice.unknownTool': '未知的操作',
       'notice.sayFallback': '直接说出你要做的操作',
       'notice.replayed': '已重放 {count} 条待办请求。',
@@ -462,9 +476,11 @@ window.__ModuleLoader__.load({
       'chrome.shots.subtitle': 'Chapter {chapter} · {name} · {shots} shots',
       'chrome.shots.subtitleEmpty': 'No storyboard yet',
       'chrome.shots.capsule': 'Chapter {current} / {total}',
+      'chrome.shots.capsuleEmpty': 'No chapters yet',
       'chrome.shots.footerLabel': 'Next',
       'chrome.shots.footerValue': 'Run the video stage',
       'chrome.shots.action': 'Generate chapter 1',
+      'chrome.shots.disabledHint': 'No storyboard yet: paste the novel in the chat box to split it into chapters first.',
       'chrome.assets.title': 'Assets',
       'chrome.assets.subtitle': '10 asset types; variants hang off a parent asset',
       'chrome.assets.capsule': '{count} assets',
@@ -488,11 +504,14 @@ window.__ModuleLoader__.load({
       'chrome.output.subtitle': 'Chapter {chapter} {name} · {shots} shots · {duration}s',
       'chrome.output.subtitleEmpty': 'No output yet',
       'chrome.output.capsule': '{position} render',
+      'chrome.output.capsuleIdle': 'No render yet',
       'chrome.output.footerLabel': 'This episode took',
       'chrome.output.footerValue': 'Cost {cost} · {status}',
+      'chrome.output.statusIdle': 'No render yet',
       'chrome.output.statusPending': 'still rendering',
       'chrome.output.statusDone': 'render complete',
       'chrome.output.action': 'Deliverables',
+      'chrome.output.disabledHint': 'No deliverables yet: assemble a chapter and the video and assets will be listed here.',
       'chrome.log.title': 'Changelog',
       'chrome.log.subtitle': 'Who changed what, when — and how to roll it back',
       'chrome.log.capsule': '{count} entries',
@@ -614,6 +633,7 @@ window.__ModuleLoader__.load({
       'deliver.binaryKept': 'Media binaries are not deleted by a rollback (video and images stay in place)',
       'log.drifted': 'This record drifted; rolling back overwrites later changes',
       'log.force': 'Force rollback',
+      'log.projectLocked': 'The project layer cannot be rolled back: this plugin has no API to delete a project',
       'log.single': 'Roll back one',
       'log.batch': 'Roll back a batch',
       'log.timepoint': 'Roll back to a point in time',
@@ -652,6 +672,7 @@ window.__ModuleLoader__.load({
       'tool.rollback.label': 'Roll back',
       'tool.rollback.say': 'roll back to chapter 2',
       'notice.undelivered': '“{label}” did not go through: the workbench has no tool channel yet. Retry, or say “{say}” in the chat box.',
+      'notice.hostRefused': '“{label}” did not go through: the host refused the call{reason}. Say “{say}” in the chat box instead.',
       'notice.unknownTool': 'Unknown action',
       'notice.sayFallback': 'what you want done',
       'notice.replayed': 'Replayed {count} queued request(s).',
@@ -693,6 +714,24 @@ window.__ModuleLoader__.load({
     budget: {},
     workflowAnalysis: null,
   });
+
+  /**
+   * 会话指令的请求 id。
+   *
+   * 宿主 `SessionPromptRequest.requestId` 要求**客户端铸造**一个唯一身份
+   * （宿主用它去重：同一个 requestId 重复投递只算一次）。
+   * 用 `crypto.randomUUID()`；老浏览器没有 `crypto` 时退回「时间戳 + 随机数」，
+   * 保证**每次调用都不一样**（重复 id 会被宿主当重放而丢掉）。
+   *
+   * @returns {string} 请求 id。
+   */
+  RF.newRequestId = function newRequestId() {
+    const cryptoRef = globalThis.crypto;
+    if (cryptoRef !== undefined && cryptoRef !== null && typeof cryptoRef.randomUUID === 'function') {
+      return cryptoRef.randomUUID();
+    }
+    return `rf-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+  };
 
   /** 交付物 / 成片文件的同源读取 URL（宿主 Connection 路由）。 */
   RF.deliverableUrl = function deliverableUrl(relativePath) {
@@ -1319,6 +1358,19 @@ window.__ModuleLoader__.load({
   }
 
   /**
+   * 有没有进入生成阶段（阶段走到「生成」之后）。
+   *
+   * 用它区分「还没开始渲染」与「还在渲染」—— 两者都不该说成「渲染完成」。
+   *
+   * @param {object} project - 投影视图。
+   * @returns {boolean} 是否已进入生成阶段。
+   */
+  function renderStarted(project) {
+    const stage = String(project?.stage ?? '');
+    return stage === 'generate' || stage === 'storyboard' || stage === 'deliver';
+  }
+
+  /**
    * 每屏的外壳描述。
    *
    * @typedef {object} TabChrome
@@ -1327,8 +1379,21 @@ window.__ModuleLoader__.load({
    * @property {(project: object, t: function) => string} capsule Header 右侧胶囊。
    * @property {(project: object, t: function) => string} footerLabel Footer 第一行标签。
    * @property {(project: object, t: function) => string} footerValue Footer 第二行。
-   * @property {{ key: string, kind: string, tab?: string, tool?: string, params?: function }} footerAction Footer 按钮。
-   * @property {string} [disabledHintKey] 按钮不可用时的说明词条（说清缺什么、给什么替代）。
+   * @property {(project: object) => object} footerAction Footer 按钮。
+   * @property {string} [disabledHintKey] 按钮不可用时的**兜底**说明词条（说清缺什么、给什么替代）。
+   */
+
+  /**
+   * 底栏按钮的动作描述。
+   *
+   * @typedef {object} FooterAction
+   * @property {string} key 按钮文案词条。
+   * @property {string} kind `tab` / `tool` / `export` / `scroll` / `none`。
+   * @property {string} [tab] `kind === 'tab'` 时切到哪个页签。
+   * @property {string} [tool] `kind === 'tool'` 时调哪个工具。
+   * @property {object | function} [params] `kind === 'tool'` 时的参数（可以是函数）。
+   * @property {boolean} [disabled] 不可用时置 true。
+   * @property {string} [hintKey] 不可用时的说明词条（说清缺什么、给什么替代）。
    */
 
   RF.TAB_CHROME = {
@@ -1361,11 +1426,14 @@ window.__ModuleLoader__.load({
         const positionText = position === null ? t('footer.idle') : t('footer.position', position);
         return `${stageLabel} · ${positionText}`;
       },
-      footerAction: { key: 'action.viewOutput', kind: 'tab', tab: 'output' },
+      footerAction: () => ({ key: 'action.viewOutput', kind: 'tab', tab: 'output' }),
     },
 
     /**
      * 09 分镜表：胶囊是「章 N / 总数」，底栏指向下一步（跑 video 出片）。
+     *
+     * ⚠️ 没有章时**不能说「章 1 / 0」**（自相矛盾），也不能让「生成第 1 章」
+     * 变成点了没反应的按钮 —— 禁用 + 说清缺什么。
      */
     shots: {
       titleKey: 'chrome.shots.title',
@@ -1380,19 +1448,23 @@ window.__ModuleLoader__.load({
       },
       capsule: (project, t) => {
         const chapters = Array.isArray(project?.chapters) ? project.chapters : [];
+        if (chapters.length === 0) return t('chrome.shots.capsuleEmpty');
         const chapter = currentChapter(project);
         return t('chrome.shots.capsule', { current: chapter?.id ?? 1, total: chapters.length });
       },
       footerLabel: staticText('chrome.shots.footerLabel'),
       footerValue: staticText('chrome.shots.footerValue'),
-      footerAction: {
-        key: 'chrome.shots.action',
-        kind: 'tool',
-        tool: RF.TOOL_IDS.runStage,
-        params: (project) => {
-          const chapter = currentChapter(project);
-          return { stage: 'video', ...(chapter === null ? {} : { seq: Number(chapter.id) || 1 }) };
-        },
+      footerAction: (project) => {
+        const chapter = currentChapter(project);
+        if (chapter === null) {
+          return { key: 'chrome.shots.action', kind: 'none', hintKey: 'chrome.shots.disabledHint' };
+        }
+        return {
+          key: 'chrome.shots.action',
+          kind: 'tool',
+          tool: RF.TOOL_IDS.runStage,
+          params: { stage: 'video', seq: Number(chapter.id) || 1 },
+        };
       },
     },
 
@@ -1407,7 +1479,7 @@ window.__ModuleLoader__.load({
       }),
       footerLabel: staticText('chrome.assets.footerLabel'),
       footerValue: staticText('chrome.assets.footerValue'),
-      footerAction: { key: 'chrome.assets.action', kind: 'tab', tab: 'shots' },
+      footerAction: () => ({ key: 'chrome.assets.action', kind: 'tab', tab: 'shots' }),
     },
 
     /**
@@ -1419,7 +1491,7 @@ window.__ModuleLoader__.load({
       capsule: (project, t) => t('chrome.context.capsule', { count: RF.CONTEXT_KEYS.length }),
       footerLabel: staticText('chrome.context.footerLabel'),
       footerValue: staticText('chrome.context.footerValue'),
-      footerAction: { key: 'chrome.context.action', kind: 'tab', tab: 'assets' },
+      footerAction: () => ({ key: 'chrome.context.action', kind: 'tab', tab: 'assets' }),
     },
 
     /**
@@ -1434,12 +1506,15 @@ window.__ModuleLoader__.load({
         const counts = skillCounts(project);
         return t('chrome.skills.footerValue', counts);
       },
-      footerAction: { key: 'chrome.skills.action', kind: 'none' },
+      footerAction: () => ({ key: 'chrome.skills.action', kind: 'none', hintKey: 'chrome.skills.disabledHint' }),
       disabledHintKey: 'chrome.skills.disabledHint',
     },
 
     /**
      * 10 成片：胶囊是渲染位置，底栏第一行是本集用时。
+     *
+     * ⚠️ 没开始渲染时不说「待开始渲染」（不通顺）；也没有交付物时，
+     * 「交付物」按钮不能点了没反应 —— 禁用 + 说清缺什么。
      */
     output: {
       titleKey: 'chrome.output.title',
@@ -1453,15 +1528,31 @@ window.__ModuleLoader__.load({
           duration: chapterDuration(chapter).toFixed(1),
         });
       },
-      capsule: (project, t) => t('chrome.output.capsule', { position: positionLabel(project, t) }),
+      capsule: (project, t) => {
+        const position = positionLabel(project, t);
+        if (position === t('status.idle')) return t('chrome.output.capsuleIdle');
+        return t('chrome.output.capsule', { position });
+      },
       footerLabel: staticText('chrome.output.footerLabel'),
       footerValue: (project, t) => {
         const cost = RF.formatMoney(project?.cost?.spent ?? 0);
         const deliverables = Array.isArray(project?.deliverables) ? project.deliverables : [];
-        const status = deliverables.length === 0 ? t('chrome.output.statusPending') : t('chrome.output.statusDone');
-        return t('chrome.output.footerValue', { cost, status });
+        if (deliverables.length > 0) {
+          return t('chrome.output.footerValue', { cost, status: t('chrome.output.statusDone') });
+        }
+        // 还没到出片阶段但已经开始生成 → 说「还在渲染」，别装成已经完成。
+        if (renderStarted(project)) {
+          return t('chrome.output.footerValue', { cost, status: t('chrome.output.statusPending') });
+        }
+        return t('chrome.output.statusIdle');
       },
-      footerAction: { key: 'chrome.output.action', kind: 'scroll', target: 'rf-deliverables' },
+      footerAction: (project) => {
+        const deliverables = Array.isArray(project?.deliverables) ? project.deliverables : [];
+        if (deliverables.length === 0) {
+          return { key: 'chrome.output.action', kind: 'none', hintKey: 'chrome.output.disabledHint' };
+        }
+        return { key: 'chrome.output.action', kind: 'scroll', target: 'rf-deliverables' };
+      },
     },
 
     /**
@@ -1473,7 +1564,7 @@ window.__ModuleLoader__.load({
       capsule: (project, t) => t('chrome.log.capsule', { count: logCount(project) }),
       footerLabel: staticText('chrome.log.footerLabel'),
       footerValue: (project, t) => t('chrome.log.footerValue', { count: logCount(project) }),
-      footerAction: { key: 'chrome.log.action', kind: 'export' },
+      footerAction: () => ({ key: 'chrome.log.action', kind: 'export' }),
     },
   };
 
@@ -1830,7 +1921,8 @@ window.__ModuleLoader__.load({
         key: value,
         label: RF.formatDuration(value),
         variant: value === selected.duration ? 'primary' : 'secondary',
-        onClick: () => props.state.setDuration(value),
+        // 把「选中的是哪一镜」一起传出去：改时长要发 `seq` + `idx`（工具必填）。
+        onClick: () => props.state.setDuration(selected, value),
       }))),
       h(RF.ui.SectionLabel, null, props.t('shots.refs')),
       h('div', null, (selected.references ?? []).map(reference => h(RF.ui.MetaRow, {
@@ -2085,19 +2177,31 @@ window.__ModuleLoader__.load({
         variant: mode === props.state.rollbackMode ? 'primary' : 'secondary',
         onClick: () => props.state.setRollbackMode(mode),
       }))),
-      entries.map(entry => h(RF.ui.Card, { key: entry.id },
-        h('div', { className: `${RF.CLS}-row` },
-          h('div', { className: `${RF.CLS}-row__main` },
-            h('div', { className: `${RF.CLS}-row__sub` }, RF.formatDateTime(entry.at ?? '')),
-            h('div', { className: `${RF.CLS}-row__title` }, entry.summary ?? ''),
-            // 字段 + 批次（设计稿 13 号板：行内标签含「批次 batch_7f3a」）。
-            h('div', { className: `${RF.CLS}-row__sub` },
-              [entry.field ?? '', entry.batchId ?? ''].filter(Boolean).join(' · '))),
-          h(RF.ui.Button, {
-            label: props.t('common.rollback'),
-            variant: 'secondary',
-            onClick: () => props.state.rollback(entry),
-          })))),
+      entries.map(entry => {
+        // ⚠️ 项目层的「新建 / 删除」**永不可回滚**（宿主硬约束：没有删除项目的 API，
+        // 回滚项目创建等于变相创建项目 ⇒ 403 拒绝）。
+        // 以前这里照样挂一个可点的「回滚」⇒ 点了必然失败，用户只看到「什么都没发生」。
+        // 现在禁用 + 说清缺什么。
+        const locked = entry.layer === 'project' && (entry.op === 'create' || entry.op === 'delete');
+        return h(RF.ui.Card, { key: entry.id },
+          h('div', { className: `${RF.CLS}-row` },
+            h('div', { className: `${RF.CLS}-row__main` },
+              h('div', { className: `${RF.CLS}-row__sub` }, RF.formatDateTime(entry.at ?? '')),
+              h('div', { className: `${RF.CLS}-row__title` }, entry.summary ?? ''),
+              // 字段 + 批次（设计稿 13 号板：行内标签含「批次 batch_7f3a」）。
+              h('div', { className: `${RF.CLS}-row__sub` },
+                [entry.field ?? '', entry.batchId ?? ''].filter(Boolean).join(' · ')),
+              locked
+                ? h('div', { className: `${RF.CLS}-row__sub ${RF.CLS}-note--warn` }, props.t('log.projectLocked'))
+                : null),
+            h(RF.ui.Button, {
+              label: props.t('common.rollback'),
+              variant: 'secondary',
+              disabled: locked,
+              title: locked ? props.t('log.projectLocked') : undefined,
+              onClick: () => props.state.rollback(entry),
+            })));
+      }),
       drifted === undefined ? null : h(RF.ui.Card, null,
         h('div', { className: `${RF.CLS}-note ${RF.CLS}-note--warn` }, props.t('log.drifted')),
         h(RF.ui.Button, { label: props.t('log.force'), variant: 'danger', onClick: () => props.state.rollback(drifted, true) })),
@@ -2203,7 +2307,15 @@ window.__ModuleLoader__.load({
     const state = {
       selectedShotId,
       selectShot: setSelectedShotId,
-      setDuration: value => RF.actions?.callTool?.(RF.TOOL_IDS.updateShot, { duration: value }),
+      // ⚠️ `reelforge.update_shot` 的必填参数是 `seq` + `idx`
+      // （`src/host/tools.js`：`required: ['seq', 'idx']`）——
+      // 只发 `{ duration }` 会被宿主拒收，改时长永远不生效。
+      // 所以这里要拿住「选中的是哪一章的第几镜」，由调用方把这一镜传进来。
+      setDuration: (shot, value) => RF.actions?.callTool?.(RF.TOOL_IDS.updateShot, {
+        seq: shot?.seq,
+        idx: shot?.idx,
+        duration: value,
+      }),
       assetCategory,
       setAssetCategory,
       skillSource,
@@ -2222,8 +2334,11 @@ window.__ModuleLoader__.load({
       },
       rollbackMode,
       setRollbackMode,
+      // ⚠️ 参数名必须是 `entryId`：`reelforge.rollback` 的 schema 是
+      // `entryId`（单条模式）+ `additionalProperties: false` —— 发成 `id`
+      // 会被宿主当成未知键**整条拒收**，回滚永远不生效。
       rollback: (entry, force) => RF.actions?.callTool?.(RF.TOOL_IDS.rollback, {
-        id: entry.id,
+        entryId: entry.id,
         mode: rollbackMode,
         ...(force === true ? { force: true } : {}),
       }),
@@ -2240,7 +2355,11 @@ window.__ModuleLoader__.load({
     // owner 裁决「按屏变化」（Q1 底栏 / Q3 胶囊）：设计稿 17 块板的胶囊与底栏文案
     // 每块都不同，以前实现是全局固定的一套。每屏长什么样在 `workbench/chrome.js`。
     const chrome = RF.tabChrome(activeTab);
-    const chromeAction = chrome.footerAction ?? {};
+    // 底栏动作**由屏上的数据决定**：没章时「生成第 1 章」不能是可点的按钮，
+    // 没有交付物时「交付物」也不能点了没反应 —— 都要禁用 + 说清缺什么。
+    const chromeAction = typeof chrome.footerAction === 'function'
+      ? chrome.footerAction(project)
+      : (chrome.footerAction ?? {});
     const chromeTitle = chrome.titleKey === undefined ? '' : t(chrome.titleKey);
     // 外壳契约：subtitle / capsule / footerLabel / footerValue **一律是函数**
     // （静态文案在 chrome.js 里就包好了，渲染层不再判类型）。
@@ -2248,6 +2367,8 @@ window.__ModuleLoader__.load({
     const chromeCapsule = chrome.capsule(project, t);
     const chromeLabel = chrome.footerLabel(project, t);
     const chromeValue = chrome.footerValue(project, t);
+    const chromeDisabled = chromeAction.disabled === true || chromeAction.kind === 'none';
+    const chromeHintKey = chromeAction.hintKey ?? chrome.disabledHintKey;
 
     // 「导出日志」：把变更日志导出成 JSON 文件（浏览器直接下载，不经过宿主）。
     const exportChangelog = () => {
@@ -2320,8 +2441,8 @@ window.__ModuleLoader__.load({
           }))
           : null,
         // 底栏主按钮暂不可用时，**说清缺什么、给什么替代**（不静默做成死按钮）。
-        chromeAction.kind === 'none' && chrome.disabledHintKey !== undefined
-          ? h('div', { className: `${RF.CLS}-note ${RF.CLS}-note--warn` }, t(chrome.disabledHintKey))
+        chromeDisabled && chromeHintKey !== undefined
+          ? h('div', { className: `${RF.CLS}-note ${RF.CLS}-note--warn` }, t(chromeHintKey))
           : null),
       h('footer', { className: `${RF.CLS}-footer` },
         h('div', { className: `${RF.CLS}-footer__text` },
@@ -2330,10 +2451,8 @@ window.__ModuleLoader__.load({
         h(RF.ui.Button, {
           label: t(chromeAction.key),
           variant: 'primary',
-          disabled: chromeAction.kind === 'none',
-          title: chromeAction.kind === 'none' && chrome.disabledHintKey !== undefined
-            ? t(chrome.disabledHintKey)
-            : undefined,
+          disabled: chromeDisabled,
+          title: chromeDisabled && chromeHintKey !== undefined ? t(chromeHintKey) : undefined,
           onClick: () => runChromeAction(),
         })));
   };
@@ -2555,6 +2674,18 @@ window.__ModuleLoader__.load({
     const data = dataOf(props);
     const entries = Array.isArray(data.entries) ? data.entries : [];
     const modes = Array.isArray(data.modes) ? data.modes : ['single', 'batch', 'timepoint'];
+    // 三个按钮都是**动作**（这一行里没有每行各自的回滚按钮），所以各自要带足
+    // 宿主工具要的定位参数：`reelforge.rollback` 的 schema 是
+    // `mode` + `entryId`（单条）/ `batchId`（整批）/ `at`（时间点），
+    // 且 `additionalProperties: false` —— 只发 `mode` 会被整条拒收。
+    // 目标取这一行里**最新**的那条变更（数组末尾）。
+    const latest = entries.length > 0 ? entries[entries.length - 1] : null;
+    const rollbackArgs = (mode) => {
+      if (latest === null) return null;
+      if (mode === 'batch') return { mode, batchId: latest.batchId };
+      if (mode === 'timepoint') return { mode, at: latest.at };
+      return { mode, entryId: latest.id };
+    };
     return h('div', { className: `${RF.CLS}-chatrow` },
       h('div', { className: `${RF.CLS}-chatrow__head` },
         h('span', { className: `${RF.CLS}-chatrow__kind` }, 'reelforge-changelog'),
@@ -2564,7 +2695,11 @@ window.__ModuleLoader__.load({
           key: mode,
           label: RF.chatRows.t(`log.${mode}`),
           variant: 'secondary',
-          onClick: () => RF.actions?.callTool?.(RF.TOOL_IDS.rollback, { mode }),
+          onClick: () => {
+            const args = rollbackArgs(mode);
+            if (args === null) return;
+            RF.actions?.callTool?.(RF.TOOL_IDS.rollback, args);
+          },
         }))),
         entries.map(entry => h('div', { key: entry.id, className: `${RF.CLS}-row` },
           h('div', { className: `${RF.CLS}-row__main` },
@@ -2845,10 +2980,15 @@ window.__ModuleLoader__.load({
    *      文案说清**缺什么**（没有可直调工具的通道）与**给什么替代**（在对话里怎么说）；
    *   3. `console.warn` **保留**（它是诊断信息），但不再是唯一的失败信号。
    *
-   * **最终 transport 待 owner 确认**：本机没有安装 DSH 宿主包，无法证明宿主到底
-   * 有没有「直接执行工具」的 API，所以代码里**不写死任何宿主 API 名** ——
-   * 唯一的例外是下面 `deliver` 里那处**显式标注为未经验证**的可选探测，
-   * 它带运行时存在性检查、不是默认路径，启用前需宿主 owner 确认签名。
+   * **transport 已对真实宿主核实**（DSH 0.2.1-alpha.1，`packages/api/session-controller`）：
+   *   - 宿主**没有**「客户端直接执行工具」的 API —— `remote.commands` 是**斜杠命令**
+   *     通道 `execute(agentId, line, attachments)`，不是工具执行器；
+   *   - 唯一的通道是 **`ctx.remote.session.prompt`**（`SessionPromptRequest`：
+   *     `requestId` / `sessionId` / `mode` / `content`）—— 也就是「把工具指令当一条
+   *     会话消息投进去，由模型去调对应工具」这条既有设计；
+   *   - `ctx.remote.session` 是**独立的服务名**（`remote.session`），必须在
+   *     `RF.CLIENT_INJECT` 里声明才能读到 —— 没声明时 Cordis 的注入守卫会抛
+   *     `cannot get property "remote.session" without inject`。
    */
   RF.actions = {
     /** 已经发起过的调用记录（成功与待重放都在这里）。 */
@@ -2863,31 +3003,44 @@ window.__ModuleLoader__.load({
     /**
      * 把一条请求投给宿主。
      *
+     * ⚠️ **读宿主服务属性会抛错，不是返回 undefined**：宿主的 ctx 是 Cordis 能力代理，
+     * 没在 `inject` 里声明的服务，访问时抛
+     * `cannot get property "<svc>" without inject`。
+     * 所以「这条通道有没有」只能问在一个 try 里 —— 以前 `typeof remote.commands`
+     * 写在 try **外面**，点一下「回滚」整条链直接炸飞：页面上什么都不发生
+     * （用户看到的就是「点了没反应」），只有控制台一行红字。
+     *
      * @param {{ toolId: string, args: object, ask: boolean }} request - 请求。
      * @returns {{ delivered: boolean, reason: string }} 投递结果。
      */
     deliver(request) {
-      const remote = RF.ctx?.remote;
+      const ctx = RF.ctx;
+      if (ctx === undefined || ctx === null) return { delivered: false, reason: 'no-remote' };
       const sessionId = RF.currentSessionId;
-      if (remote === undefined || remote === null) return { delivered: false, reason: 'no-remote' };
+      if (sessionId === undefined || sessionId === '') return { delivered: false, reason: 'no-session' };
 
-      // ⚠️ **未经验证**的可选探测：宿主将来若提供「直接执行工具」的通道
-      // （形如 `remote.commands`），优先走它。**当前本机没有安装 DSH 宿主包**，
-      // 无法证明该 API 存在、也无法证明它的参数形状 —— 所以这里只做**运行时存在性检查**，
-      // 永远不做默认路径；**启用前需宿主 owner 确认签名**。
-      if (typeof remote.commands === 'function') {
-        try {
-          void remote.commands({ toolId: request.toolId, args: request.args });
-          return { delivered: true, reason: 'direct-command' };
-        } catch (error) {
-          console.warn('[reelforge] direct command transport failed, falling back to prompt:', error);
+      try {
+        // ⚠️ `ctx.remote.session` 读的是**服务名 `remote.session`**：宿主把每个
+        // Remote 命名空间各注册成一个独立服务键
+        // （`packages/api/session-controller/src/client/index.ts`）。
+        // 不在 `RF.CLIENT_INJECT` 里声明它，宿主就会抛
+        // `cannot get property "remote.session" without inject`。
+        //
+        // 宿主**没有**「客户端直接执行工具」的 API（已在真实宿主上核实）：
+        // `remote.commands` 是斜杠命令通道 `execute(agentId, line, attachments)`，
+        // 不是工具执行器，读它反而触发注入守卫。
+        // 唯一的通道是**会话指令**：把工具 id 与参数拼成一句话投进当前会话，
+        // 由模型去调对应工具。宿主半靠 `RF.TOOL_CALL_PROMPT_PREFIX` 把这句话
+        // 从「用户输入」里排除（`src/core/inputCapture.js`）。
+        const session = ctx.remote.session;
+        if (session === undefined || session === null || typeof session.prompt !== 'function') {
+          return { delivered: false, reason: 'no-transport' };
         }
-      }
-
-      if (sessionId !== undefined
-        && remote.session !== undefined && typeof remote.session.prompt === 'function') {
-        void remote.session.prompt({
+        const outcome = session.prompt({
+          requestId: RF.newRequestId(),
           sessionId,
+          // 「排队」不是「插队」：点按钮不该打断正在跑的那一轮。
+          mode: 'queue',
           content: [{
             type: 'text',
             // 前缀冻结在 `RF.TOOL_CALL_PROMPT_PREFIX`：宿主半靠它把工作台自己
@@ -2895,9 +3048,24 @@ window.__ModuleLoader__.load({
             text: `${RF.TOOL_CALL_PROMPT_PREFIX}${request.toolId}，参数 ${JSON.stringify(request.args)}`,
           }],
         });
+        // 宿主拒收 / 传输失败 ⇒ **可见失败**，不能当成已经生效。
+        if (outcome !== undefined && typeof outcome.then === 'function') {
+          outcome.then(
+            (result) => {
+              if (result !== null && typeof result === 'object' && result.ok === false) {
+                RF.actions.reportRefused(request, result.error?.message ?? '');
+              }
+            },
+            (error) => { RF.actions.reportRefused(request, String(error)); },
+          );
+        }
         return { delivered: true, reason: 'session-prompt' };
+      } catch (error) {
+        // 通道不可用**不是**用户能理解的错误：降级到「可见失败 + 可重放」路径，
+        // 绝不让一次点击把整条链炸掉。
+        console.warn('[reelforge] tool transport unavailable:', error);
+        return { delivered: false, reason: 'transport-unavailable' };
       }
-      return { delivered: false, reason: 'no-transport' };
     },
 
     /**
@@ -2944,6 +3112,28 @@ window.__ModuleLoader__.load({
       const label = prefix === undefined ? RF.tr('notice.unknownTool') : RF.tr(`${prefix}.label`);
       const say = prefix === undefined ? RF.tr('notice.sayFallback') : RF.tr(`${prefix}.say`);
       return RF.tr('notice.undelivered', { label, say });
+    },
+
+    /**
+     * 宿主拒收 / 传输失败 ⇒ **可见失败**。
+     *
+     * 已经投出去但宿主没接受，和「根本投不出去」是两回事：文案要分开说，
+     * 不能都报成「还没接上工具通道」。
+     *
+     * @param {{ toolId: string, args: object, ask: boolean }} request - 请求。
+     * @param {string} reason - 宿主给的原因（可空）。
+     * @returns {void}
+     */
+    reportRefused(request, reason) {
+      const prefix = TOOL_HINT_KEYS[request.toolId];
+      const label = prefix === undefined ? RF.tr('notice.unknownTool') : RF.tr(`${prefix}.label`);
+      const say = prefix === undefined ? RF.tr('notice.sayFallback') : RF.tr(`${prefix}.say`);
+      RF.notify({
+        level: 'error',
+        toolId: request.toolId,
+        message: RF.tr('notice.hostRefused', { label, say, reason: reason ?? '' }),
+      });
+      console.warn('[reelforge] host refused the tool request:', request, reason);
     },
 
     /**
@@ -3056,10 +3246,17 @@ window.__ModuleLoader__.load({
     }), 'reelforge: workbench tab type');
 
     // ── 阶段二：页面体（插槽 key = definition.id，**不是 kind**） ──
+    // ⚠️ `inject: (sessionId) => ({ sessionId })` **不能少**：右栏页签体是
+    // **会话作用域**插槽，只有声明了这个 inject 面，宿主才会把会话 id 递进来
+    // （宿主做法见 `packages/client/ui-sidebar-browser/src/client/index.ts`：
+    // `inject: (sessionId, actions) => {...}`）。
+    // 没有它 → `props.sessionId` 是 undefined → `RF.currentSessionId` 永远是空
+    // → 写操作（回滚 / 生成 / 改时长）**全部投递不出去**。
     ctx.effect(() => ctx.slots.inject('sidebar.right.pane.tab', () => ctx.slots.register({
       name: 'sidebar.right.pane.tab',
       key: RF.TAB_TYPE_ID,
       locale: RF.NAMESPACE,
+      inject: sessionId => ({ sessionId }),
     }, RF.Workbench)), 'reelforge: workbench body');
 
     // ⚠️ `locale: RF.NAMESPACE` **不能少**：宿主只在注册声明了 `locale:` 时

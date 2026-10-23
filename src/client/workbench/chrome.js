@@ -120,6 +120,19 @@
   }
 
   /**
+   * 有没有进入生成阶段（阶段走到「生成」之后）。
+   *
+   * 用它区分「还没开始渲染」与「还在渲染」—— 两者都不该说成「渲染完成」。
+   *
+   * @param {object} project - 投影视图。
+   * @returns {boolean} 是否已进入生成阶段。
+   */
+  function renderStarted(project) {
+    const stage = String(project?.stage ?? '');
+    return stage === 'generate' || stage === 'storyboard' || stage === 'deliver';
+  }
+
+  /**
    * 每屏的外壳描述。
    *
    * @typedef {object} TabChrome
@@ -128,8 +141,21 @@
    * @property {(project: object, t: function) => string} capsule Header 右侧胶囊。
    * @property {(project: object, t: function) => string} footerLabel Footer 第一行标签。
    * @property {(project: object, t: function) => string} footerValue Footer 第二行。
-   * @property {{ key: string, kind: string, tab?: string, tool?: string, params?: function }} footerAction Footer 按钮。
-   * @property {string} [disabledHintKey] 按钮不可用时的说明词条（说清缺什么、给什么替代）。
+   * @property {(project: object) => object} footerAction Footer 按钮。
+   * @property {string} [disabledHintKey] 按钮不可用时的**兜底**说明词条（说清缺什么、给什么替代）。
+   */
+
+  /**
+   * 底栏按钮的动作描述。
+   *
+   * @typedef {object} FooterAction
+   * @property {string} key 按钮文案词条。
+   * @property {string} kind `tab` / `tool` / `export` / `scroll` / `none`。
+   * @property {string} [tab] `kind === 'tab'` 时切到哪个页签。
+   * @property {string} [tool] `kind === 'tool'` 时调哪个工具。
+   * @property {object | function} [params] `kind === 'tool'` 时的参数（可以是函数）。
+   * @property {boolean} [disabled] 不可用时置 true。
+   * @property {string} [hintKey] 不可用时的说明词条（说清缺什么、给什么替代）。
    */
 
   RF.TAB_CHROME = {
@@ -162,11 +188,14 @@
         const positionText = position === null ? t('footer.idle') : t('footer.position', position);
         return `${stageLabel} · ${positionText}`;
       },
-      footerAction: { key: 'action.viewOutput', kind: 'tab', tab: 'output' },
+      footerAction: () => ({ key: 'action.viewOutput', kind: 'tab', tab: 'output' }),
     },
 
     /**
      * 09 分镜表：胶囊是「章 N / 总数」，底栏指向下一步（跑 video 出片）。
+     *
+     * ⚠️ 没有章时**不能说「章 1 / 0」**（自相矛盾），也不能让「生成第 1 章」
+     * 变成点了没反应的按钮 —— 禁用 + 说清缺什么。
      */
     shots: {
       titleKey: 'chrome.shots.title',
@@ -181,19 +210,23 @@
       },
       capsule: (project, t) => {
         const chapters = Array.isArray(project?.chapters) ? project.chapters : [];
+        if (chapters.length === 0) return t('chrome.shots.capsuleEmpty');
         const chapter = currentChapter(project);
         return t('chrome.shots.capsule', { current: chapter?.id ?? 1, total: chapters.length });
       },
       footerLabel: staticText('chrome.shots.footerLabel'),
       footerValue: staticText('chrome.shots.footerValue'),
-      footerAction: {
-        key: 'chrome.shots.action',
-        kind: 'tool',
-        tool: RF.TOOL_IDS.runStage,
-        params: (project) => {
-          const chapter = currentChapter(project);
-          return { stage: 'video', ...(chapter === null ? {} : { seq: Number(chapter.id) || 1 }) };
-        },
+      footerAction: (project) => {
+        const chapter = currentChapter(project);
+        if (chapter === null) {
+          return { key: 'chrome.shots.action', kind: 'none', hintKey: 'chrome.shots.disabledHint' };
+        }
+        return {
+          key: 'chrome.shots.action',
+          kind: 'tool',
+          tool: RF.TOOL_IDS.runStage,
+          params: { stage: 'video', seq: Number(chapter.id) || 1 },
+        };
       },
     },
 
@@ -208,7 +241,7 @@
       }),
       footerLabel: staticText('chrome.assets.footerLabel'),
       footerValue: staticText('chrome.assets.footerValue'),
-      footerAction: { key: 'chrome.assets.action', kind: 'tab', tab: 'shots' },
+      footerAction: () => ({ key: 'chrome.assets.action', kind: 'tab', tab: 'shots' }),
     },
 
     /**
@@ -220,7 +253,7 @@
       capsule: (project, t) => t('chrome.context.capsule', { count: RF.CONTEXT_KEYS.length }),
       footerLabel: staticText('chrome.context.footerLabel'),
       footerValue: staticText('chrome.context.footerValue'),
-      footerAction: { key: 'chrome.context.action', kind: 'tab', tab: 'assets' },
+      footerAction: () => ({ key: 'chrome.context.action', kind: 'tab', tab: 'assets' }),
     },
 
     /**
@@ -235,12 +268,15 @@
         const counts = skillCounts(project);
         return t('chrome.skills.footerValue', counts);
       },
-      footerAction: { key: 'chrome.skills.action', kind: 'none' },
+      footerAction: () => ({ key: 'chrome.skills.action', kind: 'none', hintKey: 'chrome.skills.disabledHint' }),
       disabledHintKey: 'chrome.skills.disabledHint',
     },
 
     /**
      * 10 成片：胶囊是渲染位置，底栏第一行是本集用时。
+     *
+     * ⚠️ 没开始渲染时不说「待开始渲染」（不通顺）；也没有交付物时，
+     * 「交付物」按钮不能点了没反应 —— 禁用 + 说清缺什么。
      */
     output: {
       titleKey: 'chrome.output.title',
@@ -254,15 +290,31 @@
           duration: chapterDuration(chapter).toFixed(1),
         });
       },
-      capsule: (project, t) => t('chrome.output.capsule', { position: positionLabel(project, t) }),
+      capsule: (project, t) => {
+        const position = positionLabel(project, t);
+        if (position === t('status.idle')) return t('chrome.output.capsuleIdle');
+        return t('chrome.output.capsule', { position });
+      },
       footerLabel: staticText('chrome.output.footerLabel'),
       footerValue: (project, t) => {
         const cost = RF.formatMoney(project?.cost?.spent ?? 0);
         const deliverables = Array.isArray(project?.deliverables) ? project.deliverables : [];
-        const status = deliverables.length === 0 ? t('chrome.output.statusPending') : t('chrome.output.statusDone');
-        return t('chrome.output.footerValue', { cost, status });
+        if (deliverables.length > 0) {
+          return t('chrome.output.footerValue', { cost, status: t('chrome.output.statusDone') });
+        }
+        // 还没到出片阶段但已经开始生成 → 说「还在渲染」，别装成已经完成。
+        if (renderStarted(project)) {
+          return t('chrome.output.footerValue', { cost, status: t('chrome.output.statusPending') });
+        }
+        return t('chrome.output.statusIdle');
       },
-      footerAction: { key: 'chrome.output.action', kind: 'scroll', target: 'rf-deliverables' },
+      footerAction: (project) => {
+        const deliverables = Array.isArray(project?.deliverables) ? project.deliverables : [];
+        if (deliverables.length === 0) {
+          return { key: 'chrome.output.action', kind: 'none', hintKey: 'chrome.output.disabledHint' };
+        }
+        return { key: 'chrome.output.action', kind: 'scroll', target: 'rf-deliverables' };
+      },
     },
 
     /**
@@ -274,7 +326,7 @@
       capsule: (project, t) => t('chrome.log.capsule', { count: logCount(project) }),
       footerLabel: staticText('chrome.log.footerLabel'),
       footerValue: (project, t) => t('chrome.log.footerValue', { count: logCount(project) }),
-      footerAction: { key: 'chrome.log.action', kind: 'export' },
+      footerAction: () => ({ key: 'chrome.log.action', kind: 'export' }),
     },
   };
 

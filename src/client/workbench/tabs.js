@@ -69,7 +69,8 @@
         key: value,
         label: RF.formatDuration(value),
         variant: value === selected.duration ? 'primary' : 'secondary',
-        onClick: () => props.state.setDuration(value),
+        // 把「选中的是哪一镜」一起传出去：改时长要发 `seq` + `idx`（工具必填）。
+        onClick: () => props.state.setDuration(selected, value),
       }))),
       h(RF.ui.SectionLabel, null, props.t('shots.refs')),
       h('div', null, (selected.references ?? []).map(reference => h(RF.ui.MetaRow, {
@@ -324,19 +325,31 @@
         variant: mode === props.state.rollbackMode ? 'primary' : 'secondary',
         onClick: () => props.state.setRollbackMode(mode),
       }))),
-      entries.map(entry => h(RF.ui.Card, { key: entry.id },
-        h('div', { className: `${RF.CLS}-row` },
-          h('div', { className: `${RF.CLS}-row__main` },
-            h('div', { className: `${RF.CLS}-row__sub` }, RF.formatDateTime(entry.at ?? '')),
-            h('div', { className: `${RF.CLS}-row__title` }, entry.summary ?? ''),
-            // 字段 + 批次（设计稿 13 号板：行内标签含「批次 batch_7f3a」）。
-            h('div', { className: `${RF.CLS}-row__sub` },
-              [entry.field ?? '', entry.batchId ?? ''].filter(Boolean).join(' · '))),
-          h(RF.ui.Button, {
-            label: props.t('common.rollback'),
-            variant: 'secondary',
-            onClick: () => props.state.rollback(entry),
-          })))),
+      entries.map(entry => {
+        // ⚠️ 项目层的「新建 / 删除」**永不可回滚**（宿主硬约束：没有删除项目的 API，
+        // 回滚项目创建等于变相创建项目 ⇒ 403 拒绝）。
+        // 以前这里照样挂一个可点的「回滚」⇒ 点了必然失败，用户只看到「什么都没发生」。
+        // 现在禁用 + 说清缺什么。
+        const locked = entry.layer === 'project' && (entry.op === 'create' || entry.op === 'delete');
+        return h(RF.ui.Card, { key: entry.id },
+          h('div', { className: `${RF.CLS}-row` },
+            h('div', { className: `${RF.CLS}-row__main` },
+              h('div', { className: `${RF.CLS}-row__sub` }, RF.formatDateTime(entry.at ?? '')),
+              h('div', { className: `${RF.CLS}-row__title` }, entry.summary ?? ''),
+              // 字段 + 批次（设计稿 13 号板：行内标签含「批次 batch_7f3a」）。
+              h('div', { className: `${RF.CLS}-row__sub` },
+                [entry.field ?? '', entry.batchId ?? ''].filter(Boolean).join(' · ')),
+              locked
+                ? h('div', { className: `${RF.CLS}-row__sub ${RF.CLS}-note--warn` }, props.t('log.projectLocked'))
+                : null),
+            h(RF.ui.Button, {
+              label: props.t('common.rollback'),
+              variant: 'secondary',
+              disabled: locked,
+              title: locked ? props.t('log.projectLocked') : undefined,
+              onClick: () => props.state.rollback(entry),
+            })));
+      }),
       drifted === undefined ? null : h(RF.ui.Card, null,
         h('div', { className: `${RF.CLS}-note ${RF.CLS}-note--warn` }, props.t('log.drifted')),
         h(RF.ui.Button, { label: props.t('log.force'), variant: 'danger', onClick: () => props.state.rollback(drifted, true) })),

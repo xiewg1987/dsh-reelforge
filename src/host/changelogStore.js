@@ -366,28 +366,48 @@ export function readRows(state) {
 /**
  * 把回滚结果写回投影。
  *
+ * ## `value === null` = **删掉这一行**
+ *
+ * 核心层的契约明写：`row === null` 表示删除该行（`src/core/changelog.js` 的
+ * `writeRow` 说明）。回滚「新建」这类变更时，该行的旧值就是「这一行本来不存在」，
+ * 恢复旧值 = 删掉这一行。
+ *
+ * ⚠️ 以前这里把 `null` 降级成 `{}` 再走 upsert —— 而 upsert 是**合并**语义，
+ * 空对象合并不进去 ⇒ **回滚什么都没改**，工具却回报 `restored: 1`（谎报成功）。
+ * 现在 `null` 走独立的删除补丁：改了就是删了，没改就是没改。
+ *
  * @param {object} options
  * @param {import('./projection.js').ProjectionStore} options.store 投影存储。
  * @param {string} options.sessionId 会话 id。
  * @param {(sessionId: string, patches: object[]) => Promise<void>} options.commit 提交补丁。
  * @param {string} options.layer 内容表层。
  * @param {string} options.rowId 行 id。
- * @param {object | null} options.value 行值（行快照；`null` = 该行不存在）。
+ * @param {object | null} options.value 行值（行快照；`null` = 该行不存在 ⇒ 删掉它）。
  * @param {object[]} [options.written] 收集写回补丁的数组（给日志层用）。
  * @returns {Promise<void>} 完成。
  */
 async function writeRow({ store, sessionId, commit, layer, rowId, value, written }) {
   const patches = [];
+  // 旧值是「不存在」⇒ 这一行要被删掉；否则是把行写回旧值。
+  const deleting = value === null;
 
   if (layer === 'project') {
-    patches.push({ op: 'project.set', value: value ?? {} });
+    patches.push(deleting
+      ? { op: 'project.delete' }
+      : { op: 'project.set', value: value ?? {} });
   } else if (layer === 'chapter') {
-    patches.push({ op: 'chapter.upsert', seq: Number(rowId), value: value ?? {} });
+    patches.push(deleting
+      ? { op: 'chapter.delete', seq: Number(rowId) }
+      : { op: 'chapter.upsert', seq: Number(rowId), value: value ?? {} });
   } else if (layer === 'shot') {
     const [seq, idx] = String(rowId).split(':');
-    patches.push({ op: 'shot.set', seq: Number(seq), idx: Number(idx), value: value ?? {} });
+    patches.push(deleting
+      ? { op: 'shot.delete', seq: Number(seq), idx: Number(idx) }
+      : { op: 'shot.set', seq: Number(seq), idx: Number(idx), value: value ?? {} });
   } else if (layer === 'asset') {
-    patches.push({ op: 'asset.upsert', value: { id: rowId, ...(value ?? {}) } });
+    patches.push(deleting
+      ? { op: 'asset.delete', id: rowId }
+      : { op: 'asset.upsert', value: { id: rowId, ...(value ?? {}) } });
   } else {
     // 未知层：不猜。**报错**而不是静默返回——静默返回会让回滚「报成功但什么也没改」。
     // （`reference` 层在 `rollback` 里已经被提前拦下并明确报「该层不支持回滚」。）

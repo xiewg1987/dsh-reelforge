@@ -174,6 +174,15 @@ function applyUserMessage(state, event) {
  * { op: 'changelog.set',  value: { entries: [ ... ] } }
  * ```
  *
+ * ## 删除类补丁（`*.delete`）
+ *
+ * 回滚「新建」这类变更时，该行的旧值是「**这一行本来不存在**」——
+ * 恢复旧值就等于**删掉这一行**。没有删除类补丁时，宿主接线层只能把「删行」
+ * 降级成「upsert 一个空对象」，那个操作会**什么都不改**（`chapter.upsert`
+ * 是合并语义：空对象合并不进去），于是回滚**谎报成功**。
+ *
+ * 所以删除必须有独立补丁：改了就是删了，没改就是没改。
+ *
  * @param {object} state 当前状态。
  * @param {object} patch 补丁。
  * @returns {object} 下一个状态。
@@ -209,6 +218,35 @@ export function applyPatch(state, patch) {
       const chapters = [...state.chapters];
       chapters[index] = { ...chapters[index], shots: [...(patch.shots ?? [])] };
       return { ...state, chapters };
+    }
+
+    // ── 删除类补丁：回滚「新建」时把这一行真正删掉 ──
+    case 'project.delete':
+      // 项目行本来只有一行；删掉 = 没有项目内容了。
+      return { ...state, project: null };
+
+    case 'chapter.delete': {
+      // 章节的分镜住在章节对象里 ⇒ 删章即删它的分镜。
+      const chapters = state.chapters.filter((chapter) => chapter.seq !== patch.seq);
+      if (chapters.length === state.chapters.length) return state;
+      return { ...state, chapters };
+    }
+
+    case 'shot.delete': {
+      const chapterIndex = state.chapters.findIndex((chapter) => chapter.seq === patch.seq);
+      if (chapterIndex < 0) return state;
+      const chapter = state.chapters[chapterIndex];
+      const shots = chapter.shots.filter((shot) => shot.idx !== patch.idx);
+      if (shots.length === chapter.shots.length) return state;
+      const chapters = [...state.chapters];
+      chapters[chapterIndex] = { ...chapter, shots };
+      return { ...state, chapters };
+    }
+
+    case 'asset.delete': {
+      const assets = state.assets.filter((asset) => asset.id !== patch.id);
+      if (assets.length === state.assets.length) return state;
+      return { ...state, assets };
     }
 
     case 'shot.set': {
@@ -534,6 +572,12 @@ export function buildWireView(state, options = {}) {
       }
       return {
         id: `${chapter.seq ?? 0}-${shot.idx ?? 0}`,
+        // ⚠️ `seq` / `idx` 必须单列出来：客户端改一镜时长时要发
+        // `reelforge.update_shot`，而那个工具的必填参数就是 `seq` + `idx`
+        // （`src/host/tools.js` 的 `required: ['seq', 'idx']`）。
+        // 只给一个拼出来的 `id` 的话，客户端只能靠拆字符串反推 —— 拆错了没人知道。
+        seq: chapter.seq ?? 0,
+        idx: shot.idx ?? 0,
         label: shot.scene_name ?? `镜头 ${shot.idx ?? '?'}`,
         shotSize: shot.shot_size ?? '',
         duration: Number(shot.duration) || 0,

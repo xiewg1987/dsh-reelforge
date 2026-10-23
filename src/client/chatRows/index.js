@@ -213,6 +213,18 @@
     const data = dataOf(props);
     const entries = Array.isArray(data.entries) ? data.entries : [];
     const modes = Array.isArray(data.modes) ? data.modes : ['single', 'batch', 'timepoint'];
+    // 三个按钮都是**动作**（这一行里没有每行各自的回滚按钮），所以各自要带足
+    // 宿主工具要的定位参数：`reelforge.rollback` 的 schema 是
+    // `mode` + `entryId`（单条）/ `batchId`（整批）/ `at`（时间点），
+    // 且 `additionalProperties: false` —— 只发 `mode` 会被整条拒收。
+    // 目标取这一行里**最新**的那条变更（数组末尾）。
+    const latest = entries.length > 0 ? entries[entries.length - 1] : null;
+    const rollbackArgs = (mode) => {
+      if (latest === null) return null;
+      if (mode === 'batch') return { mode, batchId: latest.batchId };
+      if (mode === 'timepoint') return { mode, at: latest.at };
+      return { mode, entryId: latest.id };
+    };
     return h('div', { className: `${RF.CLS}-chatrow` },
       h('div', { className: `${RF.CLS}-chatrow__head` },
         h('span', { className: `${RF.CLS}-chatrow__kind` }, 'reelforge-changelog'),
@@ -222,7 +234,11 @@
           key: mode,
           label: RF.chatRows.t(`log.${mode}`),
           variant: 'secondary',
-          onClick: () => RF.actions?.callTool?.(RF.TOOL_IDS.rollback, { mode }),
+          onClick: () => {
+            const args = rollbackArgs(mode);
+            if (args === null) return;
+            RF.actions?.callTool?.(RF.TOOL_IDS.rollback, args);
+          },
         }))),
         entries.map(entry => h('div', { key: entry.id, className: `${RF.CLS}-row` },
           h('div', { className: `${RF.CLS}-row__main` },

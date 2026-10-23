@@ -290,3 +290,427 @@ $env:RF_FFPROBE_PATH = '<ffprobe.exe>'
 node --test src/media/__tests__/assemble-e2e.test.js   # 真 ffmpeg 实跑组
 ```
 
+
+---
+
+## 事实 10：工作台七屏 + 写操作全链路（2026-10-24 实机，DSH 0.2.1-alpha.1）
+
+这一轮用**真实宿主 + 系统 Chrome**（Playwright `channel: 'chrome'`，视口 1600×1000）跑了一遍：
+逐屏截图 + 抓**原始 DOM 文案** + 真的点按钮看副作用。
+
+### 10.1 环境与复跑
+
+| 项 | 值 |
+| --- | --- |
+| 宿主 | `@deepseek-ai/dsh-root` 0.2.1-alpha.1（源码 `D:\ScriptProject\deepseek-harness`） |
+| 插件安装 | `dsh plugin --profile web add "link:D:/ScriptProject/dsh-reelforge"`（**符号链接**，改仓库即生效，不用重装） |
+| 隔离 profile | `DSH_HOME=%TEMP%\dsh-rf-ui` |
+| 模型通道 | 本机 mock（`http://127.0.0.1:8098/v1`）：mock 扮演模型，听懂「请调用工具 X，参数 {...}」就去调对应工具；每个请求体落盘 |
+| 控制台错误 | **0 条** |
+
+复跑：
+
+```powershell
+# 1) 起带日志的 mock（8098）
+node "$env:TEMP\rf-mock-log.mjs"
+# 2) 起宿主（3081）
+$env:DSH_HOME = "$env:TEMP\dsh-rf-ui"
+$env:DEEPSEEK_BASE_URL = 'http://127.0.0.1:8098/v1'
+$env:DEEPSEEK_API_KEY = 'mock-key'
+node --import tsx/esm apps/cli/src/bin.ts web --port 3081 --no-open
+# 3) 浏览器脚本：发消息 → 工具调用 → 逐屏 → 点回滚 → 点「允许一次」
+node "$env:TEMP\rf-ui-e2e3.mjs" "http://127.0.0.1:3081/?token=<token>" "$env:TEMP\rf-ui-e2e6"
+```
+
+### 10.2 空态七屏（新建会话、还没发消息）
+
+原始 innerText（逐屏点开抓的，**没有手抄**）：
+
+### 阶段条（.rf-stagebar 原始 innerText）
+```text
+需求
+运行
+方案
+生成
+分镜
+交付
+1 / 6
+```
+
+### 七屏逐屏原始文案（.rf-header__title / __subtitle / __status / .rf-scroll）
+```text
+--- 页签「章节」
+title: ReelForge 工作台
+subtitle: 《未命名项目》· 0 章 · 0 镜
+capsule: 待开始
+footer.label: 当前阶段
+footer.value: 需求 · 还没有开始生成
+body:
+你的需求（自动捕获）
+在中间的对话框里写下你想做的事，它会原样落在这里。
+还没有章节。把小说正文粘到对话框，这里会自动拆章。
+下一步：把需求写全，下面就会往下走。
+还没有开始生成 · 已用 ¥0.00 / 上限 ¥12.00
+
+--- 页签「分镜」
+title: 分镜表
+subtitle: 还没有分镜表
+capsule: 还没有章
+footer.label: 下一步
+footer.value: 跑 video 阶段出片
+body:
+你的需求（自动捕获）
+在中间的对话框里写下你想做的事，它会原样落在这里。
+还没有分镜。助手会按上面的需求生成分镜表。
+下一步：把需求写全，下面就会往下走。
+还没有分镜表：先把小说正文粘到对话框拆章，才能生成这一章。
+
+--- 页签「资产」
+title: 资产库
+subtitle: 10 类资产，变体挂在父资产下
+capsule: 0 项资产
+footer.label: 下一步
+footer.value: 逐镜写分镜
+body:
+你的需求（自动捕获）
+在中间的对话框里写下你想做的事，它会原样落在这里。
+资产
+人物
+场景
+道具
+服装
+年龄变体
+音色
+配乐
+音效
+视频
+其他
+还没有参考图。助手会按需生成人物、场景与道具图。
+下一步：把需求写全，下面就会往下走。
+变体类（服装 / 年龄）必须带 parent_id，挂在原资产下
+参考图优先级：服装 > 年龄变体 > 角色原图（独立维度，不叠加）
+
+--- 页签「上下文」
+title: 上下文
+subtitle: 一致性锚点：圣经 / 风格 / 连续性
+capsule: 3 个分区
+footer.label: 下一步
+footer.value: 生成资产参考图
+body:
+你的需求（自动捕获）
+在中间的对话框里写下你想做的事，它会原样落在这里。
+上下文是空的。让人物圣经、风格指南或连续性记录先落一笔。
+下一步：把需求写全，下面就会往下走。
+人物圣经
+整段覆盖
+风格指南
+整段覆盖
+连续性记录
+追加
+上下文只允许三个键，多写的键一律报错不静默丢弃
+
+--- 页签「技能」
+title: 技能
+subtitle: 写作规范以技能形式装载
+capsule: 1 个来源
+footer.label: 技能来源
+footer.value: 内置 5 · 已装 0 · 自建 0
+body:
+你的需求（自动捕获）
+在中间的对话框里写下你想做的事，它会原样落在这里。
+技能
+内置
+已装
+自建
+novel-to-video
+ReelForge 总流水线——把小说/创意变成带配音字幕的短剧成片，是当前工作模式技能，不确定该做哪一步时先读它
+内置
+6.4 KB · 2026-10-23
+reelforge-image-prompt
+资产参考图与镜头图的提示词规范——人物三视图、场景图、道具图、服装与年龄变体怎么写才不漂
+内置
+6.6 KB · 2026-10-23
+reelforge-story-pipeline
+把小说正文变成剧本与分镜表——拆章、写人物圣经、拆分镜、绑定资产，并守住时长与说话人硬约束
+内置
+7.1 KB · 2026-10-23
+reelforge-video-prompt
+视频提示词与参考标签规范——每镜怎么写、参考素材怎么编号挂载、改写时怎么保住占位符
+内置
+6.3 KB · 2026-10-23
+reelforge-voice-design
+角色音色设计规范——音色描述怎么写、怎么绑到角色、缺音色时怎么说清楚
+内置
+5.6 KB · 2026-10-23
+插件不分发第三方技能正文，用户自行安装上游技能包。
+技能包安装走对话框：请说「安装技能包 <名称>」
+
+--- 页签「成片」
+title: 成片
+subtitle: 还没有成片
+capsule: 还没开始渲染
+footer.label: 本集用时
+footer.value: 还没开始渲染
+body:
+你的需求（自动捕获）
+在中间的对话框里写下你想做的事，它会原样落在这里。
+还没有成片。合成一章即可出片。
+下一步：把需求写全，下面就会往下走。
+还没有交付物：合成一章之后，这里会列出成片与素材。
+
+--- 页签「日志」
+title: 变更日志
+subtitle: 谁在什么时候改了什么，可回滚
+capsule: 0 条
+footer.label: 全项目
+footer.value: 0 条
+body:
+你的需求（自动捕获）
+在中间的对话框里写下你想做的事，它会原样落在这里。
+还没有变更。
+下一步：把需求写全，下面就会往下走。
+
+```
+
+### 控制台错误条数：0
+
+### 工作台根节点原始 DOM 开头（.rf-root 原始 outerHTML 前 1200 字符）
+```html
+<section class="rf-root"><header class="rf-header"><div class="rf-header__logo" aria-hidden="true"></div><div class="rf-header__text"><div class="rf-header__title">变更日志</div><div class="rf-header__subtitle">谁在什么时候改了什么，可回滚</div></div><span class="rf-header__status">0 条</span></header><nav class="rf-stagebar" aria-label="ReelForge 工作台"><span class="rf-stagebar__step rf-stagebar__step--current"><span class="rf-stagebar__dot rf-stagebar__dot--current"></span><span>需求</span></span><span class="rf-stagebar__step rf-stagebar__step--upcoming"><span class="rf-stagebar__dot rf-stagebar__dot--upcoming"></span><span>运行</span></span><span class="rf-stagebar__step rf-stagebar__step--upcoming"><span class="rf-stagebar__dot rf-stagebar__dot--upcoming"></span><span>方案</span></span><span class="rf-stagebar__step rf-stagebar__step--upcoming"><span class="rf-stagebar__dot rf-stagebar__dot--upcoming"></span><span>生成</span></span><span class="rf-stagebar__step rf-stagebar__step--upcoming"><span class="rf-stagebar__dot rf-stagebar__dot--upcoming"></span><span>分镜</span></span><span class="rf-stagebar__step rf-stagebar__step--upcoming"><span class="rf-stagebar__dot rf-stagebar__dot--upcoming"></span><span>
+```
+
+### 10.3 有数据时七屏（发消息 → `reelforge.import_novel` 真跑通 → 2 章）
+
+原始 innerText（每屏的标题 / 副标 / 胶囊 / 底栏两行 / 正文）：
+
+```text
+--- 页签「章节」
+subtitle: 《夜航船》· 2 章 · 0 镜
+capsule: 待开始
+body:
+你的需求（自动捕获）
+导入小说：第1章 林岸站在码头。第2章 船舱里没有灯。
+章节
+第1章
+0 镜 · 0.0s
+待写分镜
+剧本与提示词
+参考图
+音色样本
+视频
+第2章
+0 镜 · 0.0s
+待写分镜
+剧本与提示词
+参考图
+音色样本
+视频
+video 硬依赖 image：没有参考图直接报错。
+video 软依赖 tts：缺失时视频降质，界面会标出来。
+章节 = 一个可独立交付的成片单元 · 一章一集
+第 1 章 · 第 0 / 0 镜 · 已用 ¥0.00 / 上限 ¥12.00
+
+--- 页签「分镜」
+subtitle: 第 1 章 · 第1章 · 0 镜
+capsule: 章 1 / 2
+body:
+你的需求（自动捕获）
+导入小说：第1章 林岸站在码头。第2章 船舱里没有灯。
+还没有分镜。助手会按上面的需求生成分镜表。
+下一步：把需求写全，下面就会往下走。
+
+--- 页签「资产」
+subtitle: 10 类资产，变体挂在父资产下
+capsule: 0 项资产
+body:
+你的需求（自动捕获）
+导入小说：第1章 林岸站在码头。第2章 船舱里没有灯。
+资产
+人物
+场景
+道具
+服装
+年龄变体
+音色
+配乐
+音效
+视频
+其他
+还没有参考图。助手会按需生成人物、场景与道具图。
+下一步：把需求写全，下面就会往下走。
+变体类（服装 / 年龄）必须带 parent_id，挂在原资产下
+参考图优先级：服装 > 年龄变体 > 角色原图（独立维度，不叠加）
+
+--- 页签「上下文」
+subtitle: 一致性锚点：圣经 / 风格 / 连续性
+capsule: 3 个分区
+body:
+你的需求（自动捕获）
+导入小说：第1章 林岸站在码头。第2章 船舱里没有灯。
+上下文是空的。让人物圣经、风格指南或连续性记录先落一笔。
+下一步：把需求写全，下面就会往下走。
+人物圣经
+整段覆盖
+风格指南
+整段覆盖
+连续性记录
+追加
+上下文只允许三个键，多写的键一律报错不静默丢弃
+
+--- 页签「技能」
+subtitle: 写作规范以技能形式装载
+capsule: 1 个来源
+body:
+你的需求（自动捕获）
+导入小说：第1章 林岸站在码头。第2章 船舱里没有灯。
+技能
+内置
+已装
+自建
+novel-to-video
+ReelForge 总流水线——把小说/创意变成带配音字幕的短剧成片，是当前工作模式技能，不确定该做哪一步时先读它
+内置
+6.4 KB · 2026-10-23
+reelforge-image-prompt
+资产参考图与镜头图的提示词规范——人物三视图、场景图、道具图、服装与年龄变体怎么写才不漂
+内置
+6.6 KB · 2026-10-23
+reelforge-story-pipeline
+把小说正文变成剧本与分镜表——拆章、写人物圣经、拆分镜、绑定资产，并守住时长与说话人硬约束
+内置
+7.1 KB · 2026-10-23
+reelforge-video-prompt
+视频提示词与参考标签规范——每镜怎么写、参考素材怎么编号挂载、改写时怎么保住占位符
+内置
+6.3 KB · 2026-10-23
+reelforge-voice-design
+角色音色设计规范——音色描述怎么写、怎么绑到角色、缺音色时怎么说清楚
+内置
+5.6 KB · 2026-10-23
+插件不分发第三方技能正文，用户自行安装上游技能包。
+技能包安装走对话框：请说「安装技能包 <名称>」
+
+--- 页签「成片」
+subtitle: 第 1 章 第1章 · 0 镜 · 0.0s
+capsule: 还没开始渲染
+body:
+你的需求（自动捕获）
+导入小说：第1章 林岸站在码头。第2章 船舱里没有灯。
+还没有成片。合成一章即可出片。
+下一步：把需求写全，下面就会往下走。
+还没有交付物：合成一章之后，这里会列出成片与素材。
+
+--- 页签「日志」
+subtitle: 谁在什么时候改了什么，可回滚
+capsule: 21 条
+body:
+你的需求（自动捕获）
+导入小说：第1章 林岸站在码头。第2章 船舱里没有灯。
+回滚单条
+回滚整批
+回滚到时间点
+2026-10-24 00:42
+新建章节 1
+* · batch_session-efa7f758-906b-4c0a-86fb-2887757c255b_0001
+回滚
+2026-10-24 00:42
+新建章节 2
+* · batch_session-efa7f758-906b-4c0a-86fb-2887757c255b_0001
+回滚
+2026-10-24 00:42
+新建项目 project
+* · batch_session-efa7f758-906b-4c0a-86fb-2887757c255b_0001
+回滚
+2026-10-24 00:46
+新建章节 1
+* · batch_session-c02da33c-fa01-4cef-8c93-7ec06c59f554_0001
+回滚
+2026-10-24 00:46
+新建章节 2
+* · batch_session-c02da33c-fa01-4cef-8c93-7ec06c59f554_0001
+回滚
+2026-10-24 00:46
+新建项目 project
+* · batch_session-c02da33c-fa01-4cef-8c93-7ec06c59f554_0001
+回滚
+2026-10-24 00:58
+新建章节 1
+* · batch_session-2316e61a-7494-4dc1-a7ef-976d3473e3c9_0001
+回滚
+2026-10-24 00:58
+新建章节 2
+* · batch_session-2316e61a-7494-4dc1-a7ef-976d3473e3c9_0001
+回滚
+2026-10-24 00:58
+新建项目 project
+* · batch_session-2316e61a-7494-4dc1-a7ef-976d3473e3c9_0001
+回滚
+2026-10-24 01:14
+新建章节 1
+* · batch_session-0
+
+```
+
+### 10.4 写操作全链路：点「回滚」→ 宿主 ask 授权 → 允许 → **数据真变**
+
+**① 工作台按钮把工具指令投进会话**（对话区原文）：
+
+```text
+请调用工具 reelforge.rollback，参数 {"entryId":"cl_20261023172437892_000019_8cec7dbe","mode":"single"}
+```
+
+**② 模型转成工具调用**（mock 收到的请求体原文，节选）：
+
+```json
+{"type":"tool_use","name":"reelforge.rollback","input":{"entryId":"cl_20261023172437892_000019_8cec7dbe","mode":"single"}}
+```
+
+**③ 宿主弹 ask 人工授权**（`[data-approval-key]` 面板原始 innerText）：
+
+```text
+等待审批
+ReelForge：reelforge.rollback 会消耗算力与费用，请确认。
+拒绝
+允许一次
+```
+
+**④ 点「允许一次」后工具真跑**（工具返回原文）：
+
+```json
+[{"type":"text","text":"{\n  \"ok\": true,\n  \"status\": 200,\n  \"code\": null,\n  \"mode\": \"single\",\n  \"rolledBack\": [\n    {\n      \"entryId\": \"cl_20261023164239906_000001_adc42e41\",\n      \"layer\": \"chapter\",\n      \"rowId\": \"1\",\n      \"field\": \"*\",\n      \"op\": \"create\",\n      \"batchId\": \"batch_session-efa7f758-906b-4c0a-86fb-2887757c255b_0001\",\n      \"at\": \"2026-10-23T16:42:39.906Z\"\n    }\n  ],\n  \"restored\": 1,\n  \"forced\": false,\n  \"conflicts\": [],\n  \"message\": \"\",\n  \"notice\": \"媒体二进制不随回滚删除：磁盘上的图片 / 视频文件仍然保留，本次只回滚内容行。\"\n}"}]
+```
+
+**⑤ 界面跟着变**（回滚「新建章节 1」之后）：
+
+| 观察点 | 回滚前 | 回滚后 |
+| --- | --- | --- |
+| 章节页副标 | 《夜航船》· 2 章 · 0 镜 | 2 → 1 章 |
+| 章节页正文 | 第1章 + 第2章 | 第2章（第1章 被回滚删除） |
+| 日志页 | 21 条 | 21 条（日志是审计轨迹，条目不删） |
+| 日志页漂移卡 | 无 | 无（回滚后不再误报「已漂移」） |
+| 控制台错误 | 0 | 0 |
+
+回滚后的章节页正文原文：
+
+```text
+你的需求（自动捕获）
+导入小说：第1章 林岸站在码头。第2章 船舱里没有灯。
+章节
+第2章
+0 镜 · 0.0s
+待写分镜
+剧本与提示词
+参考图
+音色样本
+视频
+video 硬依赖 image：没有参考图直接报错。
+video 软依赖 tts：缺失时视频降质，界面会标出来。
+章节 = 一个可独立交付的成片单元 · 一章一集
+第 2 章 · 第 0 / 0 镜 · 已用 ¥0.00 / 上限 ¥12.00
+```
+
+> 这一轮实机抓出并修掉的缺陷：`reelforge.rollback` 回滚「新建」类变更时，
+> 宿主接线层把「删掉这一行」降级成了「upsert 一个空对象」——upsert 是**合并**语义，
+> 空对象合并不进去 ⇒ **回滚什么都没改**，工具却回报 `"restored": 1`（谎报成功）。
+> 修法见 `src/host/projection.js`（新增 `chapter.delete` / `shot.delete` /
+> `asset.delete` / `project.delete` 补丁）与 `src/host/changelogStore.js`（`value === null` ⇒ 走删除补丁）。

@@ -95,7 +95,15 @@
     const state = {
       selectedShotId,
       selectShot: setSelectedShotId,
-      setDuration: value => RF.actions?.callTool?.(RF.TOOL_IDS.updateShot, { duration: value }),
+      // ⚠️ `reelforge.update_shot` 的必填参数是 `seq` + `idx`
+      // （`src/host/tools.js`：`required: ['seq', 'idx']`）——
+      // 只发 `{ duration }` 会被宿主拒收，改时长永远不生效。
+      // 所以这里要拿住「选中的是哪一章的第几镜」，由调用方把这一镜传进来。
+      setDuration: (shot, value) => RF.actions?.callTool?.(RF.TOOL_IDS.updateShot, {
+        seq: shot?.seq,
+        idx: shot?.idx,
+        duration: value,
+      }),
       assetCategory,
       setAssetCategory,
       skillSource,
@@ -114,8 +122,11 @@
       },
       rollbackMode,
       setRollbackMode,
+      // ⚠️ 参数名必须是 `entryId`：`reelforge.rollback` 的 schema 是
+      // `entryId`（单条模式）+ `additionalProperties: false` —— 发成 `id`
+      // 会被宿主当成未知键**整条拒收**，回滚永远不生效。
       rollback: (entry, force) => RF.actions?.callTool?.(RF.TOOL_IDS.rollback, {
-        id: entry.id,
+        entryId: entry.id,
         mode: rollbackMode,
         ...(force === true ? { force: true } : {}),
       }),
@@ -132,7 +143,11 @@
     // owner 裁决「按屏变化」（Q1 底栏 / Q3 胶囊）：设计稿 17 块板的胶囊与底栏文案
     // 每块都不同，以前实现是全局固定的一套。每屏长什么样在 `workbench/chrome.js`。
     const chrome = RF.tabChrome(activeTab);
-    const chromeAction = chrome.footerAction ?? {};
+    // 底栏动作**由屏上的数据决定**：没章时「生成第 1 章」不能是可点的按钮，
+    // 没有交付物时「交付物」也不能点了没反应 —— 都要禁用 + 说清缺什么。
+    const chromeAction = typeof chrome.footerAction === 'function'
+      ? chrome.footerAction(project)
+      : (chrome.footerAction ?? {});
     const chromeTitle = chrome.titleKey === undefined ? '' : t(chrome.titleKey);
     // 外壳契约：subtitle / capsule / footerLabel / footerValue **一律是函数**
     // （静态文案在 chrome.js 里就包好了，渲染层不再判类型）。
@@ -140,6 +155,8 @@
     const chromeCapsule = chrome.capsule(project, t);
     const chromeLabel = chrome.footerLabel(project, t);
     const chromeValue = chrome.footerValue(project, t);
+    const chromeDisabled = chromeAction.disabled === true || chromeAction.kind === 'none';
+    const chromeHintKey = chromeAction.hintKey ?? chrome.disabledHintKey;
 
     // 「导出日志」：把变更日志导出成 JSON 文件（浏览器直接下载，不经过宿主）。
     const exportChangelog = () => {
@@ -212,8 +229,8 @@
           }))
           : null,
         // 底栏主按钮暂不可用时，**说清缺什么、给什么替代**（不静默做成死按钮）。
-        chromeAction.kind === 'none' && chrome.disabledHintKey !== undefined
-          ? h('div', { className: `${RF.CLS}-note ${RF.CLS}-note--warn` }, t(chrome.disabledHintKey))
+        chromeDisabled && chromeHintKey !== undefined
+          ? h('div', { className: `${RF.CLS}-note ${RF.CLS}-note--warn` }, t(chromeHintKey))
           : null),
       h('footer', { className: `${RF.CLS}-footer` },
         h('div', { className: `${RF.CLS}-footer__text` },
@@ -222,10 +239,8 @@
         h(RF.ui.Button, {
           label: t(chromeAction.key),
           variant: 'primary',
-          disabled: chromeAction.kind === 'none',
-          title: chromeAction.kind === 'none' && chrome.disabledHintKey !== undefined
-            ? t(chrome.disabledHintKey)
-            : undefined,
+          disabled: chromeDisabled,
+          title: chromeDisabled && chromeHintKey !== undefined ? t(chromeHintKey) : undefined,
           onClick: () => runChromeAction(),
         })));
   };

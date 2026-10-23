@@ -77,10 +77,15 @@
    *      文案说清**缺什么**（没有可直调工具的通道）与**给什么替代**（在对话里怎么说）；
    *   3. `console.warn` **保留**（它是诊断信息），但不再是唯一的失败信号。
    *
-   * **最终 transport 待 owner 确认**：本机没有安装 DSH 宿主包，无法证明宿主到底
-   * 有没有「直接执行工具」的 API，所以代码里**不写死任何宿主 API 名** ——
-   * 唯一的例外是下面 `deliver` 里那处**显式标注为未经验证**的可选探测，
-   * 它带运行时存在性检查、不是默认路径，启用前需宿主 owner 确认签名。
+   * **transport 已对真实宿主核实**（DSH 0.2.1-alpha.1，`packages/api/session-controller`）：
+   *   - 宿主**没有**「客户端直接执行工具」的 API —— `remote.commands` 是**斜杠命令**
+   *     通道 `execute(agentId, line, attachments)`，不是工具执行器；
+   *   - 唯一的通道是 **`ctx.remote.session.prompt`**（`SessionPromptRequest`：
+   *     `requestId` / `sessionId` / `mode` / `content`）—— 也就是「把工具指令当一条
+   *     会话消息投进去，由模型去调对应工具」这条既有设计；
+   *   - `ctx.remote.session` 是**独立的服务名**（`remote.session`），必须在
+   *     `RF.CLIENT_INJECT` 里声明才能读到 —— 没声明时 Cordis 的注入守卫会抛
+   *     `cannot get property "remote.session" without inject`。
    */
   RF.actions = {
     /** 已经发起过的调用记录（成功与待重放都在这里）。 */
@@ -95,31 +100,44 @@
     /**
      * 把一条请求投给宿主。
      *
+     * ⚠️ **读宿主服务属性会抛错，不是返回 undefined**：宿主的 ctx 是 Cordis 能力代理，
+     * 没在 `inject` 里声明的服务，访问时抛
+     * `cannot get property "<svc>" without inject`。
+     * 所以「这条通道有没有」只能问在一个 try 里 —— 以前 `typeof remote.commands`
+     * 写在 try **外面**，点一下「回滚」整条链直接炸飞：页面上什么都不发生
+     * （用户看到的就是「点了没反应」），只有控制台一行红字。
+     *
      * @param {{ toolId: string, args: object, ask: boolean }} request - 请求。
      * @returns {{ delivered: boolean, reason: string }} 投递结果。
      */
     deliver(request) {
-      const remote = RF.ctx?.remote;
+      const ctx = RF.ctx;
+      if (ctx === undefined || ctx === null) return { delivered: false, reason: 'no-remote' };
       const sessionId = RF.currentSessionId;
-      if (remote === undefined || remote === null) return { delivered: false, reason: 'no-remote' };
+      if (sessionId === undefined || sessionId === '') return { delivered: false, reason: 'no-session' };
 
-      // ⚠️ **未经验证**的可选探测：宿主将来若提供「直接执行工具」的通道
-      // （形如 `remote.commands`），优先走它。**当前本机没有安装 DSH 宿主包**，
-      // 无法证明该 API 存在、也无法证明它的参数形状 —— 所以这里只做**运行时存在性检查**，
-      // 永远不做默认路径；**启用前需宿主 owner 确认签名**。
-      if (typeof remote.commands === 'function') {
-        try {
-          void remote.commands({ toolId: request.toolId, args: request.args });
-          return { delivered: true, reason: 'direct-command' };
-        } catch (error) {
-          console.warn('[reelforge] direct command transport failed, falling back to prompt:', error);
+      try {
+        // ⚠️ `ctx.remote.session` 读的是**服务名 `remote.session`**：宿主把每个
+        // Remote 命名空间各注册成一个独立服务键
+        // （`packages/api/session-controller/src/client/index.ts`）。
+        // 不在 `RF.CLIENT_INJECT` 里声明它，宿主就会抛
+        // `cannot get property "remote.session" without inject`。
+        //
+        // 宿主**没有**「客户端直接执行工具」的 API（已在真实宿主上核实）：
+        // `remote.commands` 是斜杠命令通道 `execute(agentId, line, attachments)`，
+        // 不是工具执行器，读它反而触发注入守卫。
+        // 唯一的通道是**会话指令**：把工具 id 与参数拼成一句话投进当前会话，
+        // 由模型去调对应工具。宿主半靠 `RF.TOOL_CALL_PROMPT_PREFIX` 把这句话
+        // 从「用户输入」里排除（`src/core/inputCapture.js`）。
+        const session = ctx.remote.session;
+        if (session === undefined || session === null || typeof session.prompt !== 'function') {
+          return { delivered: false, reason: 'no-transport' };
         }
-      }
-
-      if (sessionId !== undefined
-        && remote.session !== undefined && typeof remote.session.prompt === 'function') {
-        void remote.session.prompt({
+        const outcome = session.prompt({
+          requestId: RF.newRequestId(),
           sessionId,
+          // 「排队」不是「插队」：点按钮不该打断正在跑的那一轮。
+          mode: 'queue',
           content: [{
             type: 'text',
             // 前缀冻结在 `RF.TOOL_CALL_PROMPT_PREFIX`：宿主半靠它把工作台自己
@@ -127,9 +145,24 @@
             text: `${RF.TOOL_CALL_PROMPT_PREFIX}${request.toolId}，参数 ${JSON.stringify(request.args)}`,
           }],
         });
+        // 宿主拒收 / 传输失败 ⇒ **可见失败**，不能当成已经生效。
+        if (outcome !== undefined && typeof outcome.then === 'function') {
+          outcome.then(
+            (result) => {
+              if (result !== null && typeof result === 'object' && result.ok === false) {
+                RF.actions.reportRefused(request, result.error?.message ?? '');
+              }
+            },
+            (error) => { RF.actions.reportRefused(request, String(error)); },
+          );
+        }
         return { delivered: true, reason: 'session-prompt' };
+      } catch (error) {
+        // 通道不可用**不是**用户能理解的错误：降级到「可见失败 + 可重放」路径，
+        // 绝不让一次点击把整条链炸掉。
+        console.warn('[reelforge] tool transport unavailable:', error);
+        return { delivered: false, reason: 'transport-unavailable' };
       }
-      return { delivered: false, reason: 'no-transport' };
     },
 
     /**
@@ -176,6 +209,28 @@
       const label = prefix === undefined ? RF.tr('notice.unknownTool') : RF.tr(`${prefix}.label`);
       const say = prefix === undefined ? RF.tr('notice.sayFallback') : RF.tr(`${prefix}.say`);
       return RF.tr('notice.undelivered', { label, say });
+    },
+
+    /**
+     * 宿主拒收 / 传输失败 ⇒ **可见失败**。
+     *
+     * 已经投出去但宿主没接受，和「根本投不出去」是两回事：文案要分开说，
+     * 不能都报成「还没接上工具通道」。
+     *
+     * @param {{ toolId: string, args: object, ask: boolean }} request - 请求。
+     * @param {string} reason - 宿主给的原因（可空）。
+     * @returns {void}
+     */
+    reportRefused(request, reason) {
+      const prefix = TOOL_HINT_KEYS[request.toolId];
+      const label = prefix === undefined ? RF.tr('notice.unknownTool') : RF.tr(`${prefix}.label`);
+      const say = prefix === undefined ? RF.tr('notice.sayFallback') : RF.tr(`${prefix}.say`);
+      RF.notify({
+        level: 'error',
+        toolId: request.toolId,
+        message: RF.tr('notice.hostRefused', { label, say, reason: reason ?? '' }),
+      });
+      console.warn('[reelforge] host refused the tool request:', request, reason);
     },
 
     /**
@@ -288,10 +343,17 @@
     }), 'reelforge: workbench tab type');
 
     // ── 阶段二：页面体（插槽 key = definition.id，**不是 kind**） ──
+    // ⚠️ `inject: (sessionId) => ({ sessionId })` **不能少**：右栏页签体是
+    // **会话作用域**插槽，只有声明了这个 inject 面，宿主才会把会话 id 递进来
+    // （宿主做法见 `packages/client/ui-sidebar-browser/src/client/index.ts`：
+    // `inject: (sessionId, actions) => {...}`）。
+    // 没有它 → `props.sessionId` 是 undefined → `RF.currentSessionId` 永远是空
+    // → 写操作（回滚 / 生成 / 改时长）**全部投递不出去**。
     ctx.effect(() => ctx.slots.inject('sidebar.right.pane.tab', () => ctx.slots.register({
       name: 'sidebar.right.pane.tab',
       key: RF.TAB_TYPE_ID,
       locale: RF.NAMESPACE,
+      inject: sessionId => ({ sessionId }),
     }, RF.Workbench)), 'reelforge: workbench body');
 
     // ⚠️ `locale: RF.NAMESPACE` **不能少**：宿主只在注册声明了 `locale:` 时
