@@ -179,13 +179,29 @@
         h('span', { className: `${RF.CLS}-chatrow__kind` }, 'reelforge-deliver'),
         h('span', { className: `${RF.CLS}-chatrow__title` }, RF.chatRows.t('chat.deliver'))),
       h('div', { className: `${RF.CLS}-chatrow__body` },
-        chapters.map(chapter => h('div', { key: chapter.id },
-          h('div', { className: `${RF.CLS}-row__title` }, chapter.title ?? ''),
-          h('div', { className: `${RF.CLS}-row__sub` }, `${chapter.shotCount ?? 0} ${RF.chatRows.t('unit.shot')} · ${RF.formatDuration(chapter.durationSec ?? 0)}`),
-          (chapter.deliverables ?? []).map(item => h('div', { key: `${item.kind}-${item.path}`, className: `${RF.CLS}-row` },
-            h('div', { className: `${RF.CLS}-row__main` },
-              h('div', { className: `${RF.CLS}-row__sub` }, `${item.label ?? item.kind} · ${RF.formatBytes(item.bytes ?? 0)}`)),
-            h(RF.ui.Button, { label: RF.chatRows.t('common.download'), variant: 'secondary' })))))));
+        chapters.map((chapter) => {
+          const deliverables = Array.isArray(chapter.deliverables) ? chapter.deliverables : [];
+          const videoPath = deliverables.find(d => typeof d.path === 'string' && d.path.endsWith('.mp4'))?.path ?? '';
+          return h('div', { key: chapter.id },
+            h('div', { className: `${RF.CLS}-row__title` }, chapter.title ?? ''),
+            h('div', { className: `${RF.CLS}-row__sub` }, `${chapter.shotCount ?? 0} ${RF.chatRows.t('unit.shot')} · ${RF.formatDuration(chapter.durationSec ?? 0)}`),
+            deliverables.map(item => h('div', { key: `${item.kind}-${item.path}`, className: `${RF.CLS}-row` },
+              h('div', { className: `${RF.CLS}-row__main` },
+                h('div', { className: `${RF.CLS}-row__sub` }, `${item.label ?? item.kind} · ${RF.formatBytes(item.bytes ?? 0)}`)),
+              item.path
+                ? h('a', {
+                  className: `${RF.CLS}-btn ${RF.CLS}-btn--secondary`,
+                  href: RF.deliverableUrl(item.path),
+                  download: item.label ?? item.kind,
+                }, RF.chatRows.t('common.download'))
+                : h(RF.ui.Button, { label: RF.chatRows.t('common.download'), variant: 'secondary' }))),
+            videoPath === '' ? null : h('video', {
+              className: `${RF.CLS}-player__video`,
+              controls: true,
+              preload: 'metadata',
+              src: RF.deliverableUrl(videoPath),
+            }));
+        })));
   };
 
   /**

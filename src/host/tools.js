@@ -1117,6 +1117,9 @@ export function createToolDefinitions({ store, config, deps = {} }) {
         if (context.error) return { ok: false, errors: [context.error] };
         const provider = args.position === 'cloud' ? config.cloudProvider : 'native';
         const patches = [{ op: 'plan.set', value: { kind: args.kind, position: args.position, provider } }];
+        const { analyzeWorkflowForPlan } = await import('./workflowView.js');
+        const analysis = await analyzeWorkflowForPlan(context.cwd, config.workspaceDir, args.kind);
+        if (analysis) patches.push({ op: 'workflowAnalysis.set', value: analysis });
         await commit(context.sessionId, context.cwd, patches);
         return { ok: true, ...planOf(args.kind, args.position, provider), patch: patches };
       },

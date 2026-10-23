@@ -23,18 +23,10 @@ T1–T5 共 **116** 条验收项（`npm run verify:acceptance`）：
 | 状态 | 数量 | 说明 |
 |---|---:|---|
 | 自动化通过 | 104 | 单测 / 命令 / 静态扫描 |
-| 实机通过 | 6 | 证据在本地 `docs/开发任务/实机/dsh-0.2.1-alpha.1.md`（**不进 GitHub**） |
-| 实机待补 | 3 | 见下表 |
+| 实机通过 | 9 | 含 T5 A4 / A19 / A27（证据在本地 `docs/开发任务/实机/`，不进 GitHub；跑 `npm run verify:acceptance` 核对） |
 | N/A | 3 | 无客户端分片（单文件拼接构建） |
+| 实机待补 | 0 | — |
 | 证据缺口 | 0 | 无「仅声称 / 证据缺失」 |
-
-**仍待浏览器实机或更大视口**（不影响 CI；核心逻辑已有自动化覆盖）：
-
-| 项 | 内容 |
-|---|---|
-| T5 A4 | 900 / 1150 面板宽度：当前宿主右栏上限约 547px（782×0.7），需更大视口补测 |
-| T5 A19 | 成片播放器可播放、交付物可下载 |
-| T5 A27 | 导入后 UI 展示解析结果与 diagnostics（需截图） |
 
 **工程面**：`npm run verify:bundle` / `typecheck` / `test`（730 pass + 2 skip）/ `verify:coverage` 均可过；GitHub Actions CI 跑 bundle + 单测 + 覆盖率（不跑 acceptance）。
 

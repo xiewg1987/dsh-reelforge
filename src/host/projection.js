@@ -51,6 +51,7 @@ export function initialState() {
     context: { bible: '', style: '', continuity: [] },
     progress: null,
     plan: null,
+    workflowAnalysis: null,
     deliverables: [],
     changelog: { entries: [] },
     input: { text: '' },
@@ -275,6 +276,9 @@ export function applyPatch(state, patch) {
 
     case 'plan.set':
       return { ...state, plan: { ...(state.plan ?? {}), ...(patch.value ?? {}) } };
+
+    case 'workflowAnalysis.set':
+      return { ...state, workflowAnalysis: patch.value ?? null };
 
     case 'deliver.set': {
       const value = patch.value ?? {};
@@ -554,6 +558,7 @@ export function buildWireView(state, options = {}) {
     },
     // 对话输入截获（§10.5）：用户在对话框里敲的原文，由钩子写进状态、日志重放可重建。
     input: { text: current.input?.text ?? '' },
+    workflowAnalysis: current.workflowAnalysis ?? null,
     // `spent`：成本记账尚未接入会话事件（R1 只认 `tool/result` 补丁），
     // 所以实际花费恒为 0；`cap` 必须来自 Config，不能写死 —— 否则工作台显示「上限 ¥0.00」。
     cost: { spent: 0, cap: budgetLimitCny },

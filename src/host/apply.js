@@ -7,9 +7,13 @@ import { PROJECTION_KEY, TRIGGER_TOOL_IDS } from '../core/constants.js';
 import { buildReelForgePromptSection } from '../core/promptSection.js';
 import { buildSkillPromptSection } from '../skills/route.js';
 import { buildSkillRegistry } from '../skills/skillTools.js';
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
+
 import { resolveConfig } from './config.js';
 import { registerInputHook } from './inputHook.js';
 import { BUNDLED_SKILLS_DIR, PRIVATE_DIR } from './paths.js';
+import { resolveProjectPath, resolveWorkspaceRoot } from './workspace.js';
 import {
   ProjectionStore,
   STATE_VERSION,
@@ -22,6 +26,7 @@ import { createToolDefinitions } from './tools.js';
 /** Connection 认证通道上的路由。挂在 `/api` 共享通道下，会经过与官方 remote 相同的栅栏。 */
 const STATE_PATH = '/api/reelforge.state';
 const CAPABILITIES_PATH = '/api/reelforge.capabilities';
+const FILE_PATH = '/api/reelforge.file';
 
 /** 汇总响应不应被任何中间缓存。 */
 const NO_STORE = { 'cache-control': 'no-store' };
@@ -35,6 +40,8 @@ const NO_STORE = { 'cache-control': 'no-store' };
 export function applyReelForge(ctx, rawConfig) {
   const config = resolveConfig(rawConfig);
   const store = new ProjectionStore();
+  /** 会话 id → 工作目录（交付物下载 / 播放路由用）。 */
+  const sessionCwds = new Map();
   /** @type {Array<() => void>} R3：插件自己的 effect 里保留全部注册项的清理函数。 */
   const disposers = [];
 
@@ -73,6 +80,8 @@ export function applyReelForge(ctx, rawConfig) {
   // ── 会话事件 → 投影 fold（R1：日志是唯一事实源，这里只是派生缓存）──
   track(ctx.on('session/event', (session, event) => {
     if (!session || !session.id) return;
+    const cwd = session.header?.cwd;
+    if (typeof cwd === 'string' && cwd.length > 0) sessionCwds.set(session.id, cwd);
     store.applyEvent(session.id, event);
   }));
 
@@ -120,7 +129,7 @@ export function applyReelForge(ctx, rawConfig) {
   // `ctx.connection.fetch.register`——在 Connection 的认证栅栏内注册精确路由，
   // 浏览器用同源 fetch 直接读。
   track(ctx.inject(['connection'], (child) => {
-    track(registerRoutes(child, store, config));
+    track(registerRoutes(child, store, config, sessionCwds));
   }));
 
   return () => {
@@ -183,7 +192,7 @@ function buildPromptSection() {
  * @param {object} config 插件配置。
  * @returns {() => void} 路由注销函数。
  */
-function registerRoutes(ctx, store, config) {
+function registerRoutes(ctx, store, config, sessionCwds) {
   const disposers = [];
   disposers.push(ctx.connection.fetch.register({
     path: STATE_PATH,
@@ -219,6 +228,41 @@ function registerRoutes(ctx, store, config) {
     ),
   }));
 
+  disposers.push(ctx.connection.fetch.register({
+    path: FILE_PATH,
+    methods: ['GET'],
+    requestBody: 'buffered',
+    fetch: async (request) => {
+      const sessionId = readSessionParam(request);
+      const cwd = (sessionId && sessionCwds.get(sessionId)) || sessionCwds.get(store.lastSessionId());
+      if (!cwd) {
+        return Response.json({ error: '会话工作目录未知，无法读取交付物' }, { status: 404, headers: NO_STORE });
+      }
+      let relative;
+      try {
+        relative = new URL(request.url).searchParams.get('path') ?? '';
+      } catch {
+        return Response.json({ error: 'path 参数无效' }, { status: 400, headers: NO_STORE });
+      }
+      const root = resolveWorkspaceRoot(cwd, config.workspaceDir);
+      const abs = resolveProjectPath(root, relative);
+      if (!abs) {
+        return Response.json({ error: '路径越界或非法' }, { status: 403, headers: NO_STORE });
+      }
+      try {
+        const data = await readFile(abs);
+        const type = contentTypeFor(abs);
+        const headers = { ...NO_STORE, 'content-type': type };
+        if (type.startsWith('video/') || type.startsWith('audio/')) {
+          headers['accept-ranges'] = 'bytes';
+        }
+        return new Response(data, { headers });
+      } catch {
+        return Response.json({ error: '文件不存在' }, { status: 404, headers: NO_STORE });
+      }
+    },
+  }));
+
   return () => {
     for (let index = disposers.length - 1; index >= 0; index -= 1) {
       disposers[index]();
@@ -241,4 +285,15 @@ function readSessionParam(request) {
   } catch {
     return undefined;
   }
+}
+
+/** @param {string} filePath */
+function contentTypeFor(filePath) {
+  const ext = path.extname(filePath).toLowerCase();
+  if (ext === '.mp4') return 'video/mp4';
+  if (ext === '.webm') return 'video/webm';
+  if (ext === '.srt') return 'text/plain; charset=utf-8';
+  if (ext === '.json') return 'application/json; charset=utf-8';
+  if (ext === '.zip') return 'application/zip';
+  return 'application/octet-stream';
 }

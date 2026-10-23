@@ -1,0 +1,8 @@
+{
+  "1": { "class_type": "CheckpointLoaderSimple", "inputs": { "ckpt_name": "sdxl.safetensors" } },
+  "2": { "class_type": "CLIPTextEncode", "inputs": { "text": "a rainy pier at night", "clip": ["1", 0] } },
+  "3": { "class_type": "CLIPTextEncode", "inputs": { "text": "low quality", "clip": ["1", 0] } },
+  "4": { "class_type": "EmptyLatentImage", "inputs": { "width": 832, "height": 1216, "batch_size": 1 } },
+  "5": { "class_type": "KSampler", "inputs": { "seed": 12345, "steps": 30, "model": ["1", 0] } },
+  "6": { "class_type": "SaveImage", "inputs": { "filename_prefix": "RF/t2i", "images": ["5", 0] } }
+}

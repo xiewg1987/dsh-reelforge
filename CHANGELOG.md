@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **T5 收尾（A4 / A19 / A27）**：四档宽度渲染断言；`/api/reelforge.file` 交付物播放与下载；`update_plan` 写入 `workflowAnalysis` 并在上下文页展示 diagnostics。
 - **对话输入截获（§10.5）**：用户在 DSH 输入框里敲的原文，由宿主在 Agent 收到 prompt 前触发的
   瀑布钩子 `agent/pre-step` 截获，写进会话投影，工作台顶部新增「对话输入（自动截获）」块。
   - 接入面是宿主公开的扩展点（`packages/core/agent/src/runtime-types.ts`），

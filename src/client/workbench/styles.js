@@ -260,6 +260,7 @@
 .rf-chatrow__toggle { border: 0; background: transparent; color: var(--dsw-alias-state-business-primary); font-size: 11px; cursor: pointer; }
 .rf-player { display: flex; gap: 12px; }
 .rf-player__frame { width: 240px; aspect-ratio: 9 / 16; border-radius: 10px; background: var(--dsw-alias-bg-layer-3); border: 1px solid var(--dsw-alias-border-l2); }
+.rf-player__video { object-fit: contain; display: block; }
 .rf-player__side { flex: 1 1 auto; min-width: 0; }
 .rf-switch { display: inline-flex; width: 44px; height: 20px; border-radius: 10px; background: var(--dsw-alias-state-idle-primary); border: 0; }
 .rf-switch--on { background: var(--dsw-alias-brand-primary); }

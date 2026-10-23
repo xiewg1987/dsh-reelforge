@@ -599,7 +599,17 @@ window.__ModuleLoader__.load({
     input: { text: '' },
     cost: { spent: 0, cap: 0 },
     budget: {},
+    workflowAnalysis: null,
   });
+
+  /** 交付物 / 成片文件的同源读取 URL（宿主 Connection 路由）。 */
+  RF.deliverableUrl = function deliverableUrl(relativePath) {
+    if (typeof relativePath !== 'string' || relativePath.length === 0) return '';
+    const sessionId = RF.currentSessionId ?? '';
+    const query = new URLSearchParams({ path: relativePath });
+    if (sessionId !== '') query.set('session', sessionId);
+    return `/api/reelforge.file?${query.toString()}`;
+  };
 
   /**
    * 模块级单例：派生视图 + 订阅通道（**不是事实源**）。
@@ -1340,6 +1350,7 @@ window.__ModuleLoader__.load({
 .rf-chatrow__toggle { border: 0; background: transparent; color: var(--dsw-alias-state-business-primary); font-size: 11px; cursor: pointer; }
 .rf-player { display: flex; gap: 12px; }
 .rf-player__frame { width: 240px; aspect-ratio: 9 / 16; border-radius: 10px; background: var(--dsw-alias-bg-layer-3); border: 1px solid var(--dsw-alias-border-l2); }
+.rf-player__video { object-fit: contain; display: block; }
 .rf-player__side { flex: 1 1 auto; min-width: 0; }
 .rf-switch { display: inline-flex; width: 44px; height: 20px; border-radius: 10px; background: var(--dsw-alias-state-idle-primary); border: 0; }
 .rf-switch--on { background: var(--dsw-alias-brand-primary); }
@@ -1462,12 +1473,52 @@ window.__ModuleLoader__.load({
    * @param {{ t: function, project: object }} props - 属性。
    * @returns {object} React 元素。
    */
+  /**
+   * 工作流解析结果 + diagnostics（§8.3 · T5 A27）。
+   * @param {{ t: function, analysis: object | null }} props
+   * @returns {object | null}
+   */
+  RF.renderWorkflowAnalysis = function renderWorkflowAnalysis(props) {
+    const analysis = props.analysis;
+    if (analysis === null || analysis === undefined || typeof analysis !== 'object') return null;
+    const diag = analysis.diagnostics ?? {};
+    const rows = [
+      ['loaders', diag.loaders],
+      ['modelLoaders', diag.modelLoaders],
+      ['saves', diag.saves],
+      ['samplers', diag.samplers],
+      ['sizeNodes', diag.sizeNodes],
+      ['textCandidates', diag.textCandidates],
+    ];
+    return h(RF.ui.Card, null,
+      h(RF.ui.SectionLabel, null, props.t('workflow.diagnostics')),
+      h('div', { className: `${RF.CLS}-row__title` }, `${analysis.kind ?? ''} · ${analysis.name ?? analysis.id ?? ''}`),
+      h('div', { className: `${RF.CLS}-row__sub` }, analysis.sourceFile ?? ''),
+      rows.map(([key, entries]) => h(RF.ui.MetaRow, {
+        key,
+        label: props.t(`workflow.${key}`),
+        value: String(Array.isArray(entries) ? entries.length : 0),
+      })),
+      h(RF.ui.MetaRow, {
+        label: props.t('workflow.hasVideoFields'),
+        value: diag.hasVideoFields ? 'true' : 'false',
+      }),
+      Array.isArray(analysis.outputs) && analysis.outputs.length
+        ? h('div', { className: `${RF.CLS}-note` }, analysis.outputs.join(' · '))
+        : null);
+  };
+
   RF.tabContext = function tabContext(props) {
     const context = props.project.context ?? {};
     const keys = RF.CONTEXT_KEYS;
     const empty = keys.every(key => String(context[key] ?? '').trim() === '');
+    const workflowBlock = RF.renderWorkflowAnalysis({
+      t: props.t,
+      analysis: props.project.workflowAnalysis,
+    });
     return h('div', null,
-      empty ? emptyOf({ t: props.t, key: 'context' }) : null,
+      workflowBlock,
+      empty && workflowBlock === null ? emptyOf({ t: props.t, key: 'context' }) : null,
       keys.map(key => h(RF.ui.Card, { key },
         h('div', { className: `${RF.CLS}-row` },
           h('div', { className: `${RF.CLS}-row__main` },
@@ -1525,9 +1576,18 @@ window.__ModuleLoader__.load({
   RF.tabOutput = function tabOutput(props) {
     const deliverables = Array.isArray(props.project.deliverables) ? props.project.deliverables : [];
     if (deliverables.length === 0) return emptyOf({ t: props.t, key: 'output' });
+    const primaryVideo = deliverables.find(item => item.kind === 'video_clean' || item.kind === 'video_subtitled' || (typeof item.path === 'string' && item.path.endsWith('.mp4')));
+    const videoSrc = primaryVideo?.path ? RF.deliverableUrl(primaryVideo.path) : '';
     return h('div', null,
       h('div', { className: `${RF.CLS}-player` },
-        h('div', { className: `${RF.CLS}-player__frame` }),
+        videoSrc === ''
+          ? h('div', { className: `${RF.CLS}-player__frame` })
+          : h('video', {
+            className: `${RF.CLS}-player__frame ${RF.CLS}-player__video`,
+            controls: true,
+            preload: 'metadata',
+            src: videoSrc,
+          }),
         h('div', { className: `${RF.CLS}-player__side` },
           h(RF.ui.SectionLabel, null, props.t('output.chapters')),
           (props.project.chapters ?? []).map(chapter => h(RF.ui.Progress, {
@@ -1570,7 +1630,13 @@ window.__ModuleLoader__.load({
           h('div', { className: `${RF.CLS}-row__main` },
             h('div', { className: `${RF.CLS}-row__title` }, item.label ?? item.kind),
             h('div', { className: `${RF.CLS}-row__sub` }, RF.formatBytes(item.bytes ?? 0))),
-          h(RF.ui.Button, { label: props.t('common.download'), variant: 'secondary' })))),
+          item.path
+            ? h('a', {
+              className: `${RF.CLS}-btn ${RF.CLS}-btn--secondary`,
+              href: RF.deliverableUrl(item.path),
+              download: item.label ?? item.kind,
+            }, props.t('common.download'))
+            : h(RF.ui.Button, { label: props.t('common.download'), variant: 'secondary' })))),
       h('div', { className: `${RF.CLS}-note` }, props.t('deliver.binaryKept')));
   };
 
@@ -1977,13 +2043,29 @@ window.__ModuleLoader__.load({
         h('span', { className: `${RF.CLS}-chatrow__kind` }, 'reelforge-deliver'),
         h('span', { className: `${RF.CLS}-chatrow__title` }, RF.chatRows.t('chat.deliver'))),
       h('div', { className: `${RF.CLS}-chatrow__body` },
-        chapters.map(chapter => h('div', { key: chapter.id },
-          h('div', { className: `${RF.CLS}-row__title` }, chapter.title ?? ''),
-          h('div', { className: `${RF.CLS}-row__sub` }, `${chapter.shotCount ?? 0} ${RF.chatRows.t('unit.shot')} · ${RF.formatDuration(chapter.durationSec ?? 0)}`),
-          (chapter.deliverables ?? []).map(item => h('div', { key: `${item.kind}-${item.path}`, className: `${RF.CLS}-row` },
-            h('div', { className: `${RF.CLS}-row__main` },
-              h('div', { className: `${RF.CLS}-row__sub` }, `${item.label ?? item.kind} · ${RF.formatBytes(item.bytes ?? 0)}`)),
-            h(RF.ui.Button, { label: RF.chatRows.t('common.download'), variant: 'secondary' })))))));
+        chapters.map((chapter) => {
+          const deliverables = Array.isArray(chapter.deliverables) ? chapter.deliverables : [];
+          const videoPath = deliverables.find(d => typeof d.path === 'string' && d.path.endsWith('.mp4'))?.path ?? '';
+          return h('div', { key: chapter.id },
+            h('div', { className: `${RF.CLS}-row__title` }, chapter.title ?? ''),
+            h('div', { className: `${RF.CLS}-row__sub` }, `${chapter.shotCount ?? 0} ${RF.chatRows.t('unit.shot')} · ${RF.formatDuration(chapter.durationSec ?? 0)}`),
+            deliverables.map(item => h('div', { key: `${item.kind}-${item.path}`, className: `${RF.CLS}-row` },
+              h('div', { className: `${RF.CLS}-row__main` },
+                h('div', { className: `${RF.CLS}-row__sub` }, `${item.label ?? item.kind} · ${RF.formatBytes(item.bytes ?? 0)}`)),
+              item.path
+                ? h('a', {
+                  className: `${RF.CLS}-btn ${RF.CLS}-btn--secondary`,
+                  href: RF.deliverableUrl(item.path),
+                  download: item.label ?? item.kind,
+                }, RF.chatRows.t('common.download'))
+                : h(RF.ui.Button, { label: RF.chatRows.t('common.download'), variant: 'secondary' }))),
+            videoPath === '' ? null : h('video', {
+              className: `${RF.CLS}-player__video`,
+              controls: true,
+              preload: 'metadata',
+              src: RF.deliverableUrl(videoPath),
+            }));
+        })));
   };
 
   /**

@@ -113,12 +113,52 @@
    * @param {{ t: function, project: object }} props - 属性。
    * @returns {object} React 元素。
    */
+  /**
+   * 工作流解析结果 + diagnostics（§8.3 · T5 A27）。
+   * @param {{ t: function, analysis: object | null }} props
+   * @returns {object | null}
+   */
+  RF.renderWorkflowAnalysis = function renderWorkflowAnalysis(props) {
+    const analysis = props.analysis;
+    if (analysis === null || analysis === undefined || typeof analysis !== 'object') return null;
+    const diag = analysis.diagnostics ?? {};
+    const rows = [
+      ['loaders', diag.loaders],
+      ['modelLoaders', diag.modelLoaders],
+      ['saves', diag.saves],
+      ['samplers', diag.samplers],
+      ['sizeNodes', diag.sizeNodes],
+      ['textCandidates', diag.textCandidates],
+    ];
+    return h(RF.ui.Card, null,
+      h(RF.ui.SectionLabel, null, props.t('workflow.diagnostics')),
+      h('div', { className: `${RF.CLS}-row__title` }, `${analysis.kind ?? ''} · ${analysis.name ?? analysis.id ?? ''}`),
+      h('div', { className: `${RF.CLS}-row__sub` }, analysis.sourceFile ?? ''),
+      rows.map(([key, entries]) => h(RF.ui.MetaRow, {
+        key,
+        label: props.t(`workflow.${key}`),
+        value: String(Array.isArray(entries) ? entries.length : 0),
+      })),
+      h(RF.ui.MetaRow, {
+        label: props.t('workflow.hasVideoFields'),
+        value: diag.hasVideoFields ? 'true' : 'false',
+      }),
+      Array.isArray(analysis.outputs) && analysis.outputs.length
+        ? h('div', { className: `${RF.CLS}-note` }, analysis.outputs.join(' · '))
+        : null);
+  };
+
   RF.tabContext = function tabContext(props) {
     const context = props.project.context ?? {};
     const keys = RF.CONTEXT_KEYS;
     const empty = keys.every(key => String(context[key] ?? '').trim() === '');
+    const workflowBlock = RF.renderWorkflowAnalysis({
+      t: props.t,
+      analysis: props.project.workflowAnalysis,
+    });
     return h('div', null,
-      empty ? emptyOf({ t: props.t, key: 'context' }) : null,
+      workflowBlock,
+      empty && workflowBlock === null ? emptyOf({ t: props.t, key: 'context' }) : null,
       keys.map(key => h(RF.ui.Card, { key },
         h('div', { className: `${RF.CLS}-row` },
           h('div', { className: `${RF.CLS}-row__main` },
@@ -176,9 +216,18 @@
   RF.tabOutput = function tabOutput(props) {
     const deliverables = Array.isArray(props.project.deliverables) ? props.project.deliverables : [];
     if (deliverables.length === 0) return emptyOf({ t: props.t, key: 'output' });
+    const primaryVideo = deliverables.find(item => item.kind === 'video_clean' || item.kind === 'video_subtitled' || (typeof item.path === 'string' && item.path.endsWith('.mp4')));
+    const videoSrc = primaryVideo?.path ? RF.deliverableUrl(primaryVideo.path) : '';
     return h('div', null,
       h('div', { className: `${RF.CLS}-player` },
-        h('div', { className: `${RF.CLS}-player__frame` }),
+        videoSrc === ''
+          ? h('div', { className: `${RF.CLS}-player__frame` })
+          : h('video', {
+            className: `${RF.CLS}-player__frame ${RF.CLS}-player__video`,
+            controls: true,
+            preload: 'metadata',
+            src: videoSrc,
+          }),
         h('div', { className: `${RF.CLS}-player__side` },
           h(RF.ui.SectionLabel, null, props.t('output.chapters')),
           (props.project.chapters ?? []).map(chapter => h(RF.ui.Progress, {
@@ -221,7 +270,13 @@
           h('div', { className: `${RF.CLS}-row__main` },
             h('div', { className: `${RF.CLS}-row__title` }, item.label ?? item.kind),
             h('div', { className: `${RF.CLS}-row__sub` }, RF.formatBytes(item.bytes ?? 0))),
-          h(RF.ui.Button, { label: props.t('common.download'), variant: 'secondary' })))),
+          item.path
+            ? h('a', {
+              className: `${RF.CLS}-btn ${RF.CLS}-btn--secondary`,
+              href: RF.deliverableUrl(item.path),
+              download: item.label ?? item.kind,
+            }, props.t('common.download'))
+            : h(RF.ui.Button, { label: props.t('common.download'), variant: 'secondary' })))),
       h('div', { className: `${RF.CLS}-note` }, props.t('deliver.binaryKept')));
   };
 

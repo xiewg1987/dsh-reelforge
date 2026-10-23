@@ -26,7 +26,17 @@
     input: { text: '' },
     cost: { spent: 0, cap: 0 },
     budget: {},
+    workflowAnalysis: null,
   });
+
+  /** 交付物 / 成片文件的同源读取 URL（宿主 Connection 路由）。 */
+  RF.deliverableUrl = function deliverableUrl(relativePath) {
+    if (typeof relativePath !== 'string' || relativePath.length === 0) return '';
+    const sessionId = RF.currentSessionId ?? '';
+    const query = new URLSearchParams({ path: relativePath });
+    if (sessionId !== '') query.set('session', sessionId);
+    return `/api/reelforge.file?${query.toString()}`;
+  };
 
   /**
    * 模块级单例：派生视图 + 订阅通道（**不是事实源**）。
