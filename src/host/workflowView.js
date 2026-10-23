@@ -9,24 +9,105 @@ import { PACKAGE_ROOT } from './paths.js';
 import { resolveProjectPath, resolveWorkspaceRoot } from './workspace.js';
 
 /**
+ * `analyzeWorkflow()` 的 diagnostics 条目。
+ *
+ * 注意 `node` 是**节点 id 字符串**（不是节点对象），`class_type` 在条目顶层。
+ *
+ * @typedef {object} WorkflowDiagnosticsEntry
+ * @property {string} [node] 节点 id。
+ * @property {string} [class_type] 节点类型，如 `SaveImage`。
+ * @property {string} [field] 输入字段名（仅 textCandidates 带）。
+ * @property {string} [media] 媒体类别（仅 loaders 带）。
+ * @property {unknown} [value] 字段值（仅 textCandidates 带）。
+ */
+
+/**
+ * @typedef {object} WorkflowDiagnostics
+ * @property {WorkflowDiagnosticsEntry[]} [loaders]
+ * @property {WorkflowDiagnosticsEntry[]} [modelLoaders]
+ * @property {WorkflowDiagnosticsEntry[]} [saves]
+ * @property {WorkflowDiagnosticsEntry[]} [samplers]
+ * @property {WorkflowDiagnosticsEntry[]} [sizeNodes]
+ * @property {WorkflowDiagnosticsEntry[]} [textCandidates]
+ * @property {boolean} [hasVideoFields]
+ */
+
+/**
+ * @typedef {object} WorkflowRole
+ * @property {string} node 节点 id。
+ * @property {string} field 输入字段名。
+ * @property {Record<string, string>} [map] 字段映射。
+ */
+
+/**
+ * `analyzeWorkflow()` 的返回值形状（只列本模块读到的字段）。
+ *
+ * @typedef {object} AnalyzedWorkflow
+ * @property {string} [kind]
+ * @property {string} [id]
+ * @property {string} [name]
+ * @property {string} [description]
+ * @property {string} [sourceFile]
+ * @property {string[]} [outputs]
+ * @property {WorkflowRole[]} [roles]
+ * @property {WorkflowDiagnostics} [diagnostics]
+ */
+
+/**
+ * 客户端可展示的 diagnostics 条目。
+ *
+ * @typedef {object} SerializedDiagnosticsEntry
+ * @property {string} class_type 节点类型。
+ * @property {string} field 输入字段名。
+ */
+
+/**
+ * @typedef {object} SerializedDiagnostics
+ * @property {SerializedDiagnosticsEntry[]} loaders
+ * @property {SerializedDiagnosticsEntry[]} modelLoaders
+ * @property {SerializedDiagnosticsEntry[]} saves
+ * @property {SerializedDiagnosticsEntry[]} samplers
+ * @property {SerializedDiagnosticsEntry[]} sizeNodes
+ * @property {SerializedDiagnosticsEntry[]} textCandidates
+ * @property {boolean} hasVideoFields
+ */
+
+/**
+ * @typedef {object} SerializedWorkflowAnalysis
+ * @property {string} kind
+ * @property {string} id
+ * @property {string} name
+ * @property {string} description
+ * @property {string} sourceFile
+ * @property {string[]} outputs
+ * @property {WorkflowRole[] | Record<string, never>} roles
+ * @property {SerializedDiagnostics} diagnostics
+ */
+
+/**
  * @param {unknown} analyzed `analyzeWorkflow()` 返回值。
- * @returns {object | null}
+ * @returns {SerializedWorkflowAnalysis | null}
  */
 export function serializeWorkflowAnalysis(analyzed) {
   if (!analyzed || typeof analyzed !== 'object') return null;
-  const diagnostics = analyzed.diagnostics ?? {};
-  const summarize = (entries) => (Array.isArray(entries) ? entries : []).map((entry) => ({
-    class_type: entry?.node?.class_type ?? '',
-    field: entry?.field ?? '',
-  }));
+  const record = /** @type {AnalyzedWorkflow} */ (analyzed);
+  const diagnostics = record.diagnostics ?? {};
+  // 上游 diagnostics 条目的 `node` 是 id 字符串、`class_type` 在顶层，不能从 `node` 里取。
+  const summarize = (entries) => (Array.isArray(entries) ? entries : []).map((entry) => {
+    const item = /** @type {WorkflowDiagnosticsEntry} */ (entry);
+    return {
+      class_type: typeof item?.class_type === 'string' ? item.class_type : '',
+      field: typeof item?.field === 'string' ? item.field : '',
+    };
+  });
   return {
-    kind: analyzed.kind ?? '',
-    id: analyzed.id ?? '',
-    name: analyzed.name ?? '',
-    description: analyzed.description ?? '',
-    sourceFile: analyzed.sourceFile ?? '',
-    outputs: Array.isArray(analyzed.outputs) ? analyzed.outputs : [],
-    roles: analyzed.roles ?? {},
+    kind: record.kind ?? '',
+    id: record.id ?? '',
+    name: record.name ?? '',
+    description: record.description ?? '',
+    sourceFile: record.sourceFile ?? '',
+    outputs: Array.isArray(record.outputs) ? record.outputs : [],
+    roles: record.roles ?? {},
     diagnostics: {
       loaders: summarize(diagnostics.loaders),
       modelLoaders: summarize(diagnostics.modelLoaders),
@@ -45,7 +126,7 @@ export function serializeWorkflowAnalysis(analyzed) {
  * @param {string} cwd 会话工作目录。
  * @param {string} workspaceDir Config.workspaceDir。
  * @param {string} kind 生成 kind。
- * @returns {Promise<object | null>}
+ * @returns {Promise<SerializedWorkflowAnalysis | null>}
  */
 export async function analyzeWorkflowForPlan(cwd, workspaceDir, kind) {
   const workspaceRoot = resolveWorkspaceRoot(cwd, workspaceDir);
@@ -73,7 +154,7 @@ export async function analyzeWorkflowForPlan(cwd, workspaceDir, kind) {
 /**
  * @param {string} baseDir 工作区根。
  * @param {string} relative 相对路径。
- * @returns {Promise<object | null>}
+ * @returns {Promise<Record<string, unknown> | null>}
  */
 async function readWorkflowJson(baseDir, relative) {
   const file = resolveProjectPath(baseDir, relative);

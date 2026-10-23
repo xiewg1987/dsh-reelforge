@@ -233,8 +233,17 @@ function walk(dir, skip = ['node_modules', '__tests__', '.git']) {
   if (sections.some((item) => item.name === 'reelforge:skills')) pass('宿主半', '技能目录提示词段落已注册');
   else fail('宿主半', '没有注册技能目录提示词段落');
 
-  if (routes.length === 2) pass('宿主半', 'Connection 通道注册了 2 条路由');
-  else fail('宿主半', `Connection 通道注册了 ${routes.length} 条路由，期望 2`);
+  // 路由门禁按**具体路径**核对，不数条数 ——
+  // 数条数是脆写法：加一条新路由（例如 `/api/reelforge.file`）就会误红，
+  // 而真正要防的是「该有的路由少了」。多注册不受约束，少注册一定红。
+  const REQUIRED_ROUTES = ['/api/reelforge.state', '/api/reelforge.capabilities', '/api/reelforge.file'];
+  const routePaths = routes.map((route) => route.path);
+  const missingRoutes = REQUIRED_ROUTES.filter((path) => !routePaths.includes(path));
+  if (missingRoutes.length === 0) {
+    pass('宿主半', `Connection 通道注册了必需的 ${REQUIRED_ROUTES.length} 条路由（${routePaths.join(' / ')}）`);
+  } else {
+    fail('宿主半', `Connection 通道缺路由：${missingRoutes.join(' / ')}`);
+  }
 
   if (listeners.has('tools/pre-execute') && listeners.has('session/event')) {
     pass('宿主半', '触发类闸门与事件 fold 都挂上了');
