@@ -117,6 +117,12 @@ export function jsonSchemaForLayer(layer) {
 
 /**
  * 单个字段的 JSON Schema。
+ *
+ * ⚠️ 只能写宿主 JSON Schema 子集允许的形状：
+ * `type` 必须是 object / array / string / number / integer / boolean / null 之一，
+ * **不允许 type 数组**（`['number','null']` 会被宿主拒绝）。
+ * 可空数字用 `oneOf`（宿主的作者层方言同样没有「nullable」，可空就是 oneOf）。
+ *
  * @param {string} type 字段类型。
  * @returns {object} JSON Schema 片段。
  */
@@ -126,7 +132,7 @@ function schemaForType(type) {
     case 'number': return { type: 'number' };
     case 'integer': return { type: 'integer' };
     case 'boolean': return { type: 'boolean' };
-    case 'numberOrNull': return { type: ['number', 'null'] };
+    case 'numberOrNull': return { oneOf: [{ type: 'number' }, { type: 'null' }] };
     case 'stringArray': return { type: 'array', items: { type: 'string' } };
     case 'array': return { type: 'array' };
     case 'dialogue': return {}; // 台词可以是字符串或行数组

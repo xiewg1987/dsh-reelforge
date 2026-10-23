@@ -123,4 +123,31 @@
 
   /** 宿主投影里 ReelForge 视图的键（T1 的投影必须以此键发布）。 */
   RF.PROJECTION_KEY = 'reelforge/project';
+
+  /**
+   * 客户端插件**必须声明**的宿主服务清单（Cordis fiber inject）。
+   *
+   * ⚠️ 为什么这条这么重要：Cordis 会守卫上下文上的属性访问 ——
+   * 插件没在 `inject` 里声明的服务，`ctx.<svc>` 访问会直接抛
+   * `cannot get property "<svc>" without inject`，
+   * **客户端插件整条 fiber 失败**，宿主启动时打「1 entry did not activate」，
+   * 右栏不会出现 ReelForge Tab。
+   *
+   * 宿主把客户端模块的**全部导出**当对象插件传给 Loader，所以这份清单
+   * 必须由产物 `return { inject: RF.CLIENT_INJECT, apply: RF.apply }` 交出去。
+   *
+   * 清单必须**覆盖客户端源码里每一次 `ctx.<svc>` 属性访问**
+   * （`src/client/__tests__/client-inject.test.js` 会逐个核对，漏一个就红）。
+   * 声明一个宿主**没有提供**的服务同样会失败 —— fiber 会永远停在 pending。
+   */
+  RF.CLIENT_INJECT = [
+    'slots',            // 插槽注册表（ui-renderer）
+    'locale',           // 文案字典（locale）
+    'sidebarRightTabs', // 右栏页签类型注册表（ui-sidebar-right）
+    'sidebarRight',     // 右栏控制器：打开页签（ui-sidebar-right）
+    'sessions',         // 会话列表：投影订阅（session-controller）
+    'shortcuts',        // 快捷键注册表（shortcuts）
+    'uiConversation',   // 对话事件定义（ui-conversation）
+    'remote',           // 宿主 RPC 面：写操作通道（connection）
+  ];
 })(RF);

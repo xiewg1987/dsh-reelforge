@@ -62,7 +62,14 @@ function defineReelForgeTool({ name, description, parameters, execute, chatKind,
     description,
     parameters,
     output: {
-      schema: { type: 'json' },
+      // DSH 只认「标准 JSON Schema 子集」：根节点的 `type` 必须是
+      // object / array / string / number / integer / boolean / null 之一。
+      // 宿主的 `defineTool` 会把作者层的 `{ type: 'json' }` 编译成
+      // **注解式 schema**（没有 `type`）；我们直接注册 raw definition，
+      // 走不到那层编译，所以这里必须写编译后的等价形状，否则整个插件
+      // 在宿主里**装都装不上**（ctx.tools.register 抛 JsonSchemaError）。
+      // 工具返回值统一是 `{ ok, errors?, ... }` 信封，所以声明成开放对象。
+      schema: { type: 'object', additionalProperties: true },
       render: (_args, value) => [{ type: 'text', text: renderSummary(value) }],
       // presentationMeta 会被原样持久化到 tool/result 的 meta 字段。
       // 载荷形状 = `{ kind, patches, ...行数据 }`：

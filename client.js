@@ -135,6 +135,33 @@ window.__ModuleLoader__.load({
 
   /** 宿主投影里 ReelForge 视图的键（T1 的投影必须以此键发布）。 */
   RF.PROJECTION_KEY = 'reelforge/project';
+
+  /**
+   * 客户端插件**必须声明**的宿主服务清单（Cordis fiber inject）。
+   *
+   * ⚠️ 为什么这条这么重要：Cordis 会守卫上下文上的属性访问 ——
+   * 插件没在 `inject` 里声明的服务，`ctx.<svc>` 访问会直接抛
+   * `cannot get property "<svc>" without inject`，
+   * **客户端插件整条 fiber 失败**，宿主启动时打「1 entry did not activate」，
+   * 右栏不会出现 ReelForge Tab。
+   *
+   * 宿主把客户端模块的**全部导出**当对象插件传给 Loader，所以这份清单
+   * 必须由产物 `return { inject: RF.CLIENT_INJECT, apply: RF.apply }` 交出去。
+   *
+   * 清单必须**覆盖客户端源码里每一次 `ctx.<svc>` 属性访问**
+   * （`src/client/__tests__/client-inject.test.js` 会逐个核对，漏一个就红）。
+   * 声明一个宿主**没有提供**的服务同样会失败 —— fiber 会永远停在 pending。
+   */
+  RF.CLIENT_INJECT = [
+    'slots',            // 插槽注册表（ui-renderer）
+    'locale',           // 文案字典（locale）
+    'sidebarRightTabs', // 右栏页签类型注册表（ui-sidebar-right）
+    'sidebarRight',     // 右栏控制器：打开页签（ui-sidebar-right）
+    'sessions',         // 会话列表：投影订阅（session-controller）
+    'shortcuts',        // 快捷键注册表（shortcuts）
+    'uiConversation',   // 对话事件定义（ui-conversation）
+    'remote',           // 宿主 RPC 面：写操作通道（connection）
+  ];
 })(RF);
 
 /* ── src/client/locale.js ───────────────────────────── */
@@ -1748,12 +1775,31 @@ window.__ModuleLoader__.load({
  *
  * 快捷键服务是**客户端**服务（`packages/client/shortcuts`），所以本文件在 `src/client/` 下。
  *
- * 键位用 `Ctrl+Alt+` 区间避开宿主已占用的默认键位（R11 清单里的
- * `⌘K ⌘/ ⌘N ⌘O ⌘G ⌘F ⌘A ⌘B ⌘\ ⌘↵ ⌘W ⌘R ⌘, ⌘P ⌘T` 与 `Ctrl+\`` 全部是单修饰键，
- * 与 `Ctrl+Alt+X` 不冲突）。
+ * 键位怎么选的（这段推理改过一次，第二次才是对的）
  *
- * **不声明 `web:linux`**（R13）：该平台只支持 3 种组合，
+ * 第一版按「宿主占用的键全是**单修饰键**（⌘K ⌘/ ⌘N ⌘O ⌘G ⌘F ⌘A ⌘B ⌘\ ⌘↵ ⌘W ⌘R ⌘,
+ * ⌘P ⌘T），所以 `Ctrl+Alt+X` 一定不冲突」来推 —— **这个前提是错的**：
+ * 宿主除了单修饰键，还大量使用**双修饰键**（`primary+alt`），而 `primary` 在
+ * Windows/Linux 上就是 `control`。于是 `Ctrl+Alt+R` 正好撞上宿主的 `page.refresh`
+ * （web:windows 上它是 `KeyR` + `primary+alt`），`Ctrl+Alt+P` 撞上 `workspace.files`。
+ * 宿主的 `ShortcutRegistry.register` 遇到冲突直接抛
+ * `Conflicting shortcut defaults: ... and ... (web:windows)` ——
+ * **整条客户端 fiber 失败，右栏不会出现 ReelForge Tab**。
+ *
+ * 现在的选键规则（对着 DSH 0.2.1-alpha.1 源码核过）：
+ *
+ * 1. 宿主已占用的字母键：`A B F G K N O P R T W`（还有 `Comma` `Slash`
+ *    `Backslash` `Backquote` `Enter` 等非字母键）—— 一律不碰。
+ * 2. **浏览器/系统保留键**：宿主 `bindingIssue` 规定，带 `primary` 修饰时
+ *    `C V X Z Y Q H` 一律保留（复制/粘贴/剪切/撤销/重做/查找/帮助）—— 一律不碰。
+ * 3. 剩下可用：`D E I J L M S U` 等。**本插件取 `D` `S` `M`**：
+ *    `D`=Dashboard（工作台总览）· `S`=Storyboard（分镜）· `M`=Movie（成片）。
+ *
+ * 键位语义同时写在 `aliases` 里（`reelforge chapters` 等），所以字母只是把手。
+ *
+ * **不声明 `web:linux`**（R13）：该平台只认 3 种组合，
  * `control+alt` 会被宿主判定为「Unsupported Web shortcut」。
+ * 宿主的 `resolveShortcutDefault` **不回退**到别的平台档，所以不声明就是「该平台无快捷键」。
  *
  * `resolve` 的前置检查（不查会抛异常）：
  *   1. `ctx.sidebarRight.mounted.getSnapshot()` 为假 → `{ status:'blocked', reason:'no session surface is mounted' }`
@@ -1768,11 +1814,16 @@ window.__ModuleLoader__.load({
   /** 快捷键 id 必须匹配 R12 的正则。 */
   RF.SHORTCUT_ID_PATTERN = /^[a-z][a-zA-Z0-9-]*(?:\.[a-zA-Z][a-zA-Z0-9-]*)+$/;
 
-  /** 三个命令的键位（键码 + 修饰键）。`web:macos` 用 meta+alt：宿主只接受 primary+alt。 */
+  /**
+   * 三个命令的键位（键码 + 修饰键）。
+   *
+   * 键码必须**同时**避开：宿主已占用的字母键、浏览器保留键、彼此。
+   * 详见文件头「键位怎么选的」。
+   */
   RF.SHORTCUT_COMMANDS = [
-    { id: RF.SHORTCUT_IDS.workbench, code: 'KeyR', focus: 'chapters' },
+    { id: RF.SHORTCUT_IDS.workbench, code: 'KeyD', focus: 'chapters' },
     { id: RF.SHORTCUT_IDS.shots, code: 'KeyS', focus: 'shots' },
-    { id: RF.SHORTCUT_IDS.player, code: 'KeyP', focus: 'output' },
+    { id: RF.SHORTCUT_IDS.player, code: 'KeyM', focus: 'output' },
   ];
 
   /**
@@ -2142,6 +2193,8 @@ window.__ModuleLoader__.load({
 })(RF);
 
 
-    return { apply: RF.apply };
+    // ⚠️ `inject` 不能少：宿主把模块导出当对象插件传给 Loader，
+    // 不声明宿主服务，客户端整条 fiber 会失败（cordis 的 inject 守卫）。
+    return { inject: RF.CLIENT_INJECT, apply: RF.apply };
   },
 });
