@@ -241,6 +241,13 @@ function walk(dir, skip = ['node_modules', '__tests__', '.git']) {
   } else {
     fail('宿主半', '事件监听没挂全');
   }
+
+  // 对话输入截获的接入面（§10.5）：宿主在 Agent 收到 prompt 前触发的瀑布钩子。
+  if (listeners.has('agent/pre-step')) {
+    pass('宿主半', '对话输入截获钩子已挂上（agent/pre-step）');
+  } else {
+    fail('宿主半', '没有挂 agent/pre-step 钩子 —— 对话输入不会被截获进工作台');
+  }
 }
 
 // ── 5. 客户端半 ───────────────────────────────────────────

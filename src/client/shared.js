@@ -22,6 +22,8 @@
     skills: [],
     deliverables: [],
     changelog: { entries: [], modes: ['single', 'batch', 'timepoint'] },
+    // 对话输入截获（§10.5）：用户在 DSH 输入框里敲的原文，由宿主钩子写进状态。
+    input: { text: '' },
     cost: { spent: 0, cap: 0 },
     budget: {},
   });

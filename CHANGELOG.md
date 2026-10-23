@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **对话输入截获（§10.5）**：用户在 DSH 输入框里敲的原文，由宿主在 Agent 收到 prompt 前触发的
+  瀑布钩子 `agent/pre-step` 截获，写进会话投影，工作台顶部新增「对话输入（自动截获）」块。
+  - 接入面是宿主公开的扩展点（`packages/core/agent/src/runtime-types.ts`），
+    根 context 监听一次即可覆盖所有会话 —— 与宿主自带的 `tool-skill` 插件同一手法。
+  - 钩子**只观察不改写**：prompt 的 `PreStepDecision` 一行不动。
+  - **同源保证**：钩子与日志重放（`user/message` 事件）产出**同一份**内容 ——
+    下游 `reject` 的消息不进模型也不进日志，两边同时不记（R1：日志是唯一事实源）。
+  - 只认 `source.kind === 'user'`：注入的技能正文 / 运行时上下文不算用户说的话；
+    工作台自己发出的「请调用工具 …」指令也被排除（共享常量 `TOOL_CALL_PROMPT_PREFIX`）。
+
+### Changed
+
+- **systemPrompt 段落重写**：从「只有技能目录」改成「**ReelForge 工作流 + 技能目录**」——
+  说清状态只存在于工具里、13 个工具各自干什么、推进顺序、以及触发类工具要用户确认
+  （用户拒绝就停下，**不许换参数重试硬闯**）。并新增「用户说的话会被自动截获写进工作台」
+  这条约定，模型因此不必再复述需求。
+- 会话投影状态版本 `1 → 2`（新增 `input` 字段），旧的持久化缓存会被正确作废。
+
 ## [0.1.0] - 2026-10-23
 
 > 首个可运行版本。**尚未发布到 npm**（`package.json` 里 `private: true`），只能用本地路径装载。

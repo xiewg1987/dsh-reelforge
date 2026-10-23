@@ -98,6 +98,8 @@
     "tab.output": "Output",
     "tab.log": "Log",
     "cost": "Spent {spent} / cap {cap}",
+    "captured.label": "Captured input (auto)",
+    "captured.empty": "What you type in the chat box lands here automatically.",
     "common.confirm": "Confirm",
     "common.cancel": "Cancel",
     "common.retry": "Retry",

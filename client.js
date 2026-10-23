@@ -114,6 +114,14 @@ window.__ModuleLoader__.load({
     'reelforge.rollback',
   ];
 
+  /**
+   * 工作台直接发起工具调用时用的指令前缀（`src/core/constants.js` 的字面镜像）。
+   *
+   * ⚠️ 两边必须一致：客户端用它拼句子，宿主半用同一前缀把**工作台自己发出的**
+   * 指令从「用户输入」里排除（`src/core/inputCapture.js`）。
+   */
+  RF.TOOL_CALL_PROMPT_PREFIX = '请调用工具 ';
+
   /** 13 个 ReelForge 工具 id（F4）。 */
   RF.TOOL_IDS = {
     importNovel: 'reelforge.import_novel',
@@ -199,6 +207,8 @@ window.__ModuleLoader__.load({
       'tab.output': '成片',
       'tab.log': '日志',
       'cost': '已用 {spent} / 上限 {cap}',
+      'captured.label': '对话输入（自动截获）',
+      'captured.empty': '你在对话框里说的话会自动写到这里。',
       'common.confirm': '确认',
       'common.cancel': '取消',
       'common.retry': '重试',
@@ -312,6 +322,8 @@ window.__ModuleLoader__.load({
       'tab.output': 'Output',
       'tab.log': 'Log',
       'cost': 'Spent {spent} / cap {cap}',
+      'captured.label': 'Captured input (auto)',
+      'captured.empty': 'What you type in the chat box lands here automatically.',
       'common.confirm': 'Confirm',
       'common.cancel': 'Cancel',
       'common.retry': 'Retry',
@@ -432,6 +444,8 @@ window.__ModuleLoader__.load({
     skills: [],
     deliverables: [],
     changelog: { entries: [], modes: ['single', 'batch', 'timepoint'] },
+    // 对话输入截获（§10.5）：用户在 DSH 输入框里敲的原文，由宿主钩子写进状态。
+    input: { text: '' },
     cost: { spent: 0, cap: 0 },
     budget: {},
   });
@@ -1066,6 +1080,26 @@ window.__ModuleLoader__.load({
 .rf-note { font-size: 11px; color: var(--dsw-alias-label-caption); margin-top: 8px; }
 .rf-note--warn { color: var(--dsw-alias-state-warn-label); }
 .rf-note--error { color: var(--dsw-alias-state-error-primary); }
+.rf-captured {
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-left: 3px solid var(--dsw-alias-brand-primary);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  background: var(--dsw-alias-bg-layer-1);
+}
+.rf-captured__label {
+  font-size: 11px;
+  color: var(--dsw-alias-label-tertiary);
+  margin-bottom: 4px;
+}
+.rf-captured__text {
+  font-size: 12px;
+  color: var(--dsw-alias-label-primary);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.rf-captured__text--empty { color: var(--dsw-alias-label-caption); }
 .rf-chatrow { border: 1px solid var(--dsw-alias-border-l2); border-radius: 8px; padding: 12px; margin-bottom: 8px; background: var(--dsw-alias-bg-layer-1); }
 .rf-chatrow__head { display: flex; gap: 8px; align-items: center; }
 .rf-chatrow__kind { font-size: 10px; color: var(--dsw-alias-label-tertiary); background: var(--dsw-alias-bg-layer-3); border-radius: 4px; padding: 2px 6px; }
@@ -1370,6 +1404,25 @@ window.__ModuleLoader__.load({
   };
 
   /**
+   * 对话输入截获块（§10.5）：把宿主钩子截到的用户原文摆在工作台最上面。
+   *
+   * 没有截到时也显示一行提示 —— 这个块是「输入会自己进来」的唯一可见证据，
+   * 平时空着等于功能不存在。
+   *
+   * @param {{ t: function, project: object }} props - 属性。
+   * @returns {object} React 元素。
+   */
+  RF.renderCapturedInput = function renderCapturedInput(props) {
+    const text = String(props.project?.input?.text ?? '').trim();
+    const empty = text === '';
+    return h('div', { className: `${RF.CLS}-captured` },
+      h('div', { className: `${RF.CLS}-captured__label` }, props.t('captured.label')),
+      h('div', {
+        className: `${RF.CLS}-captured__text${empty ? ` ${RF.CLS}-captured__text--empty` : ''}`,
+      }, empty ? props.t('captured.empty') : text));
+  };
+
+  /**
    * 工作台主壳。
    * @param {object} props - 插槽注入的 props（`useTabInfo` / `useSessions` / `t` 等）。
    * @returns {object} React 元素。
@@ -1477,6 +1530,7 @@ window.__ModuleLoader__.load({
           onClick: () => setActiveTab(tab.id),
         }, t(`tab.${tab.labelKey}`)))),
       h('div', { className: `${RF.CLS}-scroll` },
+        RF.renderCapturedInput({ t, project }),
         render({ t, project, state, width })),
       h('footer', { className: `${RF.CLS}-footer` },
         h('div', { className: `${RF.CLS}-footer__text` },
@@ -2011,7 +2065,9 @@ window.__ModuleLoader__.load({
           sessionId,
           content: [{
             type: 'text',
-            text: `请调用工具 ${request.toolId}，参数 ${JSON.stringify(request.args)}`,
+            // 前缀冻结在 `RF.TOOL_CALL_PROMPT_PREFIX`：宿主半靠它把工作台自己
+            // 发出的指令从「用户输入」里排除（`src/core/inputCapture.js`）。
+            text: `${RF.TOOL_CALL_PROMPT_PREFIX}${request.toolId}，参数 ${JSON.stringify(request.args)}`,
           }],
         });
         return { delivered: true, reason: 'session-prompt' };

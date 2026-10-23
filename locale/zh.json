@@ -98,6 +98,8 @@
     "tab.output": "成片",
     "tab.log": "日志",
     "cost": "已用 {spent} / 上限 {cap}",
+    "captured.label": "对话输入（自动截获）",
+    "captured.empty": "你在对话框里说的话会自动写到这里。",
     "common.confirm": "确认",
     "common.cancel": "取消",
     "common.retry": "重试",

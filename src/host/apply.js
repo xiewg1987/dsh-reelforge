@@ -4,9 +4,11 @@
  * 分层纪律（§5.2）：宿主专属逻辑全在这里，`src/core/` 一行 `ctx` 都不出现。
  */
 import { PROJECTION_KEY, TRIGGER_TOOL_IDS } from '../core/constants.js';
+import { buildReelForgePromptSection } from '../core/promptSection.js';
 import { buildSkillPromptSection } from '../skills/route.js';
 import { buildSkillRegistry } from '../skills/skillTools.js';
 import { resolveConfig } from './config.js';
+import { registerInputHook } from './inputHook.js';
 import { BUNDLED_SKILLS_DIR, PRIVATE_DIR } from './paths.js';
 import {
   ProjectionStore,
@@ -74,6 +76,12 @@ export function applyReelForge(ctx, rawConfig) {
     store.applyEvent(session.id, event);
   }));
 
+  // ── 对话输入截获（§10.5）──
+  // 用户在 DSH 输入框里敲的原文由宿主的 `agent/pre-step` 瀑布钩子交给我们，
+  // 写进投影后工作台立刻显示。日志重放走 `session/event` → `user/message`
+  // 也能重建同一份内容（R1：钩子只是让它更早到，不是第二份事实）。
+  track(registerInputHook(ctx, store));
+
   // ── 宿主投影单元：把状态发布成浏览器半可见的视图 ──
   // `ctx.sessionProjections` 是**可选**服务（没有 Agent / 会话投影的外壳里不存在），
   // 所以走 `ctx.inject` 而不是写进 `export const inject`——否则插件整个装不上。
@@ -93,15 +101,16 @@ export function applyReelForge(ctx, rawConfig) {
     }));
   }));
 
-  // ── 技能目录注入到 systemPrompt ──
-  // 模型要**先看到有哪些技能**才可能去读技能正文；没有这一段，`skill` 工具是瞎的。
+  // ── ReelForge 工作流 + 技能目录注入到 systemPrompt ──
+  // 模型要**先看到有哪些技能、状态存在哪、该按什么顺序调工具**才可能真的用上插件；
+  // 只有技能目录是不够的（见 `src/core/promptSection.js` 的说明）。
   track(ctx.inject(['systemPrompt'], (scoped) => {
     track(scoped.systemPrompt.section({
       name: 'reelforge:skills',
       order: scoped.systemPrompt.getSectionOrder('TOOLS_SDK') - 100,
       // 技能正文里可能有 `{...}`，插值会把它吃掉——所以关掉插值。
       interpolate: false,
-      text: () => buildSkillSection(),
+      text: () => buildPromptSection(),
     }));
   }));
 
@@ -155,6 +164,15 @@ function buildSkillSection() {
     skillSectionCache = '## ReelForge 技能目录\n\n（技能目录读取失败：`skill` 工具会报具体原因。）';
   }
   return skillSectionCache;
+}
+
+/**
+ * 注入到 systemPrompt 的完整 ReelForge 段落：工作流说明 + 技能目录。
+ *
+ * @returns {string} 段落文本。
+ */
+function buildPromptSection() {
+  return buildReelForgePromptSection(buildSkillSection());
 }
 
 /**

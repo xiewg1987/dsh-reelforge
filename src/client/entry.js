@@ -121,7 +121,9 @@
           sessionId,
           content: [{
             type: 'text',
-            text: `请调用工具 ${request.toolId}，参数 ${JSON.stringify(request.args)}`,
+            // 前缀冻结在 `RF.TOOL_CALL_PROMPT_PREFIX`：宿主半靠它把工作台自己
+            // 发出的指令从「用户输入」里排除（`src/core/inputCapture.js`）。
+            text: `${RF.TOOL_CALL_PROMPT_PREFIX}${request.toolId}，参数 ${JSON.stringify(request.args)}`,
           }],
         });
         return { delivered: true, reason: 'session-prompt' };

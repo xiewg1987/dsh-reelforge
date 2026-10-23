@@ -232,6 +232,26 @@
 .rf-note { font-size: 11px; color: var(--dsw-alias-label-caption); margin-top: 8px; }
 .rf-note--warn { color: var(--dsw-alias-state-warn-label); }
 .rf-note--error { color: var(--dsw-alias-state-error-primary); }
+.rf-captured {
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-left: 3px solid var(--dsw-alias-brand-primary);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  background: var(--dsw-alias-bg-layer-1);
+}
+.rf-captured__label {
+  font-size: 11px;
+  color: var(--dsw-alias-label-tertiary);
+  margin-bottom: 4px;
+}
+.rf-captured__text {
+  font-size: 12px;
+  color: var(--dsw-alias-label-primary);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.rf-captured__text--empty { color: var(--dsw-alias-label-caption); }
 .rf-chatrow { border: 1px solid var(--dsw-alias-border-l2); border-radius: 8px; padding: 12px; margin-bottom: 8px; background: var(--dsw-alias-bg-layer-1); }
 .rf-chatrow__head { display: flex; gap: 8px; align-items: center; }
 .rf-chatrow__kind { font-size: 10px; color: var(--dsw-alias-label-tertiary); background: var(--dsw-alias-bg-layer-3); border-radius: 4px; padding: 2px 6px; }

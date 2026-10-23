@@ -32,10 +32,11 @@ import {
   SHOT_DURATION_MAX,
   SHOT_DURATION_MIN,
 } from '../core/constants.js';
+import { extractCapturedInput } from '../core/inputCapture.js';
 import { resolveRefs } from '../core/refs.js';
 
 /** 投影状态版本。状态字段或 fold 语义变化时**必须 +1**，否则旧的持久化缓存会被错误复用。 */
-export const STATE_VERSION = 1;
+export const STATE_VERSION = 2;
 
 /**
  * 空状态的初始值。
@@ -52,6 +53,7 @@ export function initialState() {
     plan: null,
     deliverables: [],
     changelog: { entries: [] },
+    input: { text: '' },
   };
 }
 
@@ -95,15 +97,30 @@ export function initialState() {
  *   - `meta.reelforge` 是补丁数组 → 逐个作用；
  *   - `meta.reelforge` 带 `op` → 当作单个补丁。
  *
+ * ## `user/message`：对话输入截获（§10.5）
+ *
+ * 用户在对话框里敲的原文会作为 `user/message` 事件进入会话日志
+ * （`packages/core/session/src/types.ts`：`'user/message': UserMessage`）。
+ * 所以**截获结果同样能从日志重放出来** —— 钩子（`src/host/inputHook.js`）只是让
+ * 它更早到达工作台，日志仍是唯一事实源（R1）。
+ *
+ * 只认 `source.kind === 'user'`：注入上下文（技能正文、`agent.inject()` 通知）
+ * 也是 user 角色消息，但不是「用户说的话」。
+ *
  * @param {object} state 当前状态。
- * @param {{ type?: string, data?: { meta?: { reelforge?: ProjectionPayload | ProjectionPatch[] } } }} event 会话事件。
+ * @param {{ type?: string, data?: unknown, time?: number }} event 会话事件。
  * @returns {object} 下一个状态；**事件与本投影无关时返回同一个引用**（零下游开销）。
  */
 export function applyEvent(state, event) {
-  if (!event || event.type !== 'tool/result') return state;
-  const meta = event.data && event.data.meta;
+  if (!event || typeof event.type !== 'string') return state;
+  if (event.type === 'user/message') return applyUserMessage(state, event);
+  if (event.type !== 'tool/result') return state;
+  const data = /** @type {{ meta?: unknown }} */ (event.data);
+  const meta = data && data.meta;
   if (!meta || typeof meta !== 'object') return state;
-  const payload = meta.reelforge;
+  const payload = /** @type {ProjectionPayload | ProjectionPatch[] | undefined} */ (
+    /** @type {{ reelforge?: unknown }} */ (meta).reelforge
+  );
   if (payload === undefined || payload === null) return state;
 
   // F9 新形状：{ kind, patches: [...] }
@@ -119,6 +136,21 @@ export function applyEvent(state, event) {
   }
   if (typeof payload !== 'object' || typeof payload.op !== 'string') return state;
   return applyPatch(state, payload);
+}
+
+/**
+ * 把一条 `user/message` 事件作用到状态上：截获用户输入。
+ *
+ * @param {object} state 当前状态。
+ * @param {{ data?: unknown }} event 会话事件。
+ * @returns {object} 下一个状态。
+ */
+function applyUserMessage(state, event) {
+  const message = event.data;
+  if (!message || typeof message !== 'object') return state;
+  const text = extractCapturedInput([message]);
+  if (text === '') return state;
+  return applyPatch(state, { op: 'input.set', value: { text } });
 }
 
 /**
@@ -259,6 +291,14 @@ export function applyPatch(state, patch) {
     case 'changelog.set': {
       const entries = Array.isArray(patch.value?.entries) ? patch.value.entries : [];
       return { ...state, changelog: { entries } };
+    }
+
+    case 'input.set': {
+      // 对话输入截获（§10.5）：空文本不覆盖已有值 —— 空是「没截到」，
+      // 不是「用户把输入清空了」，两者不能混。
+      const text = typeof patch.value?.text === 'string' ? patch.value.text : '';
+      if (text === '') return state;
+      return { ...state, input: { ...(state.input ?? {}), text } };
     }
 
     default:
@@ -508,6 +548,8 @@ export function buildWireView(state, options = {}) {
       entries: Array.isArray(changelog.entries) ? changelog.entries : [],
       modes: [...ROLLBACK_MODES],
     },
+    // 对话输入截获（§10.5）：用户在对话框里敲的原文，由钩子写进状态、日志重放可重建。
+    input: { text: current.input?.text ?? '' },
     // `spent`：成本记账尚未接入会话事件（R1 只认 `tool/result` 补丁），
     // 所以实际花费恒为 0；`cap` 必须来自 Config，不能写死 —— 否则工作台显示「上限 ¥0.00」。
     cost: { spent: 0, cap: budgetLimitCny },

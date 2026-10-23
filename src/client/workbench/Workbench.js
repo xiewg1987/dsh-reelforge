@@ -23,6 +23,25 @@
   };
 
   /**
+   * 对话输入截获块（§10.5）：把宿主钩子截到的用户原文摆在工作台最上面。
+   *
+   * 没有截到时也显示一行提示 —— 这个块是「输入会自己进来」的唯一可见证据，
+   * 平时空着等于功能不存在。
+   *
+   * @param {{ t: function, project: object }} props - 属性。
+   * @returns {object} React 元素。
+   */
+  RF.renderCapturedInput = function renderCapturedInput(props) {
+    const text = String(props.project?.input?.text ?? '').trim();
+    const empty = text === '';
+    return h('div', { className: `${RF.CLS}-captured` },
+      h('div', { className: `${RF.CLS}-captured__label` }, props.t('captured.label')),
+      h('div', {
+        className: `${RF.CLS}-captured__text${empty ? ` ${RF.CLS}-captured__text--empty` : ''}`,
+      }, empty ? props.t('captured.empty') : text));
+  };
+
+  /**
    * 工作台主壳。
    * @param {object} props - 插槽注入的 props（`useTabInfo` / `useSessions` / `t` 等）。
    * @returns {object} React 元素。
@@ -130,6 +149,7 @@
           onClick: () => setActiveTab(tab.id),
         }, t(`tab.${tab.labelKey}`)))),
       h('div', { className: `${RF.CLS}-scroll` },
+        RF.renderCapturedInput({ t, project }),
         render({ t, project, state, width })),
       h('footer', { className: `${RF.CLS}-footer` },
         h('div', { className: `${RF.CLS}-footer__text` },

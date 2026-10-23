@@ -102,6 +102,14 @@
     'reelforge.rollback',
   ];
 
+  /**
+   * 工作台直接发起工具调用时用的指令前缀（`src/core/constants.js` 的字面镜像）。
+   *
+   * ⚠️ 两边必须一致：客户端用它拼句子，宿主半用同一前缀把**工作台自己发出的**
+   * 指令从「用户输入」里排除（`src/core/inputCapture.js`）。
+   */
+  RF.TOOL_CALL_PROMPT_PREFIX = '请调用工具 ';
+
   /** 13 个 ReelForge 工具 id（F4）。 */
   RF.TOOL_IDS = {
     importNovel: 'reelforge.import_novel',
