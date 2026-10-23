@@ -915,3 +915,130 @@ workflows/specs
 > 另修掉一处**空断言**：降级矩阵的回归测试拿「判定产出」和「矩阵表」互相比，
 > 而判定读的**就是矩阵那张表** ⇒ 比的是同一个对象，改坏两边一起变，测试永远绿。
 > 改法：引入**字面规格表**作为第三个来源，矩阵与判定都对它核对（8 个变异点全部报红）。
+
+## 2026-10-24 · 颜色层这一批（owner 实机反馈「UI 颜色都没有改变」）
+
+> 隔离宿主 DSH_HOME=`%TEMP%\dsh-rf-ui`，端口 3081，插件以 `link:` 安装；
+> 真实宿主 + 系统 Chrome（`chromium.launch({ channel: "chrome" })`）+ Playwright。
+> 量的是 `getComputedStyle` 的**实际渲染值**，不是源码里写的 token 名。
+
+### ① 强调位实测（明暗两套主题）
+
+| 位置 | 量的属性 | 浅色主题实测 | 暗色主题实测 |
+| --- | --- | --- | --- |
+| 面板头 logo 底 | `backgroundColor` | `rgb(65, 118, 230)` | `rgb(86, 134, 254)` |
+| StageBar 当前步点 | `backgroundColor` | `rgb(65, 118, 230)` | `rgb(86, 134, 254)` |
+| StageBar 当前步 chip 底 | `backgroundColor` | `color(srgb 0.254902 0.462745 0.901961 / 0.14)` | `color(srgb 0.337255 0.52549 0.996078 / 0.14)` |
+| 选中页签 | `backgroundColor` | `color(srgb 0.254902 0.462745 0.901961 / 0.14)` | `color(srgb 0.337255 0.52549 0.996078 / 0.14)` |
+| 选中卡描边 | `borderTopColor` | `rgb(65, 118, 230)` | `rgb(86, 134, 254)` |
+| 主按钮底 | `backgroundColor` | `rgb(65, 118, 230)` | `rgb(86, 134, 254)` |
+| 进行中胶囊 | `backgroundColor` | `color(srgb 0.254902 0.462745 0.901961 / 0.14)` | `color(srgb 0.337255 0.52549 0.996078 / 0.14)` |
+| 进度条填充 | `backgroundColor` | `—` | `—` |
+| 开关 | `backgroundColor` | `—` | `—` |
+| 选中卡左侧 4px 条 | `borderLeftColor` | `rgb(65, 118, 230)` | `rgb(86, 134, 254)` |
+
+> 「进度条填充」「开关」在本轮抓的这几屏里**没有渲染**（0 章 ⇒ 无章节进度条；
+> 开关在成片播放器屏，本轮未进）—— 这两处的颜色由单元断言钉住
+> （`.rf-progress__fill` / `.rf-switch--on` 必须引用 `var(--rf-accent)`）。
+
+- ✓ [light] 当前步点 = rgb(65, 118, 230)
+- ✓ [light] 面板头 logo 底 = rgb(65, 118, 230)
+- ✓ [light] 选中卡描边 = rgb(65, 118, 230)
+- ✓ [light] 选中卡左边条 = rgb(65, 118, 230)
+- ✓ [light] 主按钮底 = rgb(65, 118, 230)
+- ✓ [dark] 当前步点 = rgb(86, 134, 254)
+- ✓ [dark] 面板头 logo 底 = rgb(86, 134, 254)
+- ✓ [dark] 选中卡描边 = rgb(86, 134, 254)
+- ✓ [dark] 选中卡左边条 = rgb(86, 134, 254)
+- ✓ [dark] 主按钮底 = rgb(86, 134, 254)
+
+宿主 accent 的两套取值：`--dsw-alias-brand-primary-new-colorprimary-new-color`
+浅色 `#4176E6`（rgb(65, 118, 230)）/ 暗色 `#5686FE`（rgb(86, 134, 254)）
+—— 暗色那支与设计稿 ACCENT `#4C8DFF` 只差 (+10, −7, −1)。
+
+### ② 状态面实测（WARN-SURF / ERROR-SURF）
+
+| 位置 | 浅色 底 / 描边 | 暗色 底 / 描边 |
+| --- | --- | --- |
+| 04 结论卡红底实测 | `color(srgb 0.992549 0.907451 0.907451)` / `rgb(236, 19, 19)` | `color(srgb 0.218431 0.158824 0.162353)` / `rgb(242, 90, 90)` |
+| 06 显存条黄底实测 | `color(srgb 0.986667 0.952549 0.916078)` / `rgb(221, 134, 41)` | `color(srgb 0.210196 0.176078 0.143137)` / `rgb(221, 134, 41)` |
+| 16 降级详情卡黄描边实测 | `rgb(255, 255, 255)` / `rgb(221, 134, 41)` | `rgb(35, 35, 36)` / `rgb(221, 134, 41)` |
+
+映射表里推导的暗色值（红面 `#382929` / 黄面 `#362D25`）与**实测**逐位一致。
+
+### ③ 逐屏截图（同一轮的实机产物）
+
+| 屏 | 浅色主题 | 暗色主题 |
+| --- | --- | --- |
+| 06 执行阶段（板 06） | `rf-color-final/light-06-stages.png` | `rf-color-final/dark-06-stages.png` |
+| 16 降级矩阵（板 16） | `rf-color-final/light-16-degraded.png` | `rf-color-final/dark-16-degraded.png` |
+| 04 结论卡红底 | `rf-surface-out/light-04-error-card.png` | `rf-surface-out/dark-04-error-card.png` |
+| 06 显存条黄底 | `rf-surface-out/light-06-warn-card.png` | `rf-surface-out/dark-06-warn-card.png` |
+| 16 降级详情卡黄描边 | `rf-surface-out/light-16-warn-border-card.png` | `rf-surface-out/dark-16-warn-border-card.png` |
+
+### ④ 六屏回归（同一轮跑，颜色改动没碰坏别的）
+
+| 屏 | 副标 | 胶囊 | 页签条 | 两列网格 | 矩阵行 |
+| --- | --- | --- | --- | --- | --- |
+| 00-project-view | 《未命名项目》· 0 章 · 0 镜 | 待开始 | true | 0 | 0 |
+| 01-intake | 粘贴正文，ReelForge 自动拆章 | 新项目 | false | 0 | 0 |
+| 01-intake-interact | — | — | — | — | — |
+| 02-runmode | 同一批工作流，跑在这台机器还是云端 | 2 种位置 | false | 1 | 0 |
+| 02-runmode-interact | — | — | — | — | — |
+| 03-device | 本地档要过 9 项探测 | 9 项探测 | false | 0 | 0 |
+| 03-device-detail | — | — | — | — | — |
+| 04-plan | 哪种生成方式，跑在哪台机器上 | 5 种 kind | false | 1 | 0 |
+| 04-plan-detail | — | — | — | — | — |
+| 05-stages | 四个阶段，可按章勾选 | 4 个阶段 | false | 0 | 0 |
+| 05-stages-detail | — | — | — | — | — |
+| 06-output-tab | 还没有成片 | 还没开始渲染 | true | 0 | 0 |
+| 06-output-detail | — | — | — | — | — |
+| 07-degraded | 缺什么就说清楚，不假装成功 | 7 种缺失 | false | 0 | 8 |
+| 07-degraded-detail | — | — | — | — | — |
+| 08-back-to-tabs | 还没有分镜表 | 还没有章 | true | 0 | 0 |
+
+探测路由直连：`{"ok":true,"status":200,"itemCount":9,"matrixRows":7,"blockers":4,"firstItem":"comfy"}`
+
+### ⑤ 控制台错误
+
+```json
+[]
+```
+
+控制台错误条数：**0**。
+
+### ⑥ 设计令牌 → 宿主 token 映射表（17 条）
+
+完整表在 `src/client/workbench/styles.js` **文件头**（模板字符串之外 ——
+样式正文里只写令牌名，hex 留在文件头，这样 A7 的「无十六进制字面量」正则扫不到）。
+
+| 设计令牌 | hex | 宿主 token | 浅色 | 暗色 | 用在哪 |
+| --- | --- | --- | --- | --- | --- |
+| BG | #0B0E14 | --dsw-alias-bg-base | #FFFFFF | #151517 | 面板底 |
+| SURFACE | #171A20 | --dsw-alias-bg-layer-1 | #FFFFFF | #232324 | 卡面 |
+| SURFACE-2 | #12151B | --dsw-alias-bg-layer-2 | #FFFFFF | #2C2C2E | StageBar / 页签条 |
+| SURFACE-3 | #1F2127 | --dsw-alias-bg-layer-3 | #FFFFFF | #353638 | 胶囊 / 输入底 |
+| LINE | #23262B | --dsw-alias-border-l2 | rgba(0,0,0,.1) | rgba(255,255,255,.12) | 常规边框 |
+| LINE-2 | #2D3035 | --dsw-alias-border-l3 | rgba(0,0,0,.12) | rgba(255,255,255,.16) | 强边框 |
+| TEXT-1 | #F2F5F9 | --dsw-alias-label-primary | #0F1115 | #F9FAFB | 主文字 |
+| TEXT-2 | #8A93A5 | --dsw-alias-label-secondary | #61666B | #CFD3D6 | 次文字 |
+| TEXT-3 | #5B6472 | --dsw-alias-label-tertiary | #81858C | #ADB2B8 | 三级文字 |
+| ACCENT | #4C8DFF | --dsw-alias-brand-primary-new-colorprimary-new-color | #4176E6 | #5686FE | 强调色：当前步点 / 选中描边 / 主按钮 / 开关 / 进度条 / logo |
+| ACCENT-DIM | #16203A | color-mix(accent 14%, transparent) | 淡蓝 | #32394B | 选中态胶囊底（板 01 当前步 chip） |
+| OK | #3FB950 | --dsw-alias-state-success-primary | #22C55E | #22C55E | 完成 |
+| WARN | #D29922 | --dsw-alias-state-warn-label | #DD8629 | #DD8629 | 警告 |
+| WARN-SURF | #2A2214 | color-mix(state-warn-label 10%, bg-layer-1) | #FCF3EA | #362D25 | 警告面（板 06 显存条 / 板 16 降级详情卡描边） |
+| ERROR | #F85149 | --dsw-alias-state-error-primary | #EC1313 | #F25A5A | 错误 |
+| ERROR-SURF | #2A1618 | color-mix(state-error-primary 10%, bg-layer-1) | #FDE7E7 | #382929 | 错误面（板 04 结论卡） |
+| WHITE | #FFFFFF | --dsw-alias-toast-label | #FFFFFF | #FFFFFF | 强调色上的标记 |
+
+### ⑦ 这一批的设计取舍（写在证据里，免得日后被当成「顺手改的」）
+
+1. **强调色绑宿主 accent，不绑 `brand-primary`** —— 宿主自己的 dockkit 注释明写
+   「Emphasis … takes the platform's accent … not `--dsw-alias-brand-primary`,
+   which this platform binds to its near-black」。宿主 accent = 浅 `#4176E6` / 暗 `#5686FE`。
+2. **选中卡不染底** —— 从 `design/03-RF-RunMode.svg` / `05-RF-Plan.svg` / `06-RF-Stages.svg`
+   读矩形填充：选中卡与未选中卡**同一个面**，只有描边换 ACCENT（板 06 另加左侧 4px 条）。
+3. **底色跟随宿主主题** —— 宿主暗色主题的色阶与设计稿几乎 1:1（BG `#151517` vs `#0B0E14`、
+   ACCENT `#5686FE` vs `#4C8DFF`）；浅色主题下宿主把三个 layer 全压成纯白，
+   面板没有表面层次 —— 那是宿主浅色主题自己的取法，插件不另立一套（§4.3 / R6）。

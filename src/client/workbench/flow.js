@@ -391,7 +391,8 @@
 
       // ── 结论卡 ──
       blockers.length > 0
-        ? h(RF.ui.Card, null,
+        // 板 04 号板：结论卡是**红底**（ERROR-SURF），不是普通卡面。
+        ? h(RF.ui.Card, { tone: 'error' },
           h('div', { className: `${RF.CLS}-row__title ${RF.CLS}-note--error` }, t('flow.device.conclusionTitle')),
           blockers.map(blocker => h('div', {
             key: `blocker-${blocker.id}`,
@@ -538,7 +539,8 @@
       // ── 四张全局阶段卡 ──
       RF.STAGES.map((stage, index) => {
         const enabled = global.includes(stage);
-        return h(RF.ui.Card, { key: stage, state: enabled ? 'selected' : 'default' },
+        // 板 06 号板：阶段卡选中态 = 蓝描边 **+ 左侧 4px 蓝条**（`accent`）。
+        return h(RF.ui.Card, { key: stage, state: enabled ? 'selected' : 'default', accent: true },
           h('div', { className: `${RF.CLS}-row` },
             h('div', { className: `${RF.CLS}-row__main` },
               h('div', { className: `${RF.CLS}-row__title` }, stage),
@@ -549,7 +551,8 @@
       h('div', { className: `${RF.CLS}-note ${RF.CLS}-note--warn` }, t('flow.stages.readonly')),
 
       // ── 显存门槛提示条 ──
-      h(RF.ui.Card, null,
+      // 板 06 号板：这条是**黄底**（WARN-SURF），不是普通卡面。
+      h(RF.ui.Card, { tone: 'warn' },
         h('div', { className: `${RF.CLS}-row__title ${RF.CLS}-note--warn` }, t('flow.stages.vramTitle')),
         h('div', { className: `${RF.CLS}-note` }, t('flow.stages.vramNote'))),
 
@@ -607,13 +610,19 @@
 
     /**
      * 产出形态 → 胶囊色调。
+     *
+     * 板 16 号板明写「每格用 10-11px 文字，绿 #3FB950 / 黄 #D29922 / 红 #F85149」：
+     * 绿=有、红=无、**黄=降级但仍交付**。中间那档（静帧成片 / 部分镜 /
+     * 静音成片 / 无声成片 / 占位帧）原来落在「排队」的灰色上，
+     * 看不出是降级 —— 现在落到黄。
+     *
      * @param {string} form 形态（`none` / `text_card` / `placeholder` / `silent` / `full` / `partial`）。
      * @returns {string} 色调。
      */
     const formTone = (form) => {
       if (form === 'none') return 'failed';
       if (form === 'full') return 'done';
-      return 'queued';
+      return 'warn';
     };
 
     return h('div', null,
@@ -643,11 +652,12 @@
         h('div', { className: `${RF.CLS}-note` }, t('flow.degrade.matrixNote'))),
 
       // ── 一次真实降级 ──
+      // 板 16 号板：这张卡是**普通面 + 黄描边**（WARN-SURF 用在描边上）。
       degradations.length === 0
         ? h(RF.ui.Card, null,
           h('div', { className: `${RF.CLS}-row__title` }, t('flow.degrade.noneTitle')),
           h('div', { className: `${RF.CLS}-note` }, t('flow.degrade.noneBody')))
-        : h(RF.ui.Card, null,
+        : h(RF.ui.Card, { tone: 'warn-border' },
           h('div', { className: `${RF.CLS}-row__title` }, t(`degrade.kind.${degradations[0].kind ?? ''}`)),
           h('div', { className: `${RF.CLS}-row__sub` }, String(degradations[0].message ?? '')),
           h('div', { className: `${RF.CLS}-row__sub` }, t('flow.degrade.outputsLine', {

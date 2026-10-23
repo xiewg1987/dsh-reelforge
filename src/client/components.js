@@ -48,12 +48,18 @@
   };
 
   /**
-   * 胶囊 / 标签：进行中 / 已完成 / 失败 / 排队。
+   * 胶囊 / 标签：进行中 / 已完成 / 失败 / 排队 / **降级**。
+   *
+   * ⚠️ 画板 15 的胶囊只列了 4 态；第 5 种 `warn`（降级但仍交付）是
+   * **画板 16 降级矩阵**要的语义 —— 那一板明写「每格用 10-11px 文字，
+   * 绿 #3FB950 / 黄 #D29922 / 红 #F85149」：绿=有、红=无、黄=降级但仍交付。
+   * 少了它，「静帧成片 / 部分镜 / 静音成片」会渲染成灰色 = 看不出是降级。
+   *
    * @param {{ label: string, tone?: string }} props - 属性。
    * @returns {object} React 元素。
    */
   RF.Pill = function Pill(props) {
-    const tone = ['running', 'done', 'failed', 'queued'].includes(props.tone) ? props.tone : 'queued';
+    const tone = ['running', 'done', 'failed', 'queued', 'warn'].includes(props.tone) ? props.tone : 'queued';
     return h('span', { className: `${RF.CLS}-pill ${RF.CLS}-pill--${tone}` }, props.label);
   };
 
@@ -107,14 +113,22 @@
    * 事件来自卡片**内部**的按钮时**不重复触发**卡片自己的动作
    * （否则在子按钮上按 Enter 会同时选中卡片）。
    *
-   * @param {{ children: any, state?: string, onClick?: function }} props - 属性。
+   * @param {{ children: any, state?: string, onClick?: function, accent?: boolean, tone?: string }} props - 属性。
    * @returns {object} React 元素。
    */
   RF.Card = function Card(props) {
     const state = props.state === 'selected' || props.state === 'disabled' ? props.state : 'default';
     const clickable = state !== 'disabled' && typeof props.onClick === 'function';
+    // `accent` = 左侧 4px 强调色竖条（画板 06 号板：阶段卡选中态
+    // 「描边 #4C8DFF + 左侧 4px #4C8DFF 条」）。别的板只要描边，不要竖条。
+    const accent = props.accent === true ? ` ${RF.CLS}-card--accent` : '';
+    // `tone` = 状态面（画板 17 号板的 WARN-SURF / ERROR-SURF 两个令牌）：
+    //   `warn`        黄面 + 黄描边（画板 06 号板「显存门槛提示条」）
+    //   `error`       红面 + 红描边（画板 04 号板「结论卡」）
+    //   `warn-border` 普通面 + 黄描边（画板 16 号板「一次真实降级」卡）
+    const tone = ['warn', 'error', 'warn-border'].includes(props.tone) ? ` ${RF.CLS}-card--${props.tone}` : '';
     return h('div', {
-      className: `${RF.CLS}-card ${RF.CLS}-card--${state}`,
+      className: `${RF.CLS}-card ${RF.CLS}-card--${state}${accent}${tone}`,
       onClick: clickable ? props.onClick : undefined,
       role: clickable ? 'button' : undefined,
       tabIndex: clickable ? 0 : undefined,

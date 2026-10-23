@@ -54,8 +54,8 @@ const DOC_DIR = path.join(ROOT, 'docs', '开发任务');
  */
 
 /** 任务书里验收项的总数与分布。解析数量对不上就报错退出——宁可炸，也不要悄悄少判。 */
-const EXPECTED_TOTAL = 120;
-const EXPECTED_PER_TASK = { T1: 12, T2: 21, T3: 23, T4: 22, T5: 42 };
+const EXPECTED_TOTAL = 122;
+const EXPECTED_PER_TASK = { T1: 12, T2: 21, T3: 23, T4: 22, T5: 44 };
 
 /** 任务书文件清单（验收表在各自 §5）。 */
 const TASK_DOCS = [
@@ -479,6 +479,42 @@ export const ACCEPTANCE_MAP = [
       ],
     },
     note: 'DSH 0.2.1-alpha.1 实机：板 03 两张并列大卡 / 板 05 2×2 矩阵（两列网格门槛 560 = STYLE-SPEC §1 净宽 520 + 左右各 20 外边距）',
+  },
+  {
+    task: 'T5',
+    id: 'A43',
+    files: ['src/client/__tests__/t5-client.test.js', 'src/client/__tests__/flow.test.js'],
+    names: [
+      '颜色层：强调位用宿主 accent，不是中性的 brand-primary',
+      '颜色层：17 个设计令牌都有「设计令牌 → 宿主 token」的映射',
+      '降级矩阵配色：绿=有 / 红=无 / 黄=降级但仍交付（板 16 号板）',
+      '阶段卡选中态 = 蓝描边 + 左侧 4px 蓝条（板 06 号板）',
+    ],
+    // 强调位不许再绑中性的 brand-primary（浅色近黑 / 暗色近白 = 整个面板没有颜色）。
+    scan: {
+      pattern: 'var\\(--dsw-alias-brand-primary\\)',
+      globs: ['src/client/workbench/styles.js', 'client.js'],
+      expect: 'absent',
+    },
+    note: '设计稿板 17 的 17 个颜色令牌逐条映射到宿主 --dsw-alias-* token（映射表在 styles.js 文件头）；强调位用宿主 accent（浅 #4176E6 / 暗 #5686FE），不再用中性 brand-primary',
+  },
+  {
+    task: 'T5',
+    id: 'A44',
+    kind: 'live',
+    live: {
+      file: 'docs/开发任务/实机/dsh-0.2.1-alpha.1.md',
+      mustContain: [
+        '### ① 强调位实测（明暗两套主题）',
+        '| 面板头 logo 底 | `backgroundColor` | `rgb(65, 118, 230)` | `rgb(86, 134, 254)` |',
+        '| 选中卡描边 | `borderTopColor` | `rgb(65, 118, 230)` | `rgb(86, 134, 254)` |',
+        '| 选中卡左侧 4px 条 | `borderLeftColor` | `rgb(65, 118, 230)` | `rgb(86, 134, 254)` |',
+        '| 主按钮底 | `backgroundColor` | `rgb(65, 118, 230)` | `rgb(86, 134, 254)` |',
+        '### ② 状态面实测（WARN-SURF / ERROR-SURF）',
+        '### ⑥ 设计令牌 → 宿主 token 映射表（17 条）',
+      ],
+    },
+    note: 'DSH 0.2.1-alpha.1 实机：明暗两套主题下量 getComputedStyle 的实际渲染色 —— 强调位全是宿主 accent（浅 #4176E6 / 暗 #5686FE），状态面（红底 / 黄底 / 黄描边）按板 04 / 06 / 16 落地',
   },
 ];
 
