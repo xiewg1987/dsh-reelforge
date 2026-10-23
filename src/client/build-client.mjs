@@ -18,7 +18,7 @@
  */
 
 import { readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -82,20 +82,42 @@ export function buildClient() {
   ].join('\n');
 }
 
-const target = join(root, 'client.js');
-const output = buildClient();
-// ⚠️ **内容没变就不要重写**：重写会改 mtime，而 mtime 进 tarball ——
-// `npm pack` 的 `shasum` / `integrity` 就每次都变，交付报告每次出假 diff。
-// 幂等写入同时让「产物与源码一致」的判定更可信（mtime 不动 ⇒ git diff 干净）。
-let changed = true;
-try {
-  changed = readFileSync(target, 'utf8') !== output;
-} catch {
-  changed = true;
-}
-if (changed) {
-  writeFileSync(target, output, 'utf8');
-  process.stdout.write(`client.js written: ${relative(root, target)} (${output.length} bytes)\n`);
-} else {
-  process.stdout.write(`client.js unchanged: ${relative(root, target)} (${output.length} bytes)\n`);
+// ⚠️ **只在本文件被当脚本直接跑的时候才写盘**。
+//
+// 这个文件同时是「模块」和「脚本」：单测会 `import('../build-client.mjs')` 来拿
+// `buildClient()`。以前顶层无条件写盘 ⇒ **import 一次就重写一次 client.js**，
+// 后果是：
+//   1. 漂移单测自己把产物改对再比对 ⇒ 永远「无漂移」（它比的是自己刚写的版本）；
+//   2. CI 的 `git diff --exit-code -- client.js` 那一步跑在单测之后 ⇒ 看到的永远是
+//      单测刚写好的文件 ⇒ **CI 的产物漂移检查形同虚设**。
+//
+// 所以：被 import 时只导出函数，不碰磁盘；只有 `node build-client.mjs` 才落盘。
+const isDirectRun = (() => {
+  const entry = process.argv[1];
+  if (typeof entry !== 'string' || entry === '') return false;
+  try {
+    return resolve(entry) === fileURLToPath(import.meta.url);
+  } catch {
+    return false;
+  }
+})();
+
+if (isDirectRun) {
+  const target = join(root, 'client.js');
+  const output = buildClient();
+  // ⚠️ **内容没变就不要重写**：重写会改 mtime，而 mtime 进 tarball ——
+  // `npm pack` 的 `shasum` / `integrity` 就每次都变，交付报告每次出假 diff。
+  // 幂等写入同时让「产物与源码一致」的判定更可信（mtime 不动 ⇒ git diff 干净）。
+  let changed = true;
+  try {
+    changed = readFileSync(target, 'utf8') !== output;
+  } catch {
+    changed = true;
+  }
+  if (changed) {
+    writeFileSync(target, output, 'utf8');
+    process.stdout.write(`client.js written: ${relative(root, target)} (${output.length} bytes)\n`);
+  } else {
+    process.stdout.write(`client.js unchanged: ${relative(root, target)} (${output.length} bytes)\n`);
+  }
 }

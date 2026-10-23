@@ -276,11 +276,14 @@ export function analyzeWorkflow(graph, meta = {}) {
       ? null
       : { node: String(imageLoader.node.id), field: 'image', value: inputOf(imageLoader.node, 'image') ?? null },
     diagnostics: {
-      loaders: loaders.map(entry => ({ node: String(entry.node.id), class_type: entry.node.class_type, media: entry.value })),
-      modelLoaders: modelLoaders.map(entry => ({ node: String(entry.node.id), class_type: entry.value })),
-      saves: saves.map(entry => ({ node: String(entry.node.id), class_type: entry.node.class_type })),
-      samplers: samplers.map(entry => ({ node: String(entry.node.id), class_type: entry.node.class_type })),
-      sizeNodes: sizeNodes.map(entry => ({ node: String(entry.node.id), class_type: entry.node.class_type })),
+      // 每条都带 `field`：**绑定的是哪个输入字段**是这批诊断的另一半信息。
+      // 上游数组（loaders / saves / …）本来就带 field，是这里映射时丢掉的 ——
+      // 丢了之后客户端拿不到「哪个字段绑的什么」，只剩节点类型。
+      loaders: loaders.map(entry => ({ node: String(entry.node.id), class_type: entry.node.class_type, field: entry.field, media: entry.value })),
+      modelLoaders: modelLoaders.map(entry => ({ node: String(entry.node.id), class_type: entry.value, field: entry.field })),
+      saves: saves.map(entry => ({ node: String(entry.node.id), class_type: entry.node.class_type, field: entry.field })),
+      samplers: samplers.map(entry => ({ node: String(entry.node.id), class_type: entry.node.class_type, field: entry.field })),
+      sizeNodes: sizeNodes.map(entry => ({ node: String(entry.node.id), class_type: entry.node.class_type, field: entry.field })),
       textCandidates: textCandidates.map(entry => ({ node: String(entry.node.id), field: entry.field, value: entry.value })),
       hasVideoFields,
     },

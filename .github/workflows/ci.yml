@@ -93,7 +93,14 @@ jobs:
             node --test --experimental-test-coverage "src/**/__tests__/*.test.js"
           fi
 
-      # 11 ─ 产物漂移检查：抓「改了客户端源码但忘了重建 client.js」
+      # 11 ─ 验收门禁：116 条验收项逐条判定（含实机证据核对）
+      #     ⚠️ 这一步**会读 docs/开发任务/**（5 份任务书 + 实机原始记录）。
+      #     所以 docs/开发任务/ 必须纳入版本控制 —— 否则干净 clone 上直接退出码 2。
+      #     「证据缺失」判为**失败**（退出码 1）：声明「已通过」不等于机器能核对地通过。
+      - name: Acceptance gate (116 items, live-evidence checked)
+        run: npm run verify:acceptance
+
+      # 12 ─ 产物漂移检查：抓「改了客户端源码但忘了重建 client.js」
       - name: Client bundle drift check (client.js vs client source)
         shell: bash
         run: |

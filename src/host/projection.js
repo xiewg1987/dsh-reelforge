@@ -527,6 +527,17 @@ export function buildWireView(state, options = {}) {
     subtitle: project.idea ?? '',
     runPosition: plan.position ?? '',
     provider: plan.provider ?? '',
+    // plan：执行路径（kind × 位置）。
+    //
+    // 客户端的 6 步进度条靠 `plan.kind` 判断「方案这步过没过」—— **wire view 以前从不
+    // 输出 plan**，于是 `stageStepIndex` 恒停在第 3 步「方案」，`4/6` `5/6` `6/6`
+    // 永不可达（§7 B1）。宿主自己算得出 `stage`（第 6 步），两边长期互相矛盾。
+    //
+    // 没选 kind 时必须是 `null`（不是 `{kind:''}`）：客户端要靠它区分
+    // 「还没选方案」和「方案已定」，空串会被当成「已定」而错误地前进一格。
+    plan: typeof plan.kind === 'string' && plan.kind !== ''
+      ? { kind: plan.kind, position: plan.position ?? '', provider: plan.provider ?? '' }
+      : null,
     stage: deriveStage(current, { plan, deliverables }),
     chapters: chapterViews,
     shots: shotViews,

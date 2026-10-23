@@ -11,10 +11,24 @@ pnpm-lock.yaml
 # `npm pack` 产出的包（local-reelforge-<version>.tgz）
 *.tgz
 
-# ── 本地设计 / 文档 / 参考图（不进 GitHub）──────────────────────
+# ── 本地设计 / 参考图（不进 GitHub）─────────────────────────────
 design/
-docs/
 references/
+
+# docs/ 下**只跟踪「开发任务/」**——
+#   验收门禁（scripts/verify-acceptance.mjs）硬依赖它，缺了就必红：
+#     · docs/开发任务/T1…T5-*.md   —— 5 份任务书；缺任一份，parseAcceptanceItems()
+#                                     直接 throw「任务书缺失」⇒ 退出码 2
+#     · docs/开发任务/实机/*.md     —— 实机原始记录；门禁按每条验收项声明的
+#                                     「必须出现的事实」逐条核对，缺事实判「证据缺失」
+#   不跟踪它 ⇒ 干净 clone 上 `npm run verify:all` 直接退出码 2，CI 永远红。
+#
+#   仍留在本地的：
+#     · docs/ 根下的其他文档（如 ReelForge-设计方案.md）—— 规格源，本地保留
+#     · docs/开发任务/reports/      —— 门禁运行生成物，`npm run acceptance` 可随时重跑再生
+docs/*
+!docs/开发任务/
+docs/开发任务/reports/
 
 # design/_tmp 是渲染工具的临时输出（已在 design/ 忽略范围内）
 design/_tmp/

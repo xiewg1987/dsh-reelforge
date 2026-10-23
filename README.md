@@ -23,12 +23,12 @@ T1–T5 共 **116** 条验收项（`npm run verify:acceptance`）：
 | 状态 | 数量 | 说明 |
 |---|---:|---|
 | 自动化通过 | 104 | 单测 / 命令 / 静态扫描 |
-| 实机通过 | 9 | 含 T5 A4 / A19 / A27（证据在本地 `docs/开发任务/实机/`，不进 GitHub；跑 `npm run verify:acceptance` 核对） |
+| 实机通过 | 6 | 证据在 `docs/开发任务/实机/`（**已纳入 Git**），`npm run verify:acceptance` 逐条核对 |
 | N/A | 3 | 无客户端分片（单文件拼接构建） |
 | 实机待补 | 0 | — |
-| 证据缺口 | 0 | 无「仅声称 / 证据缺失」 |
+| **证据缺失** | **3** | **T5 A4 / A19 / A27** —— 代码已实现，但实机原始记录里缺对应事实，门禁判「证据缺失」（退出码 1）。**这一栏不是「已通过」**，别按上表其他行读 |
 
-**工程面**：`npm run verify:bundle` / `typecheck` / `test`（730 pass + 2 skip）/ `verify:coverage` 均可过；GitHub Actions CI 跑 bundle + 单测 + 覆盖率（不跑 acceptance）。
+**工程面**：`npm run verify:bundle` / `typecheck` / `test`（742 用例，740 pass + 2 skip）/ `verify:coverage` 均可过；`npm run verify:acceptance` 目前**退出码 1**（上述 3 项证据缺失），CI 已把它列为**阻断步骤**。
 
 **未发布变更**（见 [CHANGELOG](CHANGELOG.md) `[Unreleased]`）：对话输入截获（`agent/pre-step`）+ systemPrompt 工作流段落重写。
 
@@ -36,10 +36,10 @@ T1–T5 共 **116** 条验收项（`npm run verify:acceptance`）：
 
 ## 界面预览
 
-GitHub **不包含** `design/`、`docs/`、`references/`（仅本地保留，见 `.gitignore`）。
+GitHub **不包含** `design/`、`references/`（仅本地保留，见 `.gitignore`）；`docs/开发任务/` **已纳入 Git**（验收门禁硬依赖它：不跟踪 ⇒ 干净 clone 上 `npm run verify:all` 直接退出码 2）。
 
 - **设计稿**（非运行截图）：本地打开 `design/01-RF-Workbench.svg`（17 张界面 + 2 张架构图；FigCraft 源文件同目录）。
-- **实机观察记录**：本地 `docs/开发任务/实机/dsh-0.2.1-alpha.1.md`。
+- **实机观察记录**：`docs/开发任务/实机/dsh-0.2.1-alpha.1.md`（在 Git 里 —— 门禁按每条验收项声明的「必须出现的事实」逐条核对它）。
 
 ---
 
@@ -128,7 +128,7 @@ pnpm dsh web
 | `repository` / `homepage` / `bugs` | 无 | 指向本仓库的真实地址 |
 | `scripts.prepublishOnly` | 无 | `npm run verify:all`（发布前强制跑完整验证链） |
 
-> 设计稿与文档在**本地** `design/`、`docs/`，不在 Git 远程里；npm 页若要用图，需另配 `repository` + 可访问的静态资源，或把预览图放进仓库根目录（如 `icon.svg` 一类已跟踪文件）。
+> 设计稿在**本地** `design/`（不在 Git 远程里）；`docs/开发任务/`（任务书 + 实机证据）**已纳入 Git**，`docs/` 根下的设计方案等仍在本地。npm 页若要用图，需另配 `repository` + 可访问的静态资源，或把预览图放进仓库根目录（如 `icon.svg` 一类已跟踪文件）。
 
 `dsh.client.inject` 声明的是**客户端模块包名**（模块图预取边，宿主据此保证这些模块先加载）；
 **cordis 服务注入**来自客户端产物导出的 `inject`（`src/client/manifest.js` 的 `RF.CLIENT_INJECT`，是**服务名**清单）。
@@ -209,7 +209,8 @@ scripts/
 skills/            随包技能正文（5 个，各带 references/）
 workflows/         随包工作流模板（specs/ 5 种 kind + templates/）
 locale/            zh.json / en.json
-docs/              （本地）设计方案 + T1–T5 任务书 + 实机证据 —— **未纳入 Git**
+docs/开发任务/    （**已纳入 Git**）T1–T5 任务书 + 实机原始记录 —— 验收门禁硬依赖
+docs/              （本地）设计方案等其余文档 —— 未纳入 Git
 design/            （本地）FigCraft 画板 SVG/PNG —— **未纳入 Git**
 references/        （本地）第三方 UI 参考图 —— **未纳入 Git**
 ```
@@ -224,7 +225,7 @@ references/        （本地）第三方 UI 参考图 —— **未纳入 Git**
 | **运行时** npm 依赖 | **0**（`dependencies` / `peerDependencies` 都是空的） |
 
 `files` 排除了 `src/**/__tests__/**`（测试占 `src/` 体积的一半，不进包）。
-`design/`、`docs/`、`references/` 整目录忽略，**不进 Git 也不进 npm 包**。
+`design/`、`references/` 整目录忽略，**不进 Git 也不进 npm 包**；`docs/开发任务/` 进了 Git 但**不在 `files` 里**，所以也不进 npm 包。
 
 ### scripts
 
@@ -232,7 +233,7 @@ references/        （本地）第三方 UI 参考图 —— **未纳入 Git**
 npm run check:identity     # 包名三处一致（R7）
 npm run verify:bundle      # 装载验证 + R8 Config 三处一致
 npm run typecheck          # JSDoc 类型检查（tsc --checkJs）
-npm test                   # 732 条测试（730 pass；无 ffmpeg 时 2 条显式 skip）
+npm test                   # 742 条测试（740 pass；无 ffmpeg 时 2 条显式 skip）
 npm run verify:coverage    # 覆盖率门槛（4 个文件）
 npm run verify:acceptance  # 116 条验收项
 npm run verify:all         # 上面这些的组合（= prepublishOnly）

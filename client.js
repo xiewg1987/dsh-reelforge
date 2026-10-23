@@ -587,6 +587,8 @@ window.__ModuleLoader__.load({
     subtitle: '',
     runPosition: '',
     provider: '',
+    // 执行路径：没选 kind 时为 null。客户端 6 步进度条靠它判断「方案这步过没过」。
+    plan: null,
     stage: 'requirement',
     chapters: [],
     shots: [],

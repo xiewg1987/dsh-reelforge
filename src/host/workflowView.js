@@ -80,7 +80,7 @@ import { resolveProjectPath, resolveWorkspaceRoot } from './workspace.js';
  * @property {string} description
  * @property {string} sourceFile
  * @property {string[]} outputs
- * @property {WorkflowRole[] | Record<string, never>} roles
+ * @property {WorkflowRole[]} roles
  * @property {SerializedDiagnostics} diagnostics
  */
 
@@ -107,7 +107,8 @@ export function serializeWorkflowAnalysis(analyzed) {
     description: record.description ?? '',
     sourceFile: record.sourceFile ?? '',
     outputs: Array.isArray(record.outputs) ? record.outputs : [],
-    roles: record.roles ?? {},
+    // 上游 roles 恒为数组 —— 兜底也给空数组，别给空对象（形状不一致，读者要再判一次）。
+    roles: Array.isArray(record.roles) ? record.roles : [],
     diagnostics: {
       loaders: summarize(diagnostics.loaders),
       modelLoaders: summarize(diagnostics.modelLoaders),
