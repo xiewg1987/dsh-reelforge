@@ -54,7 +54,7 @@ export function buildChangelogPayload(input = {}) {
 
 /**
  * 形状自检。
- * @param {unknown} payload
+ * @param {Record<string, unknown>|null|undefined} payload 待校验的 payload（非对象直接 false）
  */
 export function isChangelogPayloadShape(payload) {
   if (!payload || typeof payload !== 'object') return false;

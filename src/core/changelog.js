@@ -26,6 +26,59 @@ import { randomBytes } from 'node:crypto';
 
 import { ROLLBACK_MODES, TOOL_IDS, isTriggerTool } from './constants.js';
 
+/**
+ * 变更日志条目（一次变更的快照）。
+ * @typedef {object} ChangeEntry
+ * @property {string} [id] 条目 id
+ * @property {string|null} [projectId] 所属项目
+ * @property {string|null} [at] 时间戳（ISO 串）
+ * @property {number} [seq] 序号（同一运行内严格递增）
+ * @property {string|null} [batchId] 整批回滚的批次 id
+ * @property {string} [layer] 内容表层（`project` / `chapter` / `shot` / `asset` / `reference`）
+ * @property {string} [rowId] 行 id
+ * @property {string} [op] 变更操作（`create` / `update` / `delete`）
+ * @property {string} [field] 变更的字段（`*` = 整行）
+ * @property {unknown} [before] 变更前的行
+ * @property {unknown} [after] 变更后的行
+ * @property {string} [summary] 人类可读的变更摘要
+ */
+
+/**
+ * `createChangeEntry()` 的输入（`id` / `at` / `seq` 通常由调用方补齐）。
+ * @typedef {object} ChangeEntryInput
+ * @property {string} [id]
+ * @property {string} [projectId]
+ * @property {string} [at]
+ * @property {number} [seq]
+ * @property {string|null} [batchId]
+ * @property {string} [layer]
+ * @property {string} [rowId]
+ * @property {string} [op]
+ * @property {string} [field]
+ * @property {unknown} [before]
+ * @property {unknown} [after]
+ * @property {string|null} [summary]
+ */
+
+/**
+ * 插件自有存储（变更日志快照；**不塞会话日志**）。
+ * @typedef {object} ChangelogStore
+ * @property {(projectId: string) => Promise<ChangeEntry[]>} list 读一个项目的全部条目
+ * @property {(entry: ChangeEntry) => Promise<unknown>} append 追加一条条目
+ * @property {(projectId: string) => Promise<unknown>} clearProject 随项目删除一并清除
+ */
+
+/**
+ * 回滚请求（三级回滚共用）。
+ * @typedef {object} RollbackRequest
+ * @property {'single'|'batch'|'timepoint'} [mode] 回滚模式
+ * @property {string} [entryId] mode = single
+ * @property {string} [batchId] mode = batch
+ * @property {string} [at] mode = timepoint（ISO 时间串）
+ * @property {boolean} [force] 漂移时强制覆盖
+ * @property {string} [projectId]
+ */
+
 /** 内容表（快照对象）。与 §6.6 的 `projects/chapters/shots/assets/reference_images` 对应。 */
 export const CHANGELOG_LAYERS = Object.freeze(['project', 'chapter', 'shot', 'asset', 'reference']);
 
@@ -149,6 +202,9 @@ export function describeChange(entry) {
 
 /**
  * 造一条变更日志条目（纯函数）。
+ *
+ * @param {ChangeEntryInput} [input] 条目内容；`layer` / `op` 非法直接抛错
+ * @returns {ChangeEntry} 变更日志条目
  */
 export function createChangeEntry({
   id,
@@ -199,7 +255,7 @@ export function isProjectDeletion(entry) {
 /**
  * 按回滚请求挑目标条目。
  * @param {Array} entries
- * @param {{mode:string, entryId?:string, batchId?:string, at?:string}} request
+ * @param {RollbackRequest} [request]
  * @returns {Array} 目标条目（新 → 旧）
  */
 export function selectRollbackTargets(entries = [], request = {}) {
@@ -230,10 +286,12 @@ export function selectRollbackTargets(entries = [], request = {}) {
  * 建一个变更日志实例。
  *
  * @param {object} options
- * @param {object} options.store 插件自有存储：`{ list(projectId), append(entry), clearProject(projectId) }`
- * @param {Function} [options.clock] `() => Date | string`，默认 `() => new Date()`
- * @param {Function} options.readRows `(projectId) => Promise<Record<'layer:rowId', row|null>>`
- * @param {Function} options.writeRow `(projectId, layer, rowId, row|null) => Promise<void>`（`row === null` 表示删除该行）
+ * @param {ChangelogStore} [options.store] 插件自有存储：`{ list(projectId), append(entry), clearProject(projectId) }`（**不给就抛错**）
+ * @param {() => Date|string|number} [options.clock] `() => Date | string`，默认 `() => new Date()`
+ * @param {(projectId: string) => Promise<Record<string, object|null>>} [options.readRows]
+ *   `(projectId) => Promise<Record<'layer:rowId', row|null>>`（**不给就抛错**）
+ * @param {(projectId: string, layer: string, rowId: string, row: object|null) => Promise<void>} [options.writeRow]
+ *   `(projectId, layer, rowId, row|null) => Promise<void>`（`row === null` 表示删除该行；**不给就抛错**）
  * @param {string} [options.idPrefix] 条目 id 前缀，默认 `cl`。
  * @param {number} [options.startSeq] 序号的起点（默认 0）。宿主把**日志文件里已有的最大序号**传进来，
  *   重启后新条目就接着旧序号走 —— 排序（`list`）与整批回滚（按 seq 倒序）都靠它。
@@ -300,13 +358,7 @@ export function createChangelog(options = {}) {
     /**
      * 三级回滚。
      *
-     * @param {object} request
-     * @param {'single'|'batch'|'timepoint'} request.mode
-     * @param {string} [request.entryId]  mode = single
-     * @param {string} [request.batchId]  mode = batch
-     * @param {string} [request.at]       mode = timepoint（ISO 时间串）
-     * @param {boolean} [request.force]   漂移时强制覆盖
-     * @param {string} [request.projectId]
+     * @param {RollbackRequest} [request] 回滚请求（`mode` / `entryId` / `batchId` / `at` / `force` / `projectId`）
      */
     async rollback(request = {}) {
       const mode = request.mode;

@@ -84,5 +84,18 @@ export function buildClient() {
 
 const target = join(root, 'client.js');
 const output = buildClient();
-writeFileSync(target, output, 'utf8');
-process.stdout.write(`client.js written: ${relative(root, target)} (${output.length} bytes)\n`);
+// ⚠️ **内容没变就不要重写**：重写会改 mtime，而 mtime 进 tarball ——
+// `npm pack` 的 `shasum` / `integrity` 就每次都变，交付报告每次出假 diff。
+// 幂等写入同时让「产物与源码一致」的判定更可信（mtime 不动 ⇒ git diff 干净）。
+let changed = true;
+try {
+  changed = readFileSync(target, 'utf8') !== output;
+} catch {
+  changed = true;
+}
+if (changed) {
+  writeFileSync(target, output, 'utf8');
+  process.stdout.write(`client.js written: ${relative(root, target)} (${output.length} bytes)\n`);
+} else {
+  process.stdout.write(`client.js unchanged: ${relative(root, target)} (${output.length} bytes)\n`);
+}

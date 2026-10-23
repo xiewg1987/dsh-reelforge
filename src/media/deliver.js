@@ -51,6 +51,39 @@ import {
 } from './assemble.js';
 import { probeTools } from './ffmpeg.js';
 
+/**
+ * @typedef {import('./assemble.js').ChapterInfo} ChapterInfo
+ * @typedef {import('./assemble.js').ShotInfo} ShotInfo
+ * @typedef {import('./assemble.js').AssetInfo} AssetInfo
+ * @typedef {import('./assemble.js').FileIo} FileIo
+ * @typedef {import('./assemble.js').FfmpegClient} FfmpegClient
+ * @typedef {import('./assemble.js').SrtResult} SrtResult
+ */
+
+/**
+ * 项目内容字段（参考图包里的 `project.json` 片段要抄的那一份）。
+ * @typedef {object} DeliverProject
+ * @property {string} [projectId]
+ * @property {string} [name]
+ * @property {string} [style]
+ * @property {string} [video_resolution]
+ * @property {string} [video_aspect_ratio]
+ * @property {number} [video_width]
+ * @property {number} [video_height]
+ * @property {boolean} [enable_bgm]
+ * @property {boolean} [enable_subtitles]
+ */
+
+/**
+ * `assembleChapter()` 的结果（交付时只读成片与降级信息）。
+ * @typedef {object} AssembleResult
+ * @property {boolean} [ok]
+ * @property {number|string} [seq]
+ * @property {number} [durationSec]
+ * @property {Array<{kind?: string, path?: string, bytes?: number|null}>} [outputs]
+ * @property {Array<{kind: string, message: string}>} [degradations]
+ */
+
 /** 交付物的人类可读标签（中文）。 */
 export const DELIVERABLE_LABELS = Object.freeze({
   video_subtitled: '成片（带字幕）',
@@ -268,9 +301,10 @@ th { background: #f6f6f6; width: 84px; font-weight: 600; white-space: nowrap; }
  * → 可离线打开、可直接打印成 PDF。
  *
  * @param {object} options
- * @param {object} options.chapter `{ id, seq, title }`
- * @param {Array}  options.shots
- * @param {Map|object} [options.thumbnails] shotId → data URI（读不到就没有该镜缩略图）
+ * @param {ChapterInfo} [options.chapter] `{ id, seq, title }`
+ * @param {ShotInfo[]} [options.shots]
+ * @param {Map<string,string>|Record<string,string>} [options.thumbnails] shotId → data URI（读不到就没有该镜缩略图）
+ * @returns {string} 自包含的 HTML
  */
 export function buildStoryboardHtml({ chapter = {}, shots = [], thumbnails = {} } = {}) {
   const thumbOf = (id) => {
@@ -362,6 +396,16 @@ export function resolveShotReferencePaths(shot = {}, assets = []) {
 /**
  * 造参考图包（ZIP）。
  * 含：每镜参考图 + `project.json` 片段 + 每镜提示词 `.txt` + `manifest.json`。
+ *
+ * @param {object} options
+ * @param {ChapterInfo} [options.chapter] `{ id, seq, title }`
+ * @param {ShotInfo[]} [options.shots]
+ * @param {DeliverProject} [options.project]
+ * @param {AssetInfo[]} [options.assets]
+ * @param {FileIo} [options.io] 文件 IO（注入）
+ * @param {(p: string) => string} [options.resolvePath] 相对路径 → 绝对路径
+ * @param {string} [options.generatedAt] 生成时间（ISO 串）；不给用当前时间
+ * @returns {Promise<{zip: Buffer, manifest: object, entries: Array<object>}>} 参考图包
  */
 export async function buildReferencePack({
   chapter = {},
@@ -455,16 +499,17 @@ export async function buildReferencePack({
  * 交付一章。
  *
  * @param {object} options
- * @param {object} options.chapter
- * @param {Array}  [options.shots]
- * @param {object} [options.project]
- * @param {Array}  [options.assets]
- * @param {object} [options.client] ffmpeg 客户端（拼版图 / 拼接命令需要）
- * @param {object} [options.io]
- * @param {Function} [options.resolvePath]
- * @param {object} [options.assembleResult] `assembleChapter()` 的结果（成片等）
- * @param {object} [options.srt] `{ text, cues }`，不给则内部生成
+ * @param {ChapterInfo} [options.chapter] `{ id, seq, title }`
+ * @param {ShotInfo[]}  [options.shots]
+ * @param {DeliverProject} [options.project]
+ * @param {AssetInfo[]}  [options.assets]
+ * @param {FfmpegClient} [options.client] ffmpeg 客户端（拼版图 / 拼接命令需要）
+ * @param {FileIo} [options.io]
+ * @param {(p: string) => string} [options.resolvePath] 相对路径 → 绝对路径
+ * @param {AssembleResult} [options.assembleResult] `assembleChapter()` 的结果（成片等）
+ * @param {SrtResult} [options.srt] 字幕，不给则内部生成
  * @param {object} [options.degrades] 额外降级输入
+ * @param {string} [options.exportsDir] 交付目录（默认 `exports`）
  * @param {string} [options.cwd] 工作区目录（ffmpeg 子进程的 cwd）。
  *   不给就从 `resolvePath` 反推——**必须钉住**：拼版图的输出路径是相对路径
  *   （`exports/ch01_分镜表.jpg`），不钉 cwd 就等于把它写进**宿主进程的启动目录**。
@@ -486,6 +531,7 @@ export async function deliverChapter(options = {}) {
 
   const seq = Number(chapter.seq ?? 1);
   const ordered = shots.slice().sort((a, b) => Number(a?.idx ?? 0) - Number(b?.idx ?? 0));
+  /** @type {SrtResult} */
   const srt = options.srt ?? buildSrt(ordered);
   const deliverables = [];
   /**
@@ -541,6 +587,7 @@ export async function deliverChapter(options = {}) {
   }
 
   // 分镜表 HTML（自包含）
+  /** @type {Record<string, string>} */
   const thumbnails = {};
   for (const shot of ordered) {
     const id = shot?.id ?? `shot_${shot?.idx ?? 0}`;

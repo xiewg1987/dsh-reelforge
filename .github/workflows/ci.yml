@@ -44,7 +44,8 @@ jobs:
           # 故意**不写 cache**：本仓库零 npm 依赖、没有 lockfile，
           # `cache: npm` 会因为找不到 lockfile 让这一步直接失败。
 
-      # 3 ─ 装依赖（本插件没有运行时依赖，这一步只是让 npm 归一化环境）
+      # 3 ─ 装依赖（**零运行时依赖**；只装 devDependencies 里的 typescript / @types/node，
+      #    它们只服务于 JSDoc 类型检查，不进产物）
       - name: Install (no runtime dependencies)
         run: npm install --no-audit --no-fund
 
@@ -52,19 +53,24 @@ jobs:
       - name: Check package identity (R7)
         run: npm run check:identity
 
-      # 5 ─ 装载验证：清单 / 导入图 / 宿主半 / 客户端半 / patch 结构
+      # 5 ─ 装载验证：清单 / 导入图 / 宿主半 / 客户端半 / patch 结构 / R8 Config 三处一致
       - name: Verify bundle
         run: npm run verify:bundle
 
-      # 6 ─ 重建客户端产物（产物是「片段拼装」出来的，不是打包器产物）
+      # 6 ─ JSDoc 类型检查（tsc --checkJs）
+      #    本地脚本会自寻 tsc；CI 里 typescript 是 devDependency，直接命中。
+      - name: Type check (JSDoc)
+        run: npm run typecheck
+
+      # 7 ─ 重建客户端产物（产物是「片段拼装」出来的，不是打包器产物）
       - name: Build client bundle
         run: npm run build:client
 
-      # 7 ─ 全量单测
+      # 8 ─ 全量单测
       - name: Unit tests
         run: npm test
 
-      # 8 ─ 打包清单预演：确认要发布的东西不多不少（清单作为产物上传，便于人工核对）
+      # 9 ─ 打包清单预演：确认要发布的东西不多不少（清单作为产物上传，便于人工核对）
       #    统一用 shell: bash，让两套 runner 的重定向字节行为完全一致。
       - name: Pack dry run
         shell: bash
@@ -73,7 +79,7 @@ jobs:
           echo "--- npm pack --dry-run（可读清单）---"
           npm pack --dry-run
 
-      # 9 ─ 覆盖率
+      # 10 ─ 覆盖率
       #    scripts/verify-coverage.mjs 由另一位 worker 在写，可能还不存在 →
       #    做**存在性判断**：有就跑带阈值校验的脚本，没有就退回带覆盖率的 node --test。
       - name: Coverage
@@ -87,7 +93,7 @@ jobs:
             node --test --experimental-test-coverage "src/**/__tests__/*.test.js"
           fi
 
-      # 10 ─ 产物漂移检查：抓「改了客户端源码但忘了重建 client.js」
+      # 11 ─ 产物漂移检查：抓「改了客户端源码但忘了重建 client.js」
       - name: Client bundle drift check (client.js vs client source)
         shell: bash
         run: |

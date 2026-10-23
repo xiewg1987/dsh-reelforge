@@ -4,26 +4,58 @@
   "private": true,
   "type": "module",
   "description": "Novel-to-short-drama pipeline for DSH: context bible, 10 asset classes, reference assembly, five generation kinds across two execution positions, per-chapter delivery and three-level rollback.",
+  "license": "MIT",
+  "author": {
+    "name": "xiewg1987",
+    "url": "https://github.com/xiewg1987"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "deepseek",
+    "novel",
+    "short-drama",
+    "storyboard",
+    "comfyui",
+    "runninghub",
+    "video",
+    "sidebar"
+  ],
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0"
+  },
+  "main": "./index.js",
   "exports": {
     ".": "./index.js",
     "./client": "./client.js",
     "./locale/*.json": "./locale/*.json",
-    "./icon": "./icon.svg"
+    "./icon": "./icon.svg",
+    "./package.json": "./package.json"
   },
   "files": [
     "index.js",
     "client.js",
     "cordis.patch.yml",
+    "patch.dev.yml",
     "locale/*.json",
     "icon.svg",
     "src/**",
+    "!src/**/__tests__/**",
     "skills/**",
     "workflows/**",
+    "docs/**",
+    "!docs/开发任务/reports/**",
     "scripts/check-package-identity.mjs",
     "scripts/verify-bundle.mjs",
     "scripts/verify-acceptance.mjs",
     "scripts/verify-coverage.mjs",
-    "scripts/run-task-dod.mjs"
+    "scripts/verify-typecheck.mjs",
+    "scripts/run-task-dod.mjs",
+    "scripts/list-registered-tools.mjs",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
   ],
   "scripts": {
     "check:identity": "node scripts/check-package-identity.mjs",
@@ -31,10 +63,18 @@
     "verify:acceptance": "node scripts/verify-acceptance.mjs",
     "verify:coverage": "node scripts/verify-coverage.mjs",
     "build:client": "node src/client/build-client.mjs",
+    "typecheck": "node scripts/verify-typecheck.mjs",
     "test": "node --test \"src/**/__tests__/*.test.js\"",
     "test:coverage": "node --test --experimental-test-coverage \"src/**/__tests__/*.test.js\"",
     "acceptance": "node scripts/run-task-dod.mjs",
-    "verify:all": "npm run check:identity && npm run verify:bundle && npm run build:client && npm test && npm run verify:coverage"
+    "prepublishOnly": "npm run verify:all",
+    "verify:all": "npm run check:identity && npm run verify:bundle && npm run build:client && npm run typecheck && npm test && npm run verify:coverage && npm run verify:acceptance"
+  },
+  "dependencies": {},
+  "peerDependencies": {},
+  "devDependencies": {
+    "@types/node": "^22.20.0",
+    "typescript": "^6.0.3"
   },
   "dsh": {
     "bundle": {
@@ -44,6 +84,8 @@
       "platform": "web",
       "immediately": true,
       "inject": [
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-slots",
         "@deepseek-ai/dsh-client-ui-sidebar-right",
         "@deepseek-ai/dsh-client-ui-conversation"
       ]

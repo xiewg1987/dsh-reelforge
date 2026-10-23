@@ -46,17 +46,40 @@ export function isLink(value) {
 }
 
 /**
+ * 模板里的一个节点（ComfyUI API 格式）。
+ * @typedef {object} TemplateNode
+ * @property {string} [class_type]
+ * @property {Record<string, unknown>} [inputs]
+ * @property {unknown} [_meta]
+ */
+
+/**
+ * 摊平后的媒体项：`{ type, path, label, assetId }`。
+ * @typedef {object} MediaItem
+ * @property {string} type
+ * @property {unknown} path
+ * @property {unknown} label
+ * @property {unknown} assetId
+ */
+
+/**
  * 取模板的节点表。接受两种形状：
  *   - ComfyUI API 格式：`{ "3": { class_type, inputs }, ... }`
  *   - 容器：`{ nodes: { "3": {...} } }`
  * @param {unknown} template
+ * @returns {Record<string, TemplateNode>}
  */
 export function toNodeMap(template) {
   if (!template || typeof template !== 'object') {
     throw new Error('工作流模板必须是对象');
   }
-  const map = template.nodes && typeof template.nodes === 'object' ? template.nodes : template;
-  const out = {};
+  const map = /** @type {Record<string, TemplateNode>} */ (
+    /** @type {{ nodes?: Record<string, TemplateNode> }} */ (template).nodes &&
+    typeof /** @type {{ nodes?: Record<string, TemplateNode> }} */ (template).nodes === 'object'
+      ? /** @type {{ nodes?: Record<string, TemplateNode> }} */ (template).nodes
+      : template
+  );
+  const out = /** @type {Record<string, TemplateNode>} */ ({});
   for (const [id, node] of Object.entries(map)) {
     if (!node || typeof node !== 'object') continue;
     out[String(id)] = {
@@ -71,6 +94,7 @@ export function toNodeMap(template) {
 /**
  * 深拷贝模板（不共享引用）。
  * @param {unknown} template
+ * @returns {Record<string, TemplateNode>}
  */
 export function cloneTemplate(template) {
   return toNodeMap(template);
@@ -105,7 +129,7 @@ export function applyRoles(nodes, spec, values) {
     let value = raw;
     if (binding.map && typeof binding.map === 'object') {
       if (Object.prototype.hasOwnProperty.call(binding.map, raw)) {
-        value = binding.map[raw];
+        value = binding.map[/** @type {string} */ (raw)];
       } else {
         missing.push({ role, reason: 'unmapped-value', value: raw });
         continue;
@@ -125,6 +149,7 @@ export function applyRoles(nodes, spec, values) {
  * 吃 F6 `resolveRefs()` 的返回（`images[]` / `audios[]`），也吃扁平数组。
  *
  * @param {unknown} media
+ * @returns {MediaItem[]}
  */
 export function normalizeMediaItems(media) {
   if (!media) return [];
@@ -170,7 +195,7 @@ export function setNestedInput(inputs, dotted, value) {
     const key = segments[i];
     const next = cursor[key];
     if (!next || typeof next !== 'object' || Array.isArray(next)) cursor[key] = {};
-    cursor = cursor[key];
+    cursor = /** @type {Record<string, unknown>} */ (cursor[key]);
   }
   cursor[segments[segments.length - 1]] = value;
 }
@@ -480,7 +505,9 @@ export function assertCkAttentionPolicy(stage, nodes, extra) {
  * @param {unknown} refs  F6 `resolveRefs()` 的返回
  */
 export function bindImageRole(values, refs) {
-  const first = Array.isArray(refs?.images) ? refs.images[0] : null;
+  const first = Array.isArray(/** @type {{ images?: Array<{ path?: string, url?: string }> }} */ (refs)?.images)
+    ? /** @type {{ images?: Array<{ path?: string, url?: string }> }} */ (refs).images[0]
+    : null;
   if (!first) return values;
   if (values?.image === undefined || values?.image === null) {
     values.image = first.path ?? first.url ?? null;

@@ -25,6 +25,34 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DOC_DIR = path.join(ROOT, 'docs', '开发任务');
 
+/**
+ * 带 `code` 的错误（本脚本自己打的分类码，如 `PARSE`）。
+ * @typedef {Error & { code?: string }} AcceptanceError
+ */
+
+/**
+ * 一条验收项的判定结果。
+ * @typedef {object} AcceptanceItem
+ * @property {string} task 任务号（T1–T5）
+ * @property {string} id 验收项号（A1、A2…）
+ * @property {string} desc 验收项原文
+ * @property {string} descShort 短描述
+ * @property {string} how 验收方式
+ * @property {string} status 状态（见 {@link STATUS}）
+ * @property {string} evidence 证据
+ * @property {string} note 备注
+ */
+
+/**
+ * 验收判定结果。
+ * @typedef {object} AcceptanceResult
+ * @property {AcceptanceItem[]} items 逐条判定
+ * @property {Record<string, number>} counts 各状态计数
+ * @property {number} gaps 证据缺口数（`证据缺失` + `仅声称`）
+ * @property {boolean} ok 没有缺口
+ * @property {number} total 验收项总数
+ */
+
 /** 任务书里验收项的总数与分布。解析数量对不上就报错退出——宁可炸，也不要悄悄少判。 */
 const EXPECTED_TOTAL = 116;
 const EXPECTED_PER_TASK = { T1: 12, T2: 21, T3: 23, T4: 22, T5: 38 };
@@ -637,12 +665,13 @@ export function validateCounts(items) {
 
 /**
  * 跑一遍验收判定。
- * @returns {{ items: object[], counts: object, gaps: number, ok: boolean }}
+ * @returns {AcceptanceResult} 判定结果（`items` / `counts` / `gaps` / `ok` / `total`）
  */
 export function runAcceptance() {
   const parsed = parseAcceptanceItems();
   const problems = validateCounts(parsed);
   if (problems.length) {
+    /** @type {AcceptanceError} */
     const err = new Error(`任务书验收表解析失败：\n  - ${problems.join('\n  - ')}`);
     err.code = 'PARSE';
     throw err;

@@ -56,6 +56,35 @@ export function initialState() {
 }
 
 /**
+ * 状态补丁（F9 的 `patches` 数组元素）。
+ *
+ * 补丁格式由 `src/host/tools.js` 的 `output.presentationMeta` 产出，
+ * 字段随 `op` 变化——这里列的是**所有 op 用得到的字段**（可选，缺失即"没带"）。
+ *
+ * @typedef {object} ProjectionPatch
+ * @property {string} [op] 补丁操作名（`project.set` / `chapter.upsert` / `shot.set` …）。
+ * @property {unknown} [value] 补丁载荷（行内容 / 上下文值 / 计划 …）。
+ * @property {number} [seq] 章节序号。
+ * @property {number} [idx] 章内镜号。
+ * @property {string} [key] 上下文键（`bible` / `style` / `continuity`）。
+ * @property {string} [field] 字段名（资产绑定用）。
+ * @property {string[]} [ids] id 列表（资产绑定用）。
+ * @property {Array<unknown>} [shots] 分镜列表（`chapter.shots` 用）。
+ */
+
+/**
+ * 补丁载荷（F9 新形状）。
+ *
+ * ⚠️ 早于 F9 的实现把补丁**直接**放在 `meta.reelforge` 上（单个补丁），
+ * 那时 `op` 在顶层——两种形状本模块都要认（见 `applyEvent`）。
+ *
+ * @typedef {object} ProjectionPayload
+ * @property {Array<ProjectionPatch>} [patches] F9 新形状：补丁数组。
+ * @property {string} [op] 旧形状：单个补丁的操作名。
+ * @property {unknown} [value] 旧形状：单个补丁的载荷。
+ */
+
+/**
  * 纯 fold：把一个已提交的会话事件作用到状态上。
  *
  * 工具结果的 `output.presentationMeta` 落成 `meta.reelforge`，形状是
@@ -67,7 +96,7 @@ export function initialState() {
  *   - `meta.reelforge` 带 `op` → 当作单个补丁。
  *
  * @param {object} state 当前状态。
- * @param {{ type?: string, data?: { meta?: { reelforge?: unknown } } }} event 会话事件。
+ * @param {{ type?: string, data?: { meta?: { reelforge?: ProjectionPayload | ProjectionPatch[] } } }} event 会话事件。
  * @returns {object} 下一个状态；**事件与本投影无关时返回同一个引用**（零下游开销）。
  */
 export function applyEvent(state, event) {

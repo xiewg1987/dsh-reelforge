@@ -53,7 +53,106 @@ import { detectDegradations, resolveOutputs, degradeNotices } from '../core/degr
 import { probeTools } from './ffmpeg.js';
 import { buildSrt, buildShotTimeline } from './srt.js';
 
-/** 默认文件 IO（宿主可注入别的实现）。 */
+/**
+ * 带 `code` 的错误（ffmpeg 子进程失败的分类码）。
+ * @typedef {Error & { code?: string }} FfmpegError
+ */
+
+/**
+ * 目标规格（画幅 / 帧率 / 像素格式 / 编码 / 采样率）。
+ * @typedef {object} TargetSpec
+ * @property {number} width
+ * @property {number} height
+ * @property {number} fps
+ * @property {string} pixFmt
+ * @property {number} sampleRate
+ * @property {string} videoCodec
+ * @property {string} audioCodec
+ */
+
+/**
+ * 章节信息（`{ id, seq, title }` + 章节级 BGM）。
+ * @typedef {object} ChapterInfo
+ * @property {string} [id]
+ * @property {number|string} [seq]
+ * @property {string} [title]
+ * @property {string} [music_path] 章节 BGM 路径
+ */
+
+/**
+ * 项目内容字段（合成时只读画幅与两个开关）。
+ * @typedef {object} ProjectInfo
+ * @property {number} [video_width]
+ * @property {number} [video_height]
+ * @property {string} [video_aspect_ratio]
+ * @property {boolean} [enable_bgm]
+ * @property {boolean} [enable_subtitles]
+ */
+
+/**
+ * 分镜（合成 / 交付会用到的字段）。
+ * @typedef {object} ShotInfo
+ * @property {number} [idx]
+ * @property {string} [id]
+ * @property {number} [duration] 镜长（秒）
+ * @property {string} [video_path]
+ * @property {string} [audio_path]
+ * @property {string} [tts_path]
+ * @property {string} [shot_size]
+ * @property {string} [size]
+ * @property {string} [framing]
+ * @property {string} [camera]
+ * @property {string} [visual]
+ * @property {string} [dialogue]
+ * @property {string} [narration]
+ * @property {string} [scene_name]
+ * @property {string} [video_prompt]
+ * @property {string} [image_prompt]
+ * @property {Array<string|{path?: string, name?: string}>} [references]
+ * @property {string[]} [character_ids]
+ * @property {string[]} [costume_ids]
+ * @property {string[]} [age_ids]
+ * @property {string[]} [scene_ids]
+ * @property {string[]} [prop_ids]
+ */
+
+/**
+ * 资产（参考图包按 id 绑定参考图时用）。
+ * @typedef {object} AssetInfo
+ * @property {string} [id]
+ * @property {string} [name]
+ * @property {string} [image_path]
+ */
+
+/**
+ * 字幕（`buildSrt()` 的结果）。
+ * @typedef {object} SrtResult
+ * @property {string} [srt] SRT 全文
+ * @property {string} [text] SRT 全文（别名）
+ * @property {Array<object>} [cues] 字幕条目
+ */
+
+/**
+ * 文件 IO（宿主可注入别的实现）。
+ * @typedef {object} FileIo
+ * @property {(dir: string) => Promise<unknown>} mkdir
+ * @property {(file: string, data: string|Buffer, encoding?: string) => Promise<unknown>} writeFile
+ * @property {(file: string) => Promise<Buffer>} readFile
+ * @property {(file: string) => Promise<{size: number}>} stat
+ */
+
+/**
+ * ffmpeg 客户端（注入；单测用 fake 客户端）。
+ * @typedef {object} FfmpegClient
+ * @property {(tool: string, args: string[], execOptions?: {cwd?: string}) => Promise<{code: number, stdout: string, stderr: string}>} exec
+ * @property {(file: string, options?: {cwd?: string}) => Promise<object>} probe
+ * @property {(tool: string) => Promise<{available: boolean, version: string|null, reason: string|null, detail: string|null}>} version
+ */
+
+/**
+ * 默认文件 IO（宿主可注入别的实现）。
+ * @returns {FileIo}
+ */
 export function createDefaultIo() {
   return {
     mkdir: (dir) => fsp.mkdir(dir, { recursive: true }),
@@ -109,6 +208,9 @@ export function dimensionsForAspect(ratio, shortSide = 1080) {
 /**
  * 目标规格。
  * 项目里显式给了 `video_width` / `video_height` 就用它，否则按画幅推。
+ *
+ * @param {ProjectInfo} [project] 项目内容字段
+ * @returns {TargetSpec} 目标规格
  */
 export function resolveTarget(project = {}) {
   const width = Number(project.video_width) || 0;
@@ -218,7 +320,7 @@ export function inferWorkspaceRoot(resolvePath) {
  * 而且**照样 exit 0**（`subtitles=` 滤镜在没有视频输入时也不报错）。
  * ⇒ 「静默产出无画面成片还报 ok:true」必须在这里被拦下来。
  *
- * @param {object} client ffmpeg 客户端
+ * @param {FfmpegClient} client ffmpeg 客户端
  * @param {string} file   产物路径
  * @param {object} [options]
  * @param {string} [options.cwd] 工作区 cwd
@@ -228,6 +330,7 @@ export function inferWorkspaceRoot(resolvePath) {
 export async function verifyVideoStream(client, file, options = {}) {
   const probe = await client.probe(file, options);
   if (!probe?.videoCodec) {
+    /** @type {FfmpegError} */
     const error = new Error(
       `成片缺少视频流（只有音频），不能算成片：${file}`
       + `（实测：video=${probe?.videoCodec ?? 'none'}，audio=${probe?.audioCodec ?? 'none'}）`,
@@ -353,6 +456,14 @@ export function planAudioMix({
 
 /**
  * 烧录字幕。**角色名前缀已在 SRT 生成时剥掉**，这里只负责压进画面。
+ *
+ * @param {object} options
+ * @param {string} options.input 待烧录的母版路径
+ * @param {string} options.srtPath 字幕文件路径
+ * @param {string} options.output 产物路径
+ * @param {TargetSpec} [options.target] 目标规格（默认 `resolveTarget()`）
+ * @param {string} [options.style] ASS 样式串；不给用内置默认
+ * @returns {string[]} ffmpeg 参数
  */
 export function planBurnSubtitles({ input, srtPath, output, target = resolveTarget(), style }) {
   const forceStyle = style ?? 'FontName=Noto Sans SC,FontSize=18,PrimaryColour=&H00FFFFFF,OutlineColour=&H99000000,BorderStyle=1,Outline=2,Shadow=0,MarginV=60,Alignment=2';
@@ -499,14 +610,19 @@ export function concatNotices(concat) {
  * 合成一章。
  *
  * @param {object} options
- * @param {object} options.chapter      `{ id, seq, title }`
- * @param {Array}  [options.shots]      本章分镜
- * @param {object} [options.project]    项目内容字段（画幅 / 开关）
- * @param {object} options.client       ffmpeg 客户端（注入）
- * @param {object} [options.io]         文件 IO（注入）
- * @param {Function} [options.resolvePath] 相对路径 → 绝对路径
- * @param {object} [options.degrades]   额外的降级输入（视频 provider 挂等）
- * @param {string} [options.cwd]        工作区目录（ffmpeg 子进程的 cwd）。
+ * @param {ChapterInfo} [options.chapter] `{ id, seq, title }`
+ * @param {ShotInfo[]} [options.shots] 本章分镜
+ * @param {ProjectInfo} [options.project] 项目内容字段（画幅 / 开关）
+ * @param {FfmpegClient} [options.client] ffmpeg 客户端（注入）；不给则走「缺 ffmpeg」降级
+ * @param {FileIo} [options.io] 文件 IO（注入）
+ * @param {(p: string) => string} [options.resolvePath] 相对路径 → 绝对路径
+ * @param {SrtResult} [options.srt] 字幕；不给则内部生成
+ * @param {object} [options.degrades] 额外的降级输入（视频 provider 挂等）
+ * @param {string} [options.tmpDir] 临时目录（默认 `.reelforge/tmp`）
+ * @param {string} [options.exportsDir] 交付目录（默认 `exports`）
+ * @param {AbortSignal} [options.signal] 取消信号：**真消费**——每步之前检查，
+ *   并把信号透传给 ffmpeg 客户端，中止时杀掉正在跑的子进程。
+ * @param {string} [options.cwd] 工作区目录（ffmpeg 子进程的 cwd）。
  *   不给就从 `resolvePath` 反推——**必须钉住**：传给 ffmpeg 的路径全是相对路径
  *   （`exports/ch01.mp4`），不钉 cwd 就等于把成片写进**宿主进程的启动目录**。
  * @returns {Promise<object>} 合成结果
@@ -523,6 +639,7 @@ export async function assembleChapter(options = {}) {
     tmpDir = '.reelforge/tmp',
     exportsDir = 'exports',
     cwd = null,
+    signal = null,
   } = options;
 
   const seq = Number(chapter.seq ?? 1);
@@ -536,7 +653,40 @@ export async function assembleChapter(options = {}) {
   /** ffmpeg / ffprobe 子进程的工作目录：显式 `cwd` 优先，否则从 `resolvePath` 反推。 */
   const ffmpegCwd = cwd ?? inferWorkspaceRoot(resolvePath);
   /** 每次调用 ffmpeg / ffprobe 都带上它——相对路径才有确定的解析基准。 */
-  const execOptions = ffmpegCwd ? { cwd: ffmpegCwd } : {};
+  const execOptions = {
+    ...(ffmpegCwd ? { cwd: ffmpegCwd } : {}),
+    // 取消信号透传给 ffmpeg 客户端：中止时**杀掉正在跑的子进程**，
+    // 而不是等它自己跑完（一章 24 镜的编码可能跑好几分钟）。
+    ...(signal ? { signal } : {}),
+  };
+
+  /**
+   * 取消检查：被中止就**立刻停**，并说清停在哪一步。
+   *
+   * 合成链和生成链（`src/workflows/*`）的取消语义必须一致——
+   * 否则「我取消了」只对生成阶段有效，合成阶段照样把 CPU 烧完。
+   *
+   * @param {string} step 当前步骤名（写进错误消息）。
+   * @throws {Error} `code = 'ABORTED'` 的取消错误。
+   */
+  const ensureNotAborted = (step) => {
+    if (!signal?.aborted) return;
+    /** @type {FfmpegError} */
+    const error = new Error(`第 ${seq} 章合成已取消（停在「${step}」）：临时产物留在 ${tmpDir}/ch${padSeq(seq)}，可重新合成`);
+    error.code = 'ABORTED';
+    error.name = 'AbortError';
+    throw error;
+  };
+
+  /**
+   * ffmpeg 返回了非 0 时判定「这是被取消，不是失败」。
+   *
+   * @param {{code?: number, stderr?: string, spawnError?: string}} run ffmpeg 结果。
+   * @param {string} step 当前步骤名。
+   */
+  const throwIfAborted = (run, step) => {
+    if (run?.spawnError === 'ABORT_ERR' || signal?.aborted) ensureNotAborted(step);
+  };
 
   const result = {
     ok: false,
@@ -587,6 +737,7 @@ export async function assembleChapter(options = {}) {
   }
 
   // 1. 探测
+  ensureNotAborted('探测');
   const probes = [];
   for (const clip of clips) {
     probes.push(await client.probe(clip.path, execOptions));
@@ -598,6 +749,7 @@ export async function assembleChapter(options = {}) {
   await io.mkdir(resolvePath(tmpChapterDir));
   const normalized = [];
   for (let i = 0; i < clips.length; i += 1) {
+    ensureNotAborted('归一');
     const probe = probes[i];
     const segPath = `${tmpChapterDir}/seg_${String(i + 1).padStart(3, '0')}.mp4`;
     const args = planNormalizeClip({
@@ -608,7 +760,9 @@ export async function assembleChapter(options = {}) {
     });
     const run = await client.exec('ffmpeg', args, execOptions);
     result.commands.push({ tool: 'ffmpeg', args, code: run.code });
+    throwIfAborted(run, '归一');
     if (run.code !== 0) {
+      /** @type {FfmpegError} */
       const error = new Error(`归一片段失败：${clips[i].path}\n${String(run.stderr ?? '').trim()}`);
       error.code = 'FFMPEG_NORMALIZE_FAILED';
       throw error;
@@ -630,9 +784,12 @@ export async function assembleChapter(options = {}) {
   );
   const masterPath = `${tmpChapterDir}/master.mp4`;
   const concatArgs = planConcat({ listFile, output: masterPath });
+  ensureNotAborted('拼接');
   const concatRun = await client.exec('ffmpeg', concatArgs, execOptions);
   result.commands.push({ tool: 'ffmpeg', args: concatArgs, code: concatRun.code });
+  throwIfAborted(concatRun, '拼接');
   if (concatRun.code !== 0) {
+    /** @type {FfmpegError} */
     const error = new Error(`拼接失败\n${String(concatRun.stderr ?? '').trim()}`);
     error.code = 'FFMPEG_CONCAT_FAILED';
     throw error;
@@ -667,9 +824,12 @@ export async function assembleChapter(options = {}) {
       output: mixedPath,
       target,
     });
+    ensureNotAborted('混音');
     const mixRun = await client.exec('ffmpeg', mixArgs, execOptions);
     result.commands.push({ tool: 'ffmpeg', args: mixArgs, code: mixRun.code });
+    throwIfAborted(mixRun, '混音');
     if (mixRun.code !== 0) {
+      /** @type {FfmpegError} */
       const error = new Error(`混音失败\n${String(mixRun.stderr ?? '').trim()}`);
       error.code = 'FFMPEG_MIX_FAILED';
       throw error;
@@ -691,9 +851,12 @@ export async function assembleChapter(options = {}) {
   // 6. 无字幕版：**重封装，不重渲**
   const cleanPath = deliverablePath('video_clean', seq);
   const remuxArgs = planRemux({ input: mixedMaster, output: cleanPath });
+  ensureNotAborted('重封装');
   const remuxRun = await client.exec('ffmpeg', remuxArgs, execOptions);
   result.commands.push({ tool: 'ffmpeg', args: remuxArgs, code: remuxRun.code });
+  throwIfAborted(remuxRun, '重封装');
   if (remuxRun.code !== 0) {
+    /** @type {FfmpegError} */
     const error = new Error(`重封装失败\n${String(remuxRun.stderr ?? '').trim()}`);
     error.code = 'FFMPEG_REMUX_FAILED';
     throw error;
@@ -705,9 +868,12 @@ export async function assembleChapter(options = {}) {
   if (project.enable_subtitles !== false) {
     const subPath = deliverablePath('video_subtitled', seq);
     const burnArgs = planBurnSubtitles({ input: mixedMaster, srtPath, output: subPath, target });
+    ensureNotAborted('字幕烧录');
     const burnRun = await client.exec('ffmpeg', burnArgs, execOptions);
     result.commands.push({ tool: 'ffmpeg', args: burnArgs, code: burnRun.code });
+    throwIfAborted(burnRun, '字幕烧录');
     if (burnRun.code !== 0) {
+      /** @type {FfmpegError} */
       const error = new Error(`字幕烧录失败\n${String(burnRun.stderr ?? '').trim()}`);
       error.code = 'FFMPEG_BURN_FAILED';
       throw error;

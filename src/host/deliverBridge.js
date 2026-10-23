@@ -68,7 +68,10 @@ export async function assembleAndDeliver({
     client,
     io,
     resolvePath,
-    tmpDir: '.reelforge/tmp',
+    // ⚠️ `tmpDir` 与 `exportsDir` **都相对 `workspaceRoot`**（= `<cwd>/<workspaceDir>`），
+    // 因为 `resolvePath` 是相对 workspaceRoot 解析的。
+    // 这里若写 '.reelforge/tmp'，会落成 `<cwd>/.reelforge/.reelforge/tmp`（多一层）。
+    tmpDir: 'tmp',
     exportsDir: 'exports',
     signal,
   });

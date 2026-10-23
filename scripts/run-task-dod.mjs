@@ -43,7 +43,13 @@ const SAMPLE_DIR = path.join(REPORT_DIR, 'samples');
 function normalizeVolatile(text) {
   return String(text)
     .replace(/^([ \t]*(?:#[ \t]*)?duration_ms[:\s]+)[\d.]+$/gim, '$1<elapsed>')
-    .replace(/^([ \t]*(?:#[ \t]*)?time[:\s]+)[\d.]+[ \t]*ms$/gim, '$1<elapsed>');
+    .replace(/^([ \t]*(?:#[ \t]*)?time[:\s]+)[\d.]+[ \t]*ms$/gim, '$1<elapsed>')
+    // ⚠️ `npm pack` 的 tarball 哈希**每次都不一样**：tar 里带文件 mtime，
+    // 哪怕文件内容一个字没变，重打的包哈希也不同。这两个字段是**纯噪声**
+    // （「包内容有没有变」由 git diff 判定，不由 tarball 哈希判定），必须归一化，
+    // 否则交付报告每次重跑都出假 diff。
+    .replace(/^([ \t]*(?:npm notice[ \t]+)?shasum[:\s]+)[\da-f]+[ \t]*$/gim, '$1<sha>')
+    .replace(/^([ \t]*(?:npm notice[ \t]+)?integrity[:\s]+)\S+[ \t]*$/gim, '$1<integrity>');
 }
 
 /**

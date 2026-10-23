@@ -52,13 +52,22 @@ const CHANGE_OPS = Object.freeze(['create', 'update', 'delete']);
 const SAMPLE_MAX = 80;
 
 /**
+ * 待校验的变更日志条目（**字段值全部待校验**）。
+ *
+ * 本函数是**校验器**：值不对就返回原因字符串，不抛错。
+ * 所以字段类型一律写 `unknown`——结论由下面的逐项判定给出。
+ *
+ * @typedef {Record<string, unknown>} ChangelogEntryCandidate
+ */
+
+/**
  * 校验一条变更日志条目。
  *
  * 不校验的后果不是「多一条脏数据」，而是**回滚退错变更**：
  * 缺 `id` 的条目没法定位，缺 `layer` / `rowId` 的条目没法写回投影，
  * `op` 不对会让「项目创建不可回滚」这条硬约束失效。
  *
- * @param {unknown} entry 解析出来的对象。
+ * @param {ChangelogEntryCandidate} entry 解析出来的对象。
  * @returns {string|null} 合规则返回 `null`，否则返回**说清缺什么**的原因。
  */
 export function validateEntry(entry) {
@@ -66,8 +75,8 @@ export function validateEntry(entry) {
   if (typeof entry.id !== 'string' || entry.id.length === 0) return '缺 id';
   if (entry.projectId === undefined) return '缺 projectId';
   if (entry.projectId !== null && typeof entry.projectId !== 'string') return 'projectId 不是字符串';
-  if (!CHANGELOG_LAYERS.includes(entry.layer)) return `未知内容表层：${JSON.stringify(entry.layer)}`;
-  if (!CHANGE_OPS.includes(entry.op)) return `未知变更操作：${JSON.stringify(entry.op)}`;
+  if (!CHANGELOG_LAYERS.includes(/** @type {string} */ (entry.layer))) return `未知内容表层：${JSON.stringify(entry.layer)}`;
+  if (!CHANGE_OPS.includes(/** @type {string} */ (entry.op))) return `未知变更操作：${JSON.stringify(entry.op)}`;
   if (entry.rowId === null || entry.rowId === undefined || String(entry.rowId).length === 0) return '缺 rowId';
   if (!Number.isFinite(Number(entry.seq))) return 'seq 不是数字';
   return null;

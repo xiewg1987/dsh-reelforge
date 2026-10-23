@@ -1,0 +1,33 @@
+# Host 源码联调（**不加载 client 半**）：
+#   cd D:\ScriptProject\deepseek-harness
+#   pnpm dsh web --patch ../dsh-reelforge/patch.dev.yml
+#
+# 与 cordis.patch.yml 的区别：那一行写**裸包名**（`@local/reelforge`），
+# 宿主才会去 profile 的 node_modules 里找这个包、**并挂载浏览器半**；
+# 这里写仓库内的相对路径，只能联调 Host 半。
+#
+# ⚠️ 同一个 profile 里 `plugin add` 与 `--patch` **不要混用**：
+# patch 形式挂不上 client half，右栏不会出现「ReelForge 工作台」Tab。
+#
+# 要跑完整 UI（Host + Client）请用 cordis.patch.yml 走 plugin add：
+#   cd D:\ScriptProject\deepseek-harness
+#   pnpm dsh plugin --profile web add file:D:/ScriptProject/dsh-reelforge
+
+- insert:
+    - id: reelforge
+      name: './index.js'
+      config:
+        workspaceDir: '.reelforge'
+        runPosition: 'cloud'
+        comfyBaseUrl: 'http://127.0.0.1:8188'
+        cloudProvider: 'dsh'
+        stages:
+          llm: true
+          image: true
+          tts: true
+          video: true
+        budgetLimitCny: 12
+        enableBgm: true
+        enableSubtitles: true
+        targetDuration: null
+        enableRunsTab: false

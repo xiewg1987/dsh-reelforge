@@ -27,24 +27,82 @@ export const COMFY_ENDPOINTS = Object.freeze({
 });
 
 /**
+ * REST 请求选项。
+ * @typedef {object} RequestOptions
+ * @property {string} [method]       默认 GET
+ * @property {unknown} [body]         FormData，或任意可 JSON 化的值
+ * @property {Record<string, string>} [headers]
+ * @property {AbortSignal} [signal]
+ * @property {boolean} [raw]          true = 返回原始 Response（不解析 JSON）
+ */
+
+/**
+ * 上传素材的选项。
+ * @typedef {object} UploadOptions
+ * @property {string} [filename]      缺省取 `file.name`，再缺省 'upload'
+ * @property {boolean} [overwrite]    默认 true
+ * @property {string} [type]          默认 input
+ */
+
+/**
+ * ComfyUI 经 WS 推来的消息（形状随 `type` 变化）。
+ * @typedef {object} ComfyMessage
+ * @property {string} [type]          progress | executing | execution_error | execution_interrupted
+ * @property {Record<string, unknown>} [data]
+ */
+
+/**
+ * 等一个 prompt 跑完的选项。
+ * @typedef {object} WaitOptions
+ * @property {(data: Record<string, unknown>) => void} [onProgress]
+ * @property {AbortSignal} [signal]
+ * @property {ComfyMessage[]} [events]      已缓存的事件（回扫用）
+ * @property {Set<Function>|null} [subscribers]  已订阅的处理器（内部用）
+ */
+
+/**
+ * `connect()` 的选项。
+ * @typedef {object} ConnectOptions
+ * @property {string} [promptId]
+ * @property {(data: Record<string, unknown>) => void} [onProgress]
+ * @property {AbortSignal} [signal]
+ * @property {object} [ws]            直接给一个建好的 WebSocket（跳过工厂）
+ */
+
+/**
+ * 上传的素材载荷：`File` / `Blob` / `Uint8Array` / 带 `arrayBuffer()` 的对象。
+ * @typedef {{ name?: string, arrayBuffer: () => Promise<ArrayBuffer> }} UploadPayload
+ */
+
+/**
+ * `connect()` 返回的连接句柄——**同步返回**，不是 Promise。
+ * @typedef {object} ComfyConnection
+ * @property {object} socket
+ * @property {ComfyMessage[]} events
+ * @property {() => void} close
+ * @property {(pid: string) => Promise<unknown>} wait
+ */
+
+/**
  * @typedef {object} ComfyClient
  * @property {string} baseUrl
+ * @property {string} clientId
  * @property {() => Promise<object>} systemStats
  * @property {(prompt: object, opts?: object) => Promise<object>} submitPrompt
  * @property {(promptId: string) => Promise<object>} getHistory
- * @property {(file: unknown, opts?: object) => Promise<object>} uploadImage
- * @property {(file: unknown, opts?: object) => Promise<object>} uploadAudio
+ * @property {(file: UploadPayload, opts?: object) => Promise<object>} uploadImage
+ * @property {(file: UploadPayload, opts?: object) => Promise<object>} uploadAudio
  * @property {(opts?: object) => Promise<void>} free
  * @property {(opts?: object) => Promise<object>} downloadOutput
- * @property {(opts?: object) => Promise<object>} connect
- * @property {(promptId: string, opts?: object) => Promise<object>} waitForPrompt
+ * @property {(opts?: object) => ComfyConnection} connect
+ * @property {(promptId: string, opts?: object) => Promise<unknown>} waitForPrompt
  */
 
 /**
  * 建一个 ComfyUI 客户端。
  *
  * @param {object} options
- * @param {string} options.baseUrl              例：`http://127.0.0.1:8188`
+ * @param {string} [options.baseUrl]              例：`http://127.0.0.1:8188`
  * @param {typeof fetch} [options.fetchImpl]    注入的 HTTP 实现
  * @param {(url: string) => object} [options.wsFactory] 注入的 WebSocket 工厂
  * @param {number} [options.timeoutMs]
@@ -66,9 +124,13 @@ export function createComfyClient({
   const root = String(baseUrl).replace(/\/+$/, '');
   const id = clientId ?? `reelforge-${Math.random().toString(36).slice(2, 10)}`;
 
+  /**
+   * @param {string} pathname
+   * @param {RequestOptions} [opts]
+   */
   async function request(pathname, { method = 'GET', body, headers, signal, raw = false } = {}) {
     const url = `${root}${pathname}`;
-    const init = { method, headers: { ...(headers ?? {}) } };
+    const init = { method, headers: /** @type {Record<string, string>} */ ({ ...(headers ?? {}) }) };
     if (body !== undefined) {
       init.body = body instanceof FormData ? body : JSON.stringify(body);
       if (!(body instanceof FormData) && !init.headers['content-type']) {
@@ -94,14 +156,24 @@ export function createComfyClient({
     }
   }
 
+  /**
+   * @param {string} pathname
+   * @param {string} field
+   * @param {UploadPayload} file
+   * @param {UploadOptions} [opts]
+   */
   async function upload(pathname, field, file, { filename, overwrite = true, type = 'input' } = {}) {
     const form = new FormData();
     const name = filename ?? (file && file.name) ?? 'upload';
     const blob =
       file instanceof Blob
         ? file
-        : new Blob([file instanceof Uint8Array ? file : new Uint8Array(await file.arrayBuffer())]);
-    form.append(field, blob, name);
+        : new Blob([
+            /** @type {BlobPart} */ (
+              file instanceof Uint8Array ? file : new Uint8Array(await file.arrayBuffer())
+            ),
+          ]);
+    form.append(field, blob, /** @type {string} */ (name));
     form.append('overwrite', String(overwrite));
     form.append('type', type);
     return request(pathname, { method: 'POST', body: form });
@@ -137,6 +209,9 @@ export function createComfyClient({
     }
   }
 
+  /**
+   * @param {ConnectOptions} [opts]
+   */
   function connect({ promptId, onProgress, signal, ws } = {}) {
     const factory = wsFactory ?? ((url) => (globalThis.WebSocket ? new globalThis.WebSocket(url) : null));
     if (typeof factory !== 'function') throw new Error('没有可用的 WebSocket 实现：请注入 wsFactory');
@@ -167,6 +242,11 @@ export function createComfyClient({
     };
   }
 
+  /**
+   * @param {object} socket
+   * @param {string} promptId
+   * @param {WaitOptions} [opts]
+   */
   function waitForPrompt(
     socket,
     promptId,
@@ -333,7 +413,7 @@ export function extractArgv(stats) {
  * @param {object} options
  * @param {string} [options.hw]     nvidia | amd
  * @param {number} [options.every]  覆盖释放间隔
- * @param {() => Promise<void>} options.free
+ * @param {() => Promise<void>} [options.free]
  */
 export function createVramReleaser({ hw = 'nvidia', every, free } = {}) {
   const interval = every ?? HW_DEFAULT_FREE[hw] ?? 0;
@@ -349,6 +429,14 @@ export function createVramReleaser({ hw = 'nvidia', every, free } = {}) {
     async note() {
       count += 1;
       if (interval > 0 && count % interval === 0) {
+        // 守卫放在**用到的这一刻**：nvidia 档 interval = 0、根本不会调 free，
+        // 不该在构造时就报错。而真要用时，缺 free 必须说清缺什么，
+        // 而不是抛一个裸的 `TypeError: free is not a function`。
+        if (typeof free !== 'function') {
+          throw new Error(
+            `ComfyUI 显存释放缺少 free()（${hw} 档每 ${interval} 次生成后要调一次 /free）`,
+          );
+        }
         await free();
         return true;
       }
@@ -368,7 +456,7 @@ export function createVramReleaser({ hw = 'nvidia', every, free } = {}) {
  *   `outputs[]` 的每一项：`{ nodeId, classType, files: [{ filename, subfolder, type }] }`
  *
  * @param {object} options
- * @param {ComfyClient} options.client
+ * @param {ComfyClient} [options.client]
  * @param {string} [options.hw]
  * @param {(payload: object, opts: { client: ComfyClient, signal?: AbortSignal }) => Promise<object>} [options.uploadFile]
  *   把本地文件传上去换成 ComfyUI 里的文件名，并返回**改过路径的载荷**。

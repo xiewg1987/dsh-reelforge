@@ -248,7 +248,7 @@ function missingClientMessage(unreachable, clientLabel, key, method) {
  * 探测一次。
  *
  * @param {object} options
- * @param {string} options.position  local | cloud
+ * @param {string} [options.position] local | cloud
  * @param {string} [options.provider]
  * @param {object} [options.deps]
  * @param {() => number} [options.now]

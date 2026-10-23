@@ -1,0 +1,5 @@
+# pnpm 11 的包级设置都放在这里（package.json 的 `pnpm` 字段不再被读取）。
+#
+# minimumReleaseAge：只解析发布满 24 小时的版本，避免刚发布的包引入供应链风险。
+# 本插件当前**零 npm 依赖**，所以暂时用不上；将来加依赖时这条规则才有意义。
+minimumReleaseAge: 1440

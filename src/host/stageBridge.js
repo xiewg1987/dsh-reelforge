@@ -416,12 +416,16 @@ export async function runStage({
     specSets,
   });
   const orchestrator = createStageOrchestrator({
-    preflight: (targetStage) => (
+    // ⚠️ 编排器把 `preflight` 声明成"返回 Promise"，但它内部是 `await preflight(...)`——
+    //    **同步**返回结论对象也完全跑得通（await 一个非 Promise 值是合法的）。
+    //    那个声明在 core/ 的契约文件里（`core/stageOrchestrator.js`），本轮不改 core/；
+    //    这里按编排器的声明形态标注，**不改运行时**（改成 async 才是改行为）。
+    preflight: (targetStage) => /** @type {Promise<object>} */ (/** @type {unknown} */ (
       // 补跑阶段没有工作项，探不过也无所谓——它只是去把"这个阶段跑过了"说给编排器听
       noOpStages.has(targetStage)
         ? { ok: true, blockers: [], warnings: [] }
         : selectForStage(probe, targetStage)
-    ),
+    )),
     // 指纹里带规格 id + 模板路径：换了规格 / 换了工作流 → 结果一定不同 → 必须重跑
     fingerprint: (targetStage, item) => computeFingerprint({
       stage: targetStage,
@@ -429,7 +433,12 @@ export async function runStage({
       specId,
       content: item?.fingerprintContent ?? null,
     }),
-    resolveRefs: (shot, shotAssets, options) => resolveRefs(shot, shotAssets, options),
+    // ⚠️ 同上：编排器声明 `resolveRefs` 返回 Promise，实际内部是 `await assemble(...)`。
+    //    `shotAssets`：编排器声明成 `object`，实际传下来的就是**资产数组**
+    //    （编排器内部 `item.assets ?? request.assets ?? []`）——断言只为消掉这个标注缺口。
+    resolveRefs: (shot, shotAssets, options) => /** @type {Promise<object>} */ (/** @type {unknown} */ (
+      resolveRefs(shot, /** @type {Array<object>} */ (shotAssets), options)
+    )),
     signal,
     now: () => Date.now(),
     execute: async (targetStage, item, context) => executeStage({
@@ -502,6 +511,22 @@ function specFingerprintId({ kind, provider, hw, userWorkflows, specSets }) {
 }
 
 /**
+ * `analyzeWorkflow()` 的 meta（规格元信息）。
+ *
+ * ⚠️ `kind` 是**多余字段**：`analyzeWorkflow` 自己从工作流图里推 kind
+ * （见 `core/analyzeWorkflow.js`），**并不读** `meta.kind`。
+ * 这里保留它（运行时行为不变），并用本地类型把它标出来——
+ * core/ 的 `meta` 类型里没有这一项（跨文件的标注缺口，见报告）。
+ *
+ * @typedef {object} AnalyzeWorkflowMeta
+ * @property {string} [id]
+ * @property {string} [name]
+ * @property {string} [description]
+ * @property {string} [sourceFile]
+ * @property {string} [kind]
+ */
+
+/**
  * 执行单个工作项（编排器注入的 `execute`）。
  *
  * @param {object} options
@@ -548,15 +573,17 @@ async function executeStage({ stage, item, context, workspaceRoot, specSets, dep
     // 规格取用顺序：随包规格集 → **用户工作流的确定性解析**（§8.3）。
     // 用户的工作流节点布局跟随包规格假设的不一样时，解析出来的规格才准。
     let spec = resolved.spec;
-    let sourceFile = spec?.sourceFile ?? '';
+    // `spec.sourceFile` 在规格记录里是 `unknown`（规格来自 JSON），
+    // 但它**就是**一个相对路径字符串——断言只为让 `readTemplate` 拿到 `string`。
+    let sourceFile = /** @type {string} */ (spec?.sourceFile ?? '');
     if (!spec && userTemplate) {
       try {
-        spec = normalizeAnalyzedSpec(analyzeWorkflow(userTemplate, {
+        spec = normalizeAnalyzedSpec(analyzeWorkflow(userTemplate, /** @type {AnalyzeWorkflowMeta} */ ({
           id: `reelforge/${kind}`,
           kind,
           name: kind,
           sourceFile: userWorkflowPath,
-        }));
+        })));
         sourceFile = userWorkflowPath;
       } catch (error) {
         return {

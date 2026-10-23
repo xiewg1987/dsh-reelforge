@@ -23,17 +23,44 @@ import { spawn } from 'node:child_process';
 export const FFMPEG = 'ffmpeg';
 export const FFPROBE = 'ffprobe';
 
+/**
+ * 带 `code` 的错误。
+ *
+ * Node 的系统错误（`ENOENT` / `EPERM` …）自带 `code`；本模块自己打的分类码
+ * （`FFPROBE_MISSING` / `FFPROBE_FAILED` / `FFPROBE_BAD_OUTPUT`）也放在同一个位置。
+ *
+ * @typedef {Error & { code?: string }} FfmpegError
+ */
+
+/**
+ * 单个工具（ffmpeg / ffprobe）的可用性探测结果。
+ *
+ * @typedef {object} ToolAvailability
+ * @property {boolean} available 工具能不能用
+ * @property {string|null} version 版本号（探测不到时为 null）
+ * @property {string|null} reason 失败原因（`not-found` / `error`；可用时为 null）
+ * @property {string|null} detail 失败细节（错误码 / stderr 摘要）
+ */
+
 /** spawn 失败时能被判定为「工具不存在」的错误码。 */
 const MISSING_TOOL_CODES = new Set(['ENOENT', 'ENOTDIR', 'EACCES', 'EPERM']);
 
 /**
  * 默认 runner：基于 `node:child_process.spawn`。
  * **永远 resolve，不 reject**——命令失败是正常业务结果，由调用方看 `code`。
+ *
+ * 支持 `options.signal`（AbortSignal）：中止时**杀掉子进程**并返回
+ * `spawnError: 'ABORT_ERR'`，让调用方能区分「被取消」与「ffmpeg 自己失败」。
  */
 export function createDefaultRunner() {
   return function run(bin, args, options = {}) {
-    const { input, cwd, timeoutMs } = options;
+    const { input, cwd, timeoutMs, signal } = options;
     return new Promise((resolve) => {
+      // 调用方已经中止：**根本不起进程**。
+      if (signal?.aborted) {
+        resolve({ code: -1, stdout: '', stderr: '已取消', spawnError: 'ABORT_ERR' });
+        return;
+      }
       let child;
       try {
         child = spawn(bin, args, { cwd, windowsHide: true });
@@ -42,17 +69,31 @@ export function createDefaultRunner() {
           code: -1,
           stdout: '',
           stderr: String(err?.message ?? err),
-          spawnError: String(err?.code ?? 'ESPAWN'),
+          spawnError: String((/** @type {FfmpegError} */ (err))?.code ?? 'ESPAWN'),
         });
         return;
       }
       let stdout = '';
       let stderr = '';
       let settled = false;
+      /** @type {NodeJS.Timeout|null} */
+      let timer = null;
       const finish = (result) => {
         if (settled) return;
         settled = true;
+        if (timer !== null) clearTimeout(timer);
+        if (signal && typeof signal.removeEventListener === 'function') {
+          signal.removeEventListener('abort', onAbort);
+        }
         resolve(result);
+      };
+      /**
+       * 中止回调：杀掉子进程并给出**可判定**的结果。
+       * 杀掉进程后 `close` 也会来一次，但 `finish` 只认第一次，结论不会被覆盖。
+       */
+      const onAbort = () => {
+        child.kill?.();
+        finish({ code: -1, stdout, stderr: `${stderr}\n已取消`, spawnError: 'ABORT_ERR' });
       };
       child.stdout?.on('data', (chunk) => { stdout += chunk; });
       child.stderr?.on('data', (chunk) => { stderr += chunk; });
@@ -61,7 +102,7 @@ export function createDefaultRunner() {
           code: -1,
           stdout,
           stderr: `${stderr}${String(err?.message ?? err)}`,
-          spawnError: String(err?.code ?? 'ESPAWN'),
+          spawnError: String((/** @type {FfmpegError} */ (err))?.code ?? 'ESPAWN'),
         });
       });
       child.on('close', (code) => {
@@ -72,8 +113,11 @@ export function createDefaultRunner() {
       } else {
         child.stdin?.end();
       }
+      if (signal && typeof signal.addEventListener === 'function') {
+        signal.addEventListener('abort', onAbort, { once: true });
+      }
       if (timeoutMs > 0) {
-        const timer = setTimeout(() => {
+        timer = setTimeout(() => {
           child.kill?.();
           finish({ code: -1, stdout, stderr: `${stderr}\n超时 ${timeoutMs}ms`, spawnError: 'ETIMEDOUT' });
         }, timeoutMs);
@@ -172,11 +216,13 @@ export function createFfmpegClient(options = {}) {
         file,
       ], { ...options, cwd: cwdOf(options) });
       if (result.spawnError && MISSING_TOOL_CODES.has(result.spawnError)) {
+        /** @type {FfmpegError} */
         const err = new Error(`ffprobe 不可用：${result.spawnError}`);
         err.code = 'FFPROBE_MISSING';
         throw err;
       }
       if (result.code !== 0) {
+        /** @type {FfmpegError} */
         const err = new Error(`ffprobe 失败（${file}）：${String(result.stderr ?? '').trim() || `exit ${result.code}`}`);
         err.code = 'FFPROBE_FAILED';
         throw err;
@@ -185,6 +231,7 @@ export function createFfmpegClient(options = {}) {
       try {
         data = JSON.parse(result.stdout);
       } catch {
+        /** @type {FfmpegError} */
         const err = new Error(`ffprobe 输出无法解析（${file}）`);
         err.code = 'FFPROBE_BAD_OUTPUT';
         throw err;
@@ -230,7 +277,7 @@ export async function probeAll(client, files = [], options = {}) {
 
 /**
  * 探测 ffmpeg / ffprobe 两个工具的可用性。
- * @returns {{ffmpeg: object, ffprobe: object, available: boolean, missing: string[]}}
+ * @returns {Promise<{ffmpeg: ToolAvailability, ffprobe: ToolAvailability, available: boolean, missing: string[]}>}
  */
 export async function probeTools(client) {
   const ffmpeg = await client.version(FFMPEG);

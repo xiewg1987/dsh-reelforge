@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2023", "DOM"],
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "strict": false,
+    "noImplicitAny": false,
+    "allowUnreachableCode": false
+  },
+  "include": [
+    "index.js",
+    "src/**/*.js",
+    "workflows/**/*.js",
+    "scripts/**/*.mjs"
+  ],
+  "exclude": [
+    "node_modules",
+    "client.js",
+    "**/__tests__/**",
+    "src/client/**"
+  ]
+}

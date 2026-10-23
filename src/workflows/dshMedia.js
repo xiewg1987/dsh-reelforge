@@ -55,7 +55,7 @@ export const DSH_VIDEO_STATUS = Object.freeze({
  * 建一个 DSH 模型通道客户端。
  *
  * @param {object} options
- * @param {(tool: string, args: object) => Promise<any>} options.call  注入的连接器调用
+ * @param {(tool: string, args: object) => Promise<any>} [options.call]  注入的连接器调用
  */
 export function createDshMediaClient({ call } = {}) {
   if (typeof call !== 'function') {
@@ -137,7 +137,7 @@ export function buildDshRequest(kind, request = {}) {
  *   `generate({ kind, request, signal })` → `{ promptId, outputs[], raw }`
  *
  * @param {object} options
- * @param {object} options.client
+ * @param {object} [options.client]
  * @param {number} [options.pollMs]
  * @param {number} [options.maxWaitMs]
  */

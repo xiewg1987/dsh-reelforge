@@ -33,6 +33,59 @@ import {
   VIDEO_RESOLUTION_MP,
 } from '../core/constants.js';
 
+/**
+ * 角色绑定（F5 的 `roles` 记录项）：`{ node, field, map? }`。
+ * @typedef {object} RoleBinding
+ * @property {string} node     目标节点 id
+ * @property {string} field    目标节点上的输入字段名
+ * @property {Record<string, unknown>} [map]  枚举翻译表（本插件取值 → ComfyUI 字段取值）
+ */
+
+/**
+ * loader 模板（媒体绑定用）。
+ * @typedef {object} LoaderTemplate
+ * @property {string} [class_type]
+ * @property {string} [fileField]   承载文件路径的输入字段名（缺省按 class_type 推断）
+ * @property {Record<string, unknown>} [inputs]
+ * @property {unknown} [_meta]
+ */
+
+/**
+ * 媒体绑定配置（`media`）——两种形态互斥：
+ *   形态① `mediaField`/`typeField`；形态② `fieldsByType`。
+ * @typedef {object} MediaConfig
+ * @property {string} [targetNode]              接收参考素材的目标节点 id
+ * @property {string} [mediaField]              形态①：媒体字段名前缀
+ * @property {string} [typeField]               形态①：媒体类型字段名前缀
+ * @property {Record<string, string>} [fieldsByType]  形态②：媒体类型 → 字段名前缀
+ * @property {Record<string, LoaderTemplate>} [loaders]  媒体类型 → loader 模板
+ * @property {number} [maxImages]               参考图上限（缺省 9）
+ * @property {number} [maxAudioVideo]           音视频上限（缺省 3）
+ * @property {string[]} [reusePool]             可复用的模板占位 loader 节点 id
+ */
+
+/**
+ * 规范化后的工作流规格（F5 形状，冻结）。
+ * @typedef {object} WorkflowSpec
+ * @property {string} id
+ * @property {string} kind
+ * @property {string} name
+ * @property {string} description
+ * @property {string} sourceFile
+ * @property {Record<string, RoleBinding>} roles
+ * @property {MediaConfig|null} media
+ * @property {string[]} outputs
+ * @property {string[]} prune
+ */
+
+/**
+ * 解析器返回的顶层角色条目（`{ node, field, value }`）。
+ * @typedef {object} AnalyzedEntry
+ * @property {string} [node]
+ * @property {string} [field]
+ * @property {unknown} [value]
+ */
+
 /** 规格集里的档位键（与 §2.4 的三列一一对应）。 */
 export const SPEC_VARIANTS = Object.freeze(['local-nvidia', 'local-amd', 'cloud-runninghub']);
 
@@ -96,10 +149,11 @@ export function loaderMediaType(classType) {
  * **不改 id / kind / sourceFile**（F5 冻结）。
  *
  * @param {Record<string, unknown>} input
- * @returns {Record<string, unknown>}
+ * @returns {WorkflowSpec}
  */
 export function normalizeSpec(input) {
-  const spec = { ...(input ?? {}) };
+  // 入参是任意 JSON（用户配置 / 规格集文件），这里把它收敛成 F5 的固定形状。
+  const spec = /** @type {WorkflowSpec} */ ({ ...(input ?? {}) });
   spec.id = String(spec.id ?? '');
   spec.kind = String(spec.kind ?? '');
   spec.name = String(spec.name ?? spec.id ?? '');
@@ -107,7 +161,7 @@ export function normalizeSpec(input) {
   spec.sourceFile = String(spec.sourceFile ?? '');
   spec.roles = { ...(spec.roles ?? {}) };
   for (const [role, binding] of Object.entries(spec.roles)) {
-    const next = { ...(binding ?? {}) };
+    const next = /** @type {RoleBinding} */ ({ ...(binding ?? {}) });
     next.node = String(next.node ?? '');
     next.field = String(next.field ?? '');
     if (next.map === undefined || next.map === null) {
@@ -135,7 +189,7 @@ export function validateSpec(spec) {
   if (!spec || typeof spec !== 'object') {
     return { ok: false, errors: [{ path: '', message: '规格必须是对象' }] };
   }
-  const s = normalizeSpec(spec);
+  const s = normalizeSpec(/** @type {Record<string, unknown>} */ (spec));
 
   if (!s.id) push('id', 'id 不能为空');
   if (!GENERATION_KINDS.includes(s.kind)) {
@@ -209,7 +263,7 @@ export function validateSpec(spec) {
 /**
  * 校验不过就抛错（带全部错误，不只报第一条）。
  * @param {unknown} spec
- * @returns {Record<string, unknown>} 规范化后的规格
+ * @returns {WorkflowSpec} 规范化后的规格
  */
 export function assertSpec(spec) {
   const { ok, errors } = validateSpec(spec);
@@ -217,7 +271,7 @@ export function assertSpec(spec) {
     const detail = errors.map((e) => `${e.path || '(root)'}: ${e.message}`).join('；');
     throw new Error(`工作流规格不合法：${detail}`);
   }
-  return normalizeSpec(spec);
+  return normalizeSpec(/** @type {Record<string, unknown>} */ (spec));
 }
 
 /**
@@ -278,15 +332,15 @@ export const ANALYZED_ROLE_KEYS = Object.freeze([
  * 仍然**没有** `prune` 字段（剪枝由 runner 的可达性遍历自动做）。
  *
  * @param {unknown} analyzed  `analyzeWorkflow()` 的返回
- * @returns {Record<string, unknown>} F5 规格
+ * @returns {WorkflowSpec} F5 规格
  */
 export function normalizeAnalyzedSpec(analyzed) {
-  const spec = { ...(analyzed ?? {}) };
-  const roles = {};
+  const spec = { ...(/** @type {Record<string, unknown>} */ (analyzed ?? {})) };
+  const roles = /** @type {Record<string, RoleBinding>} */ ({});
 
   // ① 顶层角色字段：`{ node, field, value }` → `{ node, field }`
   for (const key of ANALYZED_ROLE_KEYS) {
-    const entry = spec[key];
+    const entry = /** @type {AnalyzedEntry|undefined} */ (spec[key]);
     if (entry && typeof entry === 'object' && entry.node && entry.field) {
       roles[key] = { node: String(entry.node), field: String(entry.field) };
     }
@@ -322,9 +376,11 @@ export function parseSpecSet(json) {
   if (!json || typeof json !== 'object') {
     throw new Error('规格集必须是对象');
   }
-  const kind = String(json.kind ?? '');
-  const raw = json.specs ?? {};
-  const specs = {};
+  const kind = String(/** @type {Record<string, unknown>} */ (json).kind ?? '');
+  const raw = /** @type {Record<string, Record<string, unknown>>} */ (
+    /** @type {Record<string, unknown>} */ (json).specs ?? {}
+  );
+  const specs = /** @type {Record<string, Record<string, unknown>>} */ ({});
   for (const [variant, spec] of Object.entries(raw)) {
     if (!SPEC_VARIANTS.includes(variant)) {
       throw new Error(`规格集出现未知档位 ${variant}（允许 ${SPEC_VARIANTS.join(' / ')}）`);
@@ -353,7 +409,7 @@ export function loadSpecSetFile(file) {
  * @returns {Record<string, { kind: string, specs: Record<string, Record<string, unknown>> }>}
  */
 export function loadSpecSetDir(dir) {
-  const out = {};
+  const out = /** @type {Record<string, { kind: string, specs: Record<string, Record<string, unknown>> }>} */ ({});
   for (const file of readdirSync(dir).sort()) {
     if (!file.endsWith('.json')) continue;
     const set = loadSpecSetFile(path.join(dir, file));
@@ -370,13 +426,13 @@ export function loadSpecSetDir(dir) {
  * 硬件预设的偏好插在用户配置之后、nvidia/amd 兜底之前：AMD 机拿 nvidia 的工作流会 OOM。
  *
  * @param {object} options
- * @param {string} options.kind
+ * @param {string} [options.kind]
  * @param {string} [options.provider]  runninghub | online-api | dsh | native
  * @param {string} [options.hw]         nvidia | amd
  * @param {Record<string, string>} [options.userWorkflows]  用户配置的 kind → sourceFile
  * @param {Record<string, { specs: Record<string, unknown> }>} [options.specSets]
- * @param {string} [options.userSpec]   用户自定义的整份规格（优先于 sourceFile 覆盖）
- * @returns {{ spec: Record<string, unknown>|null, source: 'user-spec'|'user-workflow'|'variant'|null, variant: string|null, errors: string[] }}
+ * @param {Record<string, unknown>} [options.userSpec]  用户自定义的整份规格（优先于 sourceFile 覆盖）
+ * @returns {{ spec: WorkflowSpec|null, source: 'user-spec'|'user-workflow'|'variant'|null, variant: string|null, errors: string[] }}
  */
 export function resolveSpec({
   kind,
@@ -411,7 +467,9 @@ export function resolveSpec({
   const override = userWorkflows?.[kind];
   if (override) {
     const variant = hw === 'amd' ? 'local-amd' : 'local-nvidia';
-    const base = specSets?.[kind]?.specs?.[variant] ?? specSets?.[kind]?.specs?.['local-nvidia'] ?? null;
+    const base = /** @type {Record<string, unknown>} */ (
+      specSets?.[kind]?.specs?.[variant] ?? specSets?.[kind]?.specs?.['local-nvidia'] ?? null
+    );
     if (!base) {
       errors.push(`规格集缺 ${kind} 的本地档，且没有可用基线`);
       return { spec: null, source: null, variant: null, errors };

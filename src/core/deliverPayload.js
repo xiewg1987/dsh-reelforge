@@ -55,7 +55,7 @@ export function buildDeliverPayload(input = {}) {
 
 /**
  * 形状自检——用来在合流时断言「我产出的和 T5 视图要读的是同一份」。
- * @param {unknown} payload
+ * @param {Record<string, unknown>|null|undefined} payload 待校验的 payload（非对象直接 false）
  */
 export function isDeliverPayloadShape(payload) {
   if (!payload || typeof payload !== 'object') return false;

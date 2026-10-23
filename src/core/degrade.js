@@ -116,6 +116,7 @@ function normalizeFlag(value) {
  * @param {boolean|{reason?:string}} [input.imageProviderDown] 图像 provider 挂
  * @param {Array<string|{name:string,reason?:string}>} [input.missingVoices] 音色缺失
  * @param {boolean} [input.ffmpegAvailable=true] 本机有没有 ffmpeg
+ * @param {string} [input.ffmpegReason] 缺 ffmpeg 的原因（写进降级话术的 `details`）
  * @param {Array<number|{idx:number}>} [input.failedShots] 失败镜号
  * @param {number|null} [input.vramGb] 本机显存（GB）
  * @param {number} [input.vramRequiredGb] 门槛（默认取 constants 的 `VRAM_GATE_GB.video`）

@@ -6,6 +6,7 @@ node_modules/
 # 不提交它，免得本地与 CI 各自生成一份、版本号还漂移。
 # （将来真要加 npm 依赖，删掉这一行、把 lockfile 提交上来即可。）
 package-lock.json
+pnpm-lock.yaml
 
 # `npm pack` 产出的包（local-reelforge-<version>.tgz）
 *.tgz

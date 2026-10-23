@@ -38,10 +38,12 @@ export function applyReelForge(ctx, rawConfig) {
 
   /**
    * 记录宿主返回的 unregister。
-   * @param {unknown} dispose 清理函数。
+   * @param {unknown} dispose 清理函数（不是函数就当没有）。
    */
   function track(dispose) {
-    if (typeof dispose === 'function') disposers.push(dispose);
+    // `typeof` 已经把"是函数"这件事问清楚了；断言只是把结论告诉类型检查器
+    //（宿主返回的 unregister 一律是无参清理函数）。
+    if (typeof dispose === 'function') disposers.push(/** @type {() => void} */ (dispose));
   }
 
   // ── 15 个工具（13 个 ReelForge + 2 个只读技能工具）──
@@ -208,7 +210,10 @@ function registerRoutes(ctx, store, config) {
 
 /**
  * 从请求里取 `session` 查询参数。
- * @param {unknown} request 请求对象。
+ *
+ * 只用到 `url` 这一个字段——**不是** Request 也能跑（读不到就当没有 session）。
+ *
+ * @param {{ url?: string }} request 请求对象。
  * @returns {string | undefined} 会话 id。
  */
 function readSessionParam(request) {

@@ -38,6 +38,167 @@ import { BUNDLED_SKILLS_DIR, WORKFLOW_SPECS_DIR } from './paths.js';
 import { runStage } from './stageBridge.js';
 import { resolveProjectPath, resolveWorkspaceRoot, writeFileAtomic } from './workspace.js';
 
+// ─────────────────────────────────────────────────────────────
+// 类型定义（JSDoc）
+//
+// 这里的 typedef 是**给 tsc 看的契约**，不参与运行：
+//   - `ToolExecContext`：宿主注入的工具执行上下文（`execute` 的第二个参数）。
+//   - `ToolResult`：工具返回值信封 `{ ok, errors?, ... }`。
+//   - `SessionContext`：会话信息（成功 / 失败二选一）。
+//   - `*Result`：各工具**返回值**的形状——`chatData` 回调的入参就是它。
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * 宿主注入的工具执行上下文（`execute` 的第二个参数）。
+ *
+ * 本插件只用到两处：当前会话（`agent.session`）与取消信号（`signal`）。
+ *
+ * @typedef {object} ToolExecContext
+ * @property {{ session?: { id: string, header?: { cwd?: string } } }} [agent] 当前 Agent 与它的会话。
+ * @property {AbortSignal} [signal] 取消信号。
+ */
+
+/**
+ * 工具返回值信封。
+ *
+ * 规范值恒为 `{ ok, errors?, ... }`；其余键由各工具自己带
+ * （`chapterCount` / `shotCount` / `patch` / …）。
+ *
+ * @typedef {object} ToolResult
+ * @property {boolean} ok 是否成功。
+ * @property {string[]} [errors] 失败原因（`ok: false` 时给出）。
+ * @property {unknown} [patch] 状态补丁——给日志与投影用，**不给模型看**。
+ */
+
+/**
+ * 会话信息（成功分支）。
+ *
+ * ⚠️ 出错时这个形状**整个不存在**——`sessionContext` 要么给会话信息，要么给一句错误。
+ * 这里用 `never` + `?` 表达「该分支里这个字段不存在」：联合类型的属性访问
+ * 要求**每个成员**都声明过该属性，少一个就报 TS2339。
+ *
+ * @typedef {object} SessionContextOk
+ * @property {string} sessionId 会话 id。
+ * @property {string} cwd 会话工作目录。
+ * @property {never} [error] 成功分支里永远没有 `error`。
+ */
+
+/**
+ * 会话信息（失败分支）。
+ *
+ * @typedef {object} SessionContextError
+ * @property {never} [sessionId] 失败分支里没有会话 id。
+ * @property {never} [cwd] 失败分支里没有工作目录。
+ * @property {string} error 错误信息。
+ */
+
+/**
+ * `sessionContext` 的返回值：成功与失败二选一。
+ *
+ * @typedef {SessionContextOk | SessionContextError} SessionContext
+ */
+
+/**
+ * `importNovel` 的返回值（`chatData` 的入参）。
+ *
+ * @typedef {object} ImportNovelResult
+ * @property {Array<{ seq?: number, title?: string, shotCount?: number, durationSec?: number }>} [chapters] 章节摘要。
+ */
+
+/**
+ * `setStoryboard` 的返回值。
+ *
+ * @typedef {object} StoryboardResult
+ * @property {number} [seq] 章节序号。
+ * @property {Array<{ idx?: number, scene_name?: string, shot_size?: string, camera?: string, duration?: number, dialogue?: string }>} [shots] 分镜列表。
+ */
+
+/**
+ * 资产行（`createAsset` / `updateAsset` 的返回值里带一个）。
+ *
+ * @typedef {object} AssetRow
+ * @property {string} [id] 资产 id。
+ * @property {string} [category] 分类。
+ * @property {string} [name] 名字。
+ * @property {string} [description] 描述。
+ * @property {string} [parent_id] 变体类指向的角色资产 id。
+ * @property {string[]} [tags] 标签。
+ */
+
+/**
+ * `createAsset` / `updateAsset` 的返回值。
+ *
+ * @typedef {object} AssetResult
+ * @property {AssetRow} [asset] 资产行。
+ */
+
+/**
+ * `runStage` 的返回值。
+ *
+ * @typedef {object} RunStageResult
+ * @property {string} [stage] 阶段。
+ * @property {unknown[]} [items] 处理项。
+ * @property {unknown[]} [skipped] 跳过项。
+ * @property {string[]} [warnings] 提示。
+ */
+
+/**
+ * `regenerateShot` 的返回值。
+ *
+ * @typedef {object} RegenerateShotResult
+ * @property {number} [seq] 章节序号。
+ * @property {number} [idx] 章内镜号。
+ * @property {unknown[]} [items] 处理项。
+ */
+
+/**
+ * 交付 payload 里的章节条目。
+ *
+ * @typedef {object} DeliverChapter
+ * @property {string | null} id 章节 id。
+ * @property {string} title 章节标题。
+ * @property {number} shotCount 镜数。
+ * @property {number} durationSec 时长（秒）。
+ * @property {Array<{ kind: string, label: string, path: string | null, bytes: number | null }>} deliverables 交付物。
+ */
+
+/**
+ * `assembleChapter` 的返回值。
+ *
+ * @typedef {object} AssembleResult
+ * @property {{ chapters?: DeliverChapter[] }} [payload] 交付 payload。
+ */
+
+/**
+ * 回滚命中的变更日志条目。
+ *
+ * @typedef {object} RolledBackEntry
+ * @property {string} entryId 条目 id。
+ * @property {string} layer 层。
+ * @property {string} rowId 行 id。
+ * @property {string} field 字段。
+ * @property {string} op 变更类型。
+ * @property {string | null} [batchId] 批次 id。
+ * @property {string | null} [at] 时间戳。
+ */
+
+/**
+ * `rollback` 的返回值。
+ *
+ * @typedef {object} RollbackResult
+ * @property {RolledBackEntry[]} [rolledBack] 已回滚的条目。
+ */
+
+/**
+ * 执行路径的行数据（`kind × 位置`）。
+ *
+ * @typedef {object} PlanResult
+ * @property {string} [kind] 生成 kind。
+ * @property {string} [position] 运行位置。
+ * @property {string} [provider] provider。
+ * @property {Array<{ kind: string, position: string, sourceFile: string, label: string }>} [candidates] 候选表。
+ */
+
 /** 分镜上可以绑资产的字段。 */
 const BINDABLE_SHOT_FIELDS = Object.freeze([
   'character_ids',
@@ -51,9 +212,13 @@ const BINDABLE_SHOT_FIELDS = Object.freeze([
 /**
  * 构造一个 ReelForge 工具定义。
  *
- * @param {{ name: string, description: string, parameters: object, execute: Function,
+ * @param {{ name: string, description: string, parameters: object,
+ *           execute: (args: any, exec: ToolExecContext) => ToolResult | Promise<ToolResult>,
  *           chatKind?: string, chatData?: (value: unknown) => object }} options 工具定义要素。
  *   `chatKind` = 这个工具的结果要在对话里呈现成哪一类消息行（§10.3 的 7 个 kind）。
+ *   `args` 的形状由各工具自己的 `parameters`（JSON Schema）约束、宿主校验后传入，
+ *   没有一个单一类型能覆盖 15 个工具，故为 `any`；`chatData` 的入参形状则由
+ *   每个调用点自己用 `@param` 声明（见 `ImportNovelResult` 等 typedef）。
  * @returns {object} `ToolDefinition` 普通对象。
  */
 function defineReelForgeTool({ name, description, parameters, execute, chatKind, chatData }) {
@@ -94,7 +259,7 @@ function defineReelForgeTool({ name, description, parameters, execute, chatKind,
 
 /**
  * 渲染给模型看的摘要：去掉 `patch`（那是给日志看的，不是给模型看的）。
- * @param {unknown} value 工具返回值。
+ * @param {Record<string, unknown> | null | undefined} value 工具返回值。
  * @returns {string} 文本。
  */
 function renderSummary(value) {
@@ -105,8 +270,9 @@ function renderSummary(value) {
 
 /**
  * 取出工具执行上下文里的会话信息。
- * @param {object} exec 工具执行上下文。
- * @returns {{ sessionId: string, cwd: string } | { error: string }} 会话信息或错误。
+ *
+ * @param {ToolExecContext} exec 工具执行上下文。
+ * @returns {SessionContext} 会话信息或错误（成功 / 失败二选一）。
  */
 function sessionContext(exec) {
   const session = exec && exec.agent && exec.agent.session;
@@ -295,7 +461,7 @@ export function createToolDefinitions({ store, config, deps = {} }) {
         };
       },
       chatKind: 'reelforge-chapters',
-      chatData: (value) => ({
+      chatData: (/** @param {ImportNovelResult} value @returns {object} */ (value) => ({
         chapters: (value.chapters ?? []).map((chapter) => ({
           id: chapter.seq ?? null,
           title: chapter.title ?? '',
@@ -304,7 +470,7 @@ export function createToolDefinitions({ store, config, deps = {} }) {
           status: 'queued',
           tone: 'queued',
         })),
-      }),
+      })),
     }),
 
     // ── 2. 写分镜（整章） ──
@@ -376,7 +542,7 @@ export function createToolDefinitions({ store, config, deps = {} }) {
         };
       },
       chatKind: 'reelforge-storyboard',
-      chatData: (value) => ({
+      chatData: (/** @param {StoryboardResult} value @returns {object} */ (value) => ({
         seq: value.seq,
         shots: (value.shots ?? []).map((shot) => ({
           id: shot.idx ?? null,
@@ -388,7 +554,7 @@ export function createToolDefinitions({ store, config, deps = {} }) {
           status: 'queued',
           tone: 'queued',
         })),
-      }),
+      })),
     }),
 
     // ── 3. 写上下文三键 ──
@@ -523,7 +689,7 @@ export function createToolDefinitions({ store, config, deps = {} }) {
         return { ok: true, asset, patch: patches };
       },
       chatKind: 'reelforge-assets',
-      chatData: (value) => ({ assets: value.asset ? [value.asset] : [] }),
+      chatData: (/** @param {AssetResult} value @returns {object} */ (value) => ({ assets: value.asset ? [value.asset] : [] })),
     }),
 
     // ── 6. 改资产 ──
@@ -570,7 +736,7 @@ export function createToolDefinitions({ store, config, deps = {} }) {
         return { ok: true, asset, patch: patches };
       },
       chatKind: 'reelforge-assets',
-      chatData: (value) => ({ assets: value.asset ? [value.asset] : [] }),
+      chatData: (/** @param {AssetResult} value @returns {object} */ (value) => ({ assets: value.asset ? [value.asset] : [] })),
     }),
 
     // ── 7. 绑资产到分镜 ──
@@ -678,12 +844,12 @@ export function createToolDefinitions({ store, config, deps = {} }) {
         };
       },
       chatKind: 'reelforge-progress',
-      chatData: (value) => ({
+      chatData: (/** @param {RunStageResult} value @returns {object} */ (value) => ({
         stage: value.stage ?? '',
         chapter: value.items?.length ? `${value.items.length} 项` : '',
         shot: value.skipped?.length ? `跳过 ${value.skipped.length}` : '',
         elapsed: value.warnings?.length ? `${value.warnings.length} 条提示` : '',
-      }),
+      })),
     }),
 
     // ── 9. 重生成单镜（触发类） ──
@@ -767,12 +933,12 @@ export function createToolDefinitions({ store, config, deps = {} }) {
         };
       },
       chatKind: 'reelforge-progress',
-      chatData: (value) => ({
+      chatData: (/** @param {RegenerateShotResult} value @returns {object} */ (value) => ({
         stage: 'video',
         chapter: `第 ${value.seq ?? '?'} 章`,
         shot: `第 ${value.idx ?? '?'} 镜`,
         elapsed: value.items?.length ? '重生成' : '',
-      }),
+      })),
     }),
 
     // ── 10. 合成章节（触发类） ──
@@ -816,7 +982,7 @@ export function createToolDefinitions({ store, config, deps = {} }) {
         };
       },
       chatKind: 'reelforge-deliver',
-      chatData: (value) => ({
+      chatData: (/** @param {AssembleResult} value @returns {object} */ (value) => ({
         chapters: (value.payload?.chapters ?? []).map((chapter) => ({
           id: chapter.id,
           title: chapter.title,
@@ -824,7 +990,7 @@ export function createToolDefinitions({ store, config, deps = {} }) {
           durationSec: chapter.durationSec,
           deliverables: chapter.deliverables,
         })),
-      }),
+      })),
     }),
 
     // ── 11. 指定章节背景音乐 ──
@@ -913,7 +1079,7 @@ export function createToolDefinitions({ store, config, deps = {} }) {
         };
       },
       chatKind: 'reelforge-changelog',
-      chatData: (value) => buildChangelogPayload({
+      chatData: (/** @param {RollbackResult} value @returns {object} */ (value) => buildChangelogPayload({
         entries: (value.rolledBack ?? []).map((item) => ({
           id: item.entryId ?? null,
           at: item.at ?? null,
@@ -921,7 +1087,7 @@ export function createToolDefinitions({ store, config, deps = {} }) {
           field: item.field ?? '*',
           batchId: item.batchId,
         })),
-      }),
+      })),
     }),
 
     // ── 13. 改执行路径（kind × 位置）──
@@ -955,12 +1121,12 @@ export function createToolDefinitions({ store, config, deps = {} }) {
         return { ok: true, ...planOf(args.kind, args.position, provider), patch: patches };
       },
       chatKind: 'reelforge-plan',
-      chatData: (value) => ({
+      chatData: (/** @param {PlanResult} value @returns {object} */ (value) => ({
         kind: value.kind,
         position: value.position,
         provider: value.provider,
         candidates: value.candidates,
-      }),
+      })),
     }),
 
     // ── 14. 读技能正文（只读） ──
@@ -1033,10 +1199,15 @@ function projectContent(value) {
  *
  * ⚠️ D **由调用方传入**——这里按 H3 的约定取 1..15 的整数秒。
  * 写成非整数（比如 4.5）的时长后端会拒，所以门禁与量化都以这张表为准。
+ *
+ * ⚠️ `Object.freeze` 让静态类型成了 `readonly number[]`，而 `quantizeDurations`
+ * 的入参签名是 `number[]`（在 `src/core/quantize.js`，不是本文件能改的）。
+ * 这里用一次**类型断言**把静态类型对齐成 `number[]`：`quantizeDurations` 只**读**
+ * 这个集合，运行时没人改它（冻结本身也在运行时兜底），行为不变。
  */
-const ALLOWED_DURATIONS = Object.freeze(
+const ALLOWED_DURATIONS = /** @type {number[]} */ (Object.freeze(
   Array.from({ length: SHOT_DURATION_MAX - SHOT_DURATION_MIN + 1 }, (_, i) => SHOT_DURATION_MIN + i),
-);
+));
 
 /**
  * 时长量化（§7.2）。
@@ -1131,7 +1302,9 @@ function sourceFileOf(kind, position) {
       hw: 'nvidia',
       specSets,
     });
-    return resolved?.spec?.sourceFile ?? '';
+    // `resolveSpec` 的规格是 `Record<string, unknown>`（规格集里的字段形状不固定），
+    // `sourceFile` 按约定是工作区内的相对路径字符串。
+    return /** @type {string} */ (resolved?.spec?.sourceFile ?? '');
   } catch {
     return '';
   }

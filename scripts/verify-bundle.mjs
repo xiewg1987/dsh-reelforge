@@ -81,17 +81,20 @@ function walk(dir, skip = ['node_modules', '__tests__', '.git']) {
     else fail('清单', `${label} → ${rel} 不存在`);
   }
 
-  // files 里的 glob 要有东西（否则 npm pack 会带一个空目录）
+  // files 里的 glob 要有东西（否则 npm pack 会带一个空目录）。
+  // ⚠️ `!` 开头的是**排除项**（npm 的 negation），不校验「目录存在」——
+  //    `!src/**/__tests__/**` 指向的目录本来就应该存在，排除项没有「命中」语义。
   const patterns = pkg.files ?? [];
   for (const pattern of patterns) {
-    // `dir/**` → dir；`dir/*` → dir；`dir/*.ext` → dir
+    if (pattern.startsWith('!')) continue;
     const base = path.resolve(ROOT, pattern.replace(/\/?\*\*$/, '').replace(/\/\*(\.[^/]+)?$/, ''));
     if (!existsSync(base)) {
       fail('清单', `files 条目「${pattern}」在仓库里没有对应目录`);
     }
   }
   if (!failures.some((item) => item.startsWith('清单'))) {
-    pass('清单', `files 全部命中（${patterns.length} 条）`);
+    const includes = patterns.filter((item) => !item.startsWith('!'));
+    pass('清单', `files 的 ${includes.length} 条包含项全部命中（另有 ${patterns.length - includes.length} 条排除项）`);
   }
 }
 
@@ -442,6 +445,98 @@ function walk(dir, skip = ['node_modules', '__tests__', '.git']) {
   else fail('patch', 'insert 行的 name 不是 @local/reelforge');
   if (hasConfig) pass('patch', 'insert 行带 config 块（R5：可调值进 Config）');
   else fail('patch', 'insert 行没有 config 块');
+
+  // ── R8：Config 三处一致 ────────────────────────────────
+  // config.js 的 CONFIG_DEFAULTS、cordis.patch.yml、patch.dev.yml
+  // 说的是同一份可调值。三处任何一处单独改，另外两处不跟，就会出现
+  // 「联调时是一套配置、装进宿主后是另一套」——而且**不报错**，只是行为不同。
+  {
+    /**
+     * 解析 patch 文件里的 config 块，摊平成 `a.b` → 标量。
+     *
+     * 只支持这两个 patch 文件用到的 YAML 子集（两层缩进、标量值），
+     * 不引 YAML 解析器——本项目坚持零 npm 运行时依赖。
+     *
+     * @param {string} text 文件全文。
+     * @returns {Record<string, unknown>} 摊平后的键值。
+     */
+    const parsePatchConfig = (text) => {
+      /** @type {Record<string, unknown>} */
+      const flat = {};
+      const lines = text.split(/\r?\n/);
+      const configIndex = lines.findIndex((line) => /^\s*config:\s*$/.test(line));
+      if (configIndex === -1) return flat;
+      const configIndent = lines[configIndex].match(/^\s*/)[0].length;
+      /** config 的直接子项缩进。 */
+      const childIndent = configIndent + 2;
+      /** 当前嵌套前缀（`stages` 之类）。 */
+      let prefix = '';
+      for (let i = configIndex + 1; i < lines.length; i += 1) {
+        const line = lines[i];
+        if (line.trim() === '' || line.trim().startsWith('#')) continue;
+        const indent = line.match(/^\s*/)[0].length;
+        if (indent <= configIndent) break;
+        const match = line.trim().match(/^([A-Za-z_][A-Za-z0-9_]*):\s*(.*)$/);
+        if (!match) continue;
+        const [, key, rawValue] = match;
+        // 回到 config 的直接子项层级时，前一个嵌套前缀必须丢掉，
+        // 否则 `stages:` 之后的所有字段都会被错记成 `stages.xxx`。
+        if (indent === childIndent) prefix = '';
+        if (rawValue === '') {
+          prefix = `${prefix}${key}.`;
+          continue;
+        }
+        // ⚠️ 标量与原始文本要分开存：`value` 一旦被标成 `unknown`，
+        // 就不能再拿它去跑正则（正则只吃 string）。
+        const raw = rawValue.replace(/^['"]|['"]$/g, '');
+        /** @type {unknown} */
+        let value = raw;
+        if (raw === 'true') value = true;
+        else if (raw === 'false') value = false;
+        else if (raw === 'null' || raw === '~') value = null;
+        else if (/^-?\d+(\.\d+)?$/.test(raw)) value = Number(raw);
+        flat[`${prefix}${key}`] = value;
+      }
+      return flat;
+    };
+
+    const defaults = (await import(pathToFileURL(path.join(ROOT, 'src', 'host', 'config.js')).href))
+      .CONFIG_DEFAULTS;
+    /** @type {Record<string, unknown>} */
+    const expected = {};
+    for (const [key, value] of Object.entries(defaults)) {
+      // `deps` 是宿主注入的能力对象，不是可调值，不在 patch 里出现。
+      if (key === 'deps') continue;
+      if (value && typeof value === 'object') {
+        for (const [sub, subValue] of Object.entries(value)) expected[`${key}.${sub}`] = subValue;
+      } else {
+        expected[key] = value;
+      }
+    }
+
+    const patchFiles = ['cordis.patch.yml', 'patch.dev.yml'];
+    for (const fileName of patchFiles) {
+      const filePath = path.join(ROOT, fileName);
+      if (!existsSync(filePath)) {
+        fail('R8', `${fileName} 不存在`);
+        continue;
+      }
+      const actual = parsePatchConfig(readFileSync(filePath, 'utf8'));
+      const diffs = [];
+      for (const [key, want] of Object.entries(expected)) {
+        if (!(key in actual)) diffs.push(`${key} 缺失（应为 ${JSON.stringify(want)}）`);
+        else if (actual[key] !== want) diffs.push(`${key} = ${JSON.stringify(actual[key])}，应为 ${JSON.stringify(want)}`);
+      }
+      for (const key of Object.keys(actual)) {
+        if (!(key in expected)) diffs.push(`${key} 多余（Config 里没有这个字段）`);
+      }
+      if (diffs.length === 0) {
+        pass('R8', `${fileName} 的 config 与 CONFIG_DEFAULTS 逐项一致（${Object.keys(expected).length} 项）`);
+      } else {
+        fail('R8', `${fileName} 的 config 与 CONFIG_DEFAULTS 不一致：${diffs.join('；')}`);
+      }
+    }
+  }
 }
 
 // ── 汇总 ─────────────────────────────────────────────────

@@ -92,6 +92,7 @@ export function createChapter(input = {}) {
  * @returns {object} 分镜对象。
  */
 export function createShot(input = {}) {
+  /** @type {Record<string, unknown>} */
   const shot = {};
   for (const field of SHOT_CONTENT_FIELDS) {
     if (!(field in input)) continue;

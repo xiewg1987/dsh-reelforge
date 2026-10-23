@@ -113,10 +113,18 @@ export function computeFingerprint(content) {
 }
 
 /**
+ * 各阶段的并发上限。
+ * @typedef {object} ConcurrencyTable
+ * @property {number} video
+ * @property {number} runninghub
+ * @property {number} image
+ */
+
+/**
  * 组装指纹输入（规格 id + 提示词 + 参考素材指纹 + seed + 参数）。
  *
  * @param {object} options
- * @param {{ id?: string, kind?: string }} options.spec
+ * @param {{ id?: string, kind?: string }} [options.spec]
  * @param {string} [options.prompt]
  * @param {string} [options.negativePrompt]
  * @param {Array<{ path?: string, label?: string, assetId?: string }>} [options.refs]
@@ -190,7 +198,7 @@ export async function rewritePrompt({ text, rewrite, maxAttempts = PROMPT_REWRIT
  * 队列等待上限：超过就**放弃并报错**（不无限等、不静默跳过）。
  *
  * @param {object} options
- * @param {number} options.limit
+ * @param {number} [options.limit]
  * @param {() => number} [options.now]
  * @param {number} [options.waitLimitMs]
  */
@@ -243,7 +251,7 @@ export function createLimiter({ limit = 1, now = () => Date.now(), waitLimitMs =
  * 某阶段的并发上限。
  * @param {string} stage
  * @param {{ position?: string, provider?: string }} request
- * @param {Record<string, number>} [table]
+ * @param {ConcurrencyTable} [table]
  */
 export function resolveConcurrency(stage, request = {}, table = CONCURRENCY) {
   if (request.position === 'cloud' && request.provider === 'runninghub') {
@@ -289,7 +297,7 @@ export function assertProductShape(product) {
  * 判定依据是 constants.js 里的 `isTriggerTool()`（F8）。
  *
  * @param {object} options
- * @param {string} options.toolId
+ * @param {string} [options.toolId]
  * @param {string[]} [options.stages]
  * @param {string} [options.summary]
  * @returns {{ kind: 'ask', reason: string, displayReason: { en: string, zh: string } }|{ kind: 'allow' }}
@@ -318,9 +326,9 @@ export function buildToolApproval({ toolId, stages = [], summary = '' } = {}) {
  * 阶段依赖检查（硬依赖 = 报错；软依赖 = 降质但说出来）。
  *
  * @param {string} stage
- * @param {object} context
- * @param {object} context.request
- * @param {string[]} context.completedStages
+ * @param {object} [context]
+ * @param {object} [context.request]
+ * @param {string[]} [context.completedStages]
  */
 export function checkStageDependencies(stage, { request = {}, completedStages = [] } = {}) {
   const errors = [];
@@ -358,6 +366,9 @@ export function checkStageDependencies(stage, { request = {}, completedStages = 
  *   **F6**：T2 提供的参考装配。本模块只消费。
  * @param {() => number} [deps.now]
  * @param {AbortSignal} [deps.signal]
+ * @param {ConcurrencyTable} [deps.concurrency] 各阶段的并发上限
+ * @param {number} [deps.queueWaitLimitMs] 队列等待上限（毫秒）
+ * @param {object} [deps.refsOptions] 传给 `resolveRefs` 的参考装配选项
  */
 export function createStageOrchestrator(deps = {}) {
   const {
