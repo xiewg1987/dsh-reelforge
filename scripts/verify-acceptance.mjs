@@ -54,8 +54,8 @@ const DOC_DIR = path.join(ROOT, 'docs', '开发任务');
  */
 
 /** 任务书里验收项的总数与分布。解析数量对不上就报错退出——宁可炸，也不要悄悄少判。 */
-const EXPECTED_TOTAL = 116;
-const EXPECTED_PER_TASK = { T1: 12, T2: 21, T3: 23, T4: 22, T5: 38 };
+const EXPECTED_TOTAL = 120;
+const EXPECTED_PER_TASK = { T1: 12, T2: 21, T3: 23, T4: 22, T5: 42 };
 
 /** 任务书文件清单（验收表在各自 §5）。 */
 const TASK_DOCS = [
@@ -412,6 +412,74 @@ export const ACCEPTANCE_MAP = [
   { task: 'T5', id: 'A36', kind: 'na', note: '同上：无分片即无 rev 对齐问题' },
   { task: 'T5', id: 'A37', files: ['src/client/__tests__/t5-client.test.js'], names: ['client.js 与 src/client/** 的构建产物一致'], scan: { pattern: 'external\\s*:', globs: ['src/client/build-client.mjs'], expect: 'absent' }, note: '无 bundler / 无 externals 配置项' },
   { task: 'T5', id: 'A38', cmd: { argv: ['npm', 'pack', '--dry-run'], outputMustNotMatch: 'node_modules|[\\\\/]lib[\\\\/]|chunk-' }, note: 'dry-run 清单里没有陈旧分片与第三方正文' },
+  // ── 流程屏（设计稿 02 / 03 / 04 / 05 / 06 / 16）──
+  {
+    task: 'T5',
+    id: 'A39',
+    kind: 'live',
+    live: {
+      file: 'docs/开发任务/实机/dsh-0.2.1-alpha.1.md',
+      mustContain: [
+        '| 02 导入 | 粘贴正文，ReelForge 自动拆章 | 新项目 | 无 |',
+        '| 03 运行位置 | 同一批工作流，跑在这台机器还是云端 | 2 种位置 | 无 |',
+        '| 04 设备检查 | 本地档要过 9 项探测 | 9 项探测 | 无 |',
+        '| 05 执行路径 | 哪种生成方式，跑在哪台机器上 | 5 种 kind | 无 |',
+        '| 06 执行阶段 | 四个阶段，可按章勾选 | 4 个阶段 | 无 |',
+        '| 16 降级矩阵 | 缺什么就说清楚，不假装成功 | 7 种缺失 | 无 |',
+        '控制台错误条数：**0**。',
+      ],
+    },
+    note: 'DSH 0.2.1-alpha.1 实机：六块流程屏逐屏可达，标题 / 副标 / 胶囊逐屏切换，流程屏里没有页签条（两层：项目视图 7 页签 + 流程屏 6 块）',
+  },
+  {
+    task: 'T5',
+    id: 'A40',
+    kind: 'live',
+    live: {
+      file: 'docs/开发任务/实机/dsh-0.2.1-alpha.1.md',
+      mustContain: [
+        'ComfyUI 可达',
+        'CK 版本',
+        'provider 规格',
+        '本机跑不满当前方案',
+        '改用云端运行',
+        '只跑到 image 阶段',
+        '9 行是否齐：**齐**。',
+      ],
+    },
+    note: 'DSH 0.2.1-alpha.1 实机：设备检查屏 9 行探测表按设计稿行序渲染，失败时给结论卡 + 两个出路（不给死路）',
+  },
+  {
+    task: 'T5',
+    id: 'A41',
+    kind: 'live',
+    live: {
+      file: 'docs/开发任务/实机/dsh-0.2.1-alpha.1.md',
+      mustContain: [
+        '视频通道不可用',
+        '音色缺失',
+        '模型通道不可达',
+        '静音成片',
+        '占位帧',
+        '成片页有「查看降级说明」按钮：**有**。',
+        '- 降级矩阵屏 `rf-matrix` 行数 = **8**（表头 1 行 + 数据 7 行）。',
+      ],
+    },
+    note: 'DSH 0.2.1-alpha.1 实机：降级矩阵 7 行 × 3 类交付物（成片 / 分镜表 / 参考图），成片页**空态**也有降级入口',
+  },
+  {
+    task: 'T5',
+    id: 'A42',
+    kind: 'live',
+    live: {
+      file: 'docs/开发任务/实机/dsh-0.2.1-alpha.1.md',
+      mustContain: [
+        '- 03 运行位置屏：`rf-grid--two` 网格数 = **1**（两张并列大卡）。',
+        '- 05 执行路径屏：`rf-grid--two` 网格数 = **1**（2×2 矩阵）。',
+      ],
+    },
+    note: 'DSH 0.2.1-alpha.1 实机：板 03 两张并列大卡 / 板 05 2×2 矩阵（两列网格门槛 560 = STYLE-SPEC §1 净宽 520 + 左右各 20 外边距）',
+  },
 ];
 
 /* ────────────────────────────── 工具函数 ────────────────────────────── */
@@ -867,7 +935,7 @@ export function renderAcceptanceReport(result) {
     '',
     '### 汇总',
     '',
-    `- 验收项总数：**${result.total}**（T1 12 / T2 21 / T3 23 / T4 22 / T5 38）`,
+    `- 验收项总数：**${result.total}**（${Object.entries(EXPECTED_PER_TASK).map(([task, n]) => `${task} ${n}`).join(' / ')}）`,
     `- ${STATUS.PASS}：**${result.counts[STATUS.PASS]}**`,
     `- ${STATUS.LIVE}：**${result.counts[STATUS.LIVE]}**`,
     `- ${STATUS.MISSING}：**${result.counts[STATUS.MISSING]}**`,

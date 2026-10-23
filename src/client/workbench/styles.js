@@ -37,6 +37,12 @@
   background: var(--dsw-alias-brand-primary);
   flex: 0 0 auto;
 }
+/* 流程屏里，面板头 logo 是「回到工作台」的出口。 */
+.rf-header__logo--button {
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
 .rf-header__text { min-width: 0; flex: 1 1 auto; }
 .rf-header__title {
   font-size: 15px;
@@ -73,6 +79,13 @@
   border-radius: 6px;
   font-size: 11px;
   white-space: nowrap;
+  /* StageBar 的步点是**可点**的（点哪一步到那一屏）—— 按钮态要复位，
+     底色与文字色交给 current / passed / upcoming 三个修饰类。 */
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  color: inherit;
+  cursor: pointer;
 }
 .rf-stagebar__step--current {
   background: var(--dsw-alias-button-primary-dimmed);
@@ -195,6 +208,16 @@
 }
 .rf-input--focus { border-color: var(--dsw-alias-state-business-primary); }
 .rf-input--error { border-color: var(--dsw-alias-state-error-primary); color: var(--dsw-alias-state-error-primary); }
+/* 多行正文（板 02 的「小说正文」输入）。 */
+.rf-textarea {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 120px;
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.5;
+}
 .rf-pill {
   display: inline-flex;
   align-items: center;
@@ -229,6 +252,11 @@
 .rf-row__main { flex: 1 1 auto; min-width: 0; }
 .rf-row__title { font-size: 12px; color: var(--dsw-alias-label-primary); }
 .rf-row__sub { font-size: 11px; color: var(--dsw-alias-label-tertiary); }
+/* 降级矩阵（板 16 号板）：缺失项 + 3 列产出形态。
+   第一列吃掉剩余宽度，三列按内容宽度 —— 窄栏（300px）也不破版。 */
+.rf-matrix { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; gap: 8px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--dsw-alias-border-l1); }
+.rf-matrix:last-child { border-bottom: 0; }
+.rf-matrix__head { font-size: 11px; color: var(--dsw-alias-label-tertiary); }
 .rf-note { font-size: 11px; color: var(--dsw-alias-label-caption); margin-top: 8px; }
 .rf-note--warn { color: var(--dsw-alias-state-warn-label); }
 .rf-note--error { color: var(--dsw-alias-state-error-primary); }

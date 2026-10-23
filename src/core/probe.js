@@ -297,14 +297,29 @@ export async function probeCapabilities({ position, provider, deps = {}, now = (
   if (scope.includes('vram')) {
     let vramGb = null;
     let source = null;
-    const smi = await run('nvidia-smi', ['--query-gpu=memory.total', '--format=csv,noheader,nounits']);
+    let gpuName = null;
+    // 一次问两件事：显卡名 + 总显存。
+    // 用 `lastIndexOf(',')` 切分 —— GPU 名字里理论上不会有逗号，真有的话 CSV 会加引号，
+    // 取最后一段逗号前的内容最稳（取第一段逗号会把 "NVIDIA GeForce RTX 4070" 切坏）。
+    const smi = await run('nvidia-smi', ['--query-gpu=name,memory.total', '--format=csv,noheader,nounits']);
     if (smi?.code === 0) {
-      const numbers = String(smi.stdout)
+      const lines = String(smi.stdout)
         .split('\n')
-        .map((line) => Number(line.trim()))
-        .filter((n) => Number.isFinite(n) && n > 0);
-      if (numbers.length > 0) {
-        vramGb = Math.round((numbers.reduce((a, b) => a + b, 0) / 1024) * 10) / 10;
+        .map(line => line.trim())
+        .filter(line => line !== '');
+      const sizes = [];
+      for (const line of lines) {
+        const cut = line.lastIndexOf(',');
+        const name = cut >= 0 ? line.slice(0, cut).trim() : '';
+        const raw = cut >= 0 ? line.slice(cut + 1).trim() : line;
+        const size = Number(raw);
+        if (Number.isFinite(size) && size > 0) {
+          sizes.push(size);
+          if (gpuName === null && name !== '') gpuName = name;
+        }
+      }
+      if (sizes.length > 0) {
+        vramGb = Math.round((sizes.reduce((a, b) => a + b, 0) / 1024) * 10) / 10;
         source = 'nvidia-smi';
       }
     }
@@ -323,7 +338,9 @@ export async function probeCapabilities({ position, provider, deps = {}, now = (
       'vram',
       status,
       vramGb === null ? '读不到显存余量' : `显存 ${vramGb}GB（${source}）`,
-      { value: vramGb, source },
+      // `gpuName` 单独带出来：设计稿 04 号板把「GPU」单列成一行（型号 + 厂商），
+      // 而探测项只有一个 `vram` —— 型号是它的副产品，不另起一次 nvidia-smi 调用。
+      { value: vramGb, source, gpuName },
     );
   }
 

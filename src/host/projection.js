@@ -28,13 +28,17 @@
 import {
   CHANGELOG_VIEW_LIMIT,
   CONTEXT_KEYS,
+  FALLBACK_CHAPTER_CHARS,
   ROLLBACK_MODES,
   SHOT_DURATION_DEFAULT,
   SHOT_DURATION_MAX,
   SHOT_DURATION_MIN,
+  STAGES,
 } from '../core/constants.js';
 import { extractCapturedInput } from '../core/inputCapture.js';
 import { resolveRefs } from '../core/refs.js';
+import { findChapterHeadings } from '../core/splitChapters.js';
+import { planMatrix } from './specMatrix.js';
 
 /** 投影状态版本。状态字段或 fold 语义变化时**必须 +1**，否则旧的持久化缓存会被错误复用。 */
 export const STATE_VERSION = 2;
@@ -522,13 +526,15 @@ function chapterStages(chapter) {
  * 引用变了就会触发一次无谓的下发。
  *
  * @param {object} state 投影状态。
- * @param {{ budgetLimitCny?: number, skills?: Array<object> }} [options] 来自 `Config` 的运行参数
- *   与宿主侧的只读资源。
+ * @param {{ budgetLimitCny?: number, skills?: Array<object>, stages?: Record<string, boolean>, defaults?: { enableBgm?: boolean, enableSubtitles?: boolean, targetDuration?: number|null } }} [options]
+ *   来自 `Config` 的运行参数与宿主侧的只读资源。
  *   `budgetLimitCny` 是**预算上限**（元），设计 T1 §config：上限走 Config、不硬编码。
  *   不传时按 0 处理（没有 Config 的纯投影场景）。
  *   `skills` 是**技能目录**（磁盘上的只读资源，不是会话状态）——技能文件本来就是
  *   磁盘上的事实源，没有「从日志 fold 出来」这回事，所以由宿主侧扫描后注入。
  *   不传时按空数组处理（技能页显示空态，而不是假装有技能）。
+ *   `stages` 是**全局四阶段开关**（Config 的可调值）——板 06 号板「四张全局阶段卡」
+ *   的勾选初值。不传时按「全开」处理（Config 的默认值就是全开）。
  * @returns {object} 客户端视图。
  */
 export function buildWireView(state, options = {}) {
@@ -537,6 +543,9 @@ export function buildWireView(state, options = {}) {
     ? options.budgetLimitCny
     : 0;
   const skills = Array.isArray(options.skills) ? options.skills : [];
+  const globalStages = Array.isArray(STAGES)
+    ? STAGES.filter(stage => (options.stages ?? {})[stage] !== false)
+    : [];
   const project = current.project ?? {};
   const assets = Array.isArray(current.assets) ? current.assets : [];
   const chapters = Array.isArray(current.chapters) ? current.chapters : [];
@@ -610,6 +619,39 @@ export function buildWireView(state, options = {}) {
       ? { kind: plan.kind, position: plan.position ?? '', provider: plan.provider ?? '' }
       : null,
     stage: deriveStage(current, { plan, deliverables }),
+    // ── 需求（板 02）────────────────────────────────────────
+    // 只给**字数**与**检测到的章节标题**，**不给正文** ——
+    // 正文动辄几万字，塞进会话投影会把它撑爆（界面也不需要正文）。
+    intake: {
+      chars: String(project.novel ?? '').length,
+      headings: findChapterHeadings(project.novel ?? '').map((heading, index) => ({
+        seq: index + 1,
+        title: heading.title,
+      })),
+      fallbackChars: FALLBACK_CHAPTER_CHARS,
+    },
+    // 项目设置（板 02 的「项目设置卡」）：画幅 / 分辨率 / 目标时长 / BGM。
+    // 项目层没写过的项回落到 **Config 默认值**（那是可调值的唯一来源）。
+    settings: {
+      aspectRatio: project.video_aspect_ratio ?? '',
+      resolution: project.video_resolution ?? '',
+      targetDuration: Number.isFinite(project.target_duration)
+        ? Number(project.target_duration)
+        : (Number.isFinite(options.defaults?.targetDuration) ? Number(options.defaults.targetDuration) : null),
+      enableBgm: project.enable_bgm === undefined
+        ? options.defaults?.enableBgm === true
+        : project.enable_bgm === true,
+      enableSubtitles: project.enable_subtitles === undefined
+        ? options.defaults?.enableSubtitles === true
+        : project.enable_subtitles === true,
+    },
+    // 执行路径矩阵（板 05）：kind × 位置的规格来源（随包只读资源，宿主侧读一次）。
+    planMatrix: planMatrix(),
+    // 执行阶段（板 06）：全局开关（Config）+ 按章覆盖（章节实际跑过的阶段）。
+    stages: {
+      global: globalStages,
+      byChapter: chapterViews.map(chapter => ({ seq: chapter.id, stages: chapter.stages })),
+    },
     chapters: chapterViews,
     shots: shotViews,
     assets: assets.map((asset) => ({

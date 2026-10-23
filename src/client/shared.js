@@ -24,12 +24,49 @@
     skills: [],
     deliverables: [],
     changelog: { entries: [], total: 0, modes: ['single', 'batch', 'timepoint'] },
+    // 需求（板 02）：正文规模 + 检测到的章节标题（**没有正文**）。
+    intake: { chars: 0, headings: [], fallbackChars: 0 },
+    // 项目设置（板 02）：画幅 / 分辨率 / 目标时长 / BGM。
+    settings: {
+      aspectRatio: '',
+      resolution: '',
+      targetDuration: null,
+      enableBgm: false,
+      enableSubtitles: false,
+    },
+    // 执行路径矩阵（板 05）：kind × 位置的规格来源。
+    planMatrix: [],
+    // 执行阶段（板 06）：全局开关 + 按章覆盖。
+    stages: { global: [], byChapter: [] },
     // 对话输入截获（§10.5）：用户在 DSH 输入框里敲的原文，由宿主钩子写进状态。
     input: { text: '' },
     cost: { spent: 0, cap: 0 },
     budget: {},
     workflowAnalysis: null,
   });
+
+  /**
+   * 设备检查 / 降级矩阵的宿主路由 URL（板 04 / 16 号板）。
+   *
+   * 探测结果是**能力事实**，不是会话状态 ⇒ 不进 wire view，走一条独立只读路由
+   * （宿主半 `src/host/probeRoute.js`）。`refresh=1` 绕过宿主侧缓存强制重跑。
+   *
+   * @param {{ position?: string, provider?: string, refresh?: boolean }} [options] - 选项。
+   * @returns {string} 同源 URL。
+   */
+  RF.probeUrl = function probeUrl(options = {}) {
+    const query = new URLSearchParams();
+    const sessionId = RF.currentSessionId ?? '';
+    if (sessionId !== '') query.set('session', sessionId);
+    if (typeof options.position === 'string' && options.position !== '') {
+      query.set('position', options.position);
+    }
+    if (typeof options.provider === 'string' && options.provider !== '') {
+      query.set('provider', options.provider);
+    }
+    if (options.refresh === true) query.set('refresh', '1');
+    return `/api/reelforge.probe?${query.toString()}`;
+  };
 
   /**
    * 会话指令的请求 id。

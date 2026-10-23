@@ -64,6 +64,59 @@ const PACK_RANK = Object.freeze({
 export const FORBIDDEN_COMPLETION_WORDS = Object.freeze(['已完成']);
 
 /**
+ * 每种降级**固定**的产出矩阵（成片 / 分镜表 / 参考图包）。
+ *
+ * ## 为什么抽成一张表
+ *
+ * 设计稿板 16 要在界面上画一张「7 种缺失 × 3 类交付物」的矩阵。
+ * 如果这张表另写一份，它就会和 `detectDegradations` **各说各话** ——
+ * 界面画着「有」，实际交付时是「无」，那就是**界面在撒谎**。
+ * ⇒ 判定与矩阵**必须同源**：判定从这张表取产出形态，矩阵也由这张表生成。
+ *
+ * ⚠️ 画板 16 的行名与 §9.3 的 kind 名**并不一一对应**（画板多一行「BGM 失败」，
+ * 实现多两条「provider 挂」；两边对「显存不足」的成片口径也不同）。
+ * 那是规格内部冲突（差距表 §5 C6），**本轮不自行裁决** ——
+ * 这里只保证「矩阵 = 实现真实行为」，行名差异在差距表里记着。
+ */
+export const DEGRADE_MATRIX = Object.freeze({
+  [DEGRADE_KINDS.videoProviderDown]: Object.freeze({
+    video: DEGRADE_OUTPUTS.videoNone,
+    storyboard: true,
+    referencePack: DEGRADE_OUTPUTS.packFull,
+  }),
+  [DEGRADE_KINDS.imageProviderDown]: Object.freeze({
+    video: DEGRADE_OUTPUTS.videoTextCard,
+    storyboard: true,
+    referencePack: DEGRADE_OUTPUTS.packTextCard,
+  }),
+  [DEGRADE_KINDS.voiceMissing]: Object.freeze({
+    video: DEGRADE_OUTPUTS.videoSilent,
+    storyboard: true,
+    referencePack: DEGRADE_OUTPUTS.packFull,
+  }),
+  [DEGRADE_KINDS.ffmpegMissing]: Object.freeze({
+    video: DEGRADE_OUTPUTS.videoNone,
+    storyboard: true,
+    referencePack: DEGRADE_OUTPUTS.packFull,
+  }),
+  [DEGRADE_KINDS.partialShotFailed]: Object.freeze({
+    video: DEGRADE_OUTPUTS.videoPlaceholder,
+    storyboard: true,
+    referencePack: DEGRADE_OUTPUTS.packPartial,
+  }),
+  [DEGRADE_KINDS.vramInsufficient]: Object.freeze({
+    video: DEGRADE_OUTPUTS.videoNone,
+    storyboard: true,
+    referencePack: DEGRADE_OUTPUTS.packFull,
+  }),
+  [DEGRADE_KINDS.modelChannelUnreachable]: Object.freeze({
+    video: DEGRADE_OUTPUTS.videoNone,
+    storyboard: true,
+    referencePack: DEGRADE_OUTPUTS.packNone,
+  }),
+});
+
+/**
  * 话术里是否混进了「假装完成」的说法。
  * @param {string} message
  */
@@ -131,11 +184,7 @@ export function detectDegradations(input = {}) {
     const reason = video.reason || '视频 provider 全部失败';
     degradations.push({
       kind: DEGRADE_KINDS.videoProviderDown,
-      outputs: {
-        video: DEGRADE_OUTPUTS.videoNone,
-        storyboard: true,
-        referencePack: DEGRADE_OUTPUTS.packFull,
-      },
+      outputs: DEGRADE_MATRIX[DEGRADE_KINDS.videoProviderDown],
       message: `未生成视频：${reason}。已交付分镜与提示词，可在别处生成后回来合成`,
       details: { reason },
     });
@@ -146,11 +195,7 @@ export function detectDegradations(input = {}) {
     const reason = image.reason || '图像 provider 不可用';
     degradations.push({
       kind: DEGRADE_KINDS.imageProviderDown,
-      outputs: {
-        video: DEGRADE_OUTPUTS.videoTextCard,
-        storyboard: true,
-        referencePack: DEGRADE_OUTPUTS.packTextCard,
-      },
+      outputs: DEGRADE_MATRIX[DEGRADE_KINDS.imageProviderDown],
       message: `参考图不可用，已用文字卡占位。视频阶段硬依赖参考图，本次未能跑视频阶段（原因：${reason}）`,
       details: { reason, hardDependency: 'image' },
     });
@@ -159,11 +204,7 @@ export function detectDegradations(input = {}) {
   for (const voice of normalizeVoices(input.missingVoices)) {
     degradations.push({
       kind: DEGRADE_KINDS.voiceMissing,
-      outputs: {
-        video: DEGRADE_OUTPUTS.videoSilent,
-        storyboard: true,
-        referencePack: DEGRADE_OUTPUTS.packFull,
-      },
+      outputs: DEGRADE_MATRIX[DEGRADE_KINDS.voiceMissing],
       message: `${voice.name} 的参考音不可用，该镜声音已缺失`,
       details: { name: voice.name, reason: voice.reason, softDependency: 'tts' },
     });
@@ -172,11 +213,7 @@ export function detectDegradations(input = {}) {
   if (input.ffmpegAvailable === false) {
     degradations.push({
       kind: DEGRADE_KINDS.ffmpegMissing,
-      outputs: {
-        video: DEGRADE_OUTPUTS.videoNone,
-        storyboard: true,
-        referencePack: DEGRADE_OUTPUTS.packFull,
-      },
+      outputs: DEGRADE_MATRIX[DEGRADE_KINDS.ffmpegMissing],
       message: '本机缺 ffmpeg，未能出成片；附拼接命令',
       details: { reason: input.ffmpegReason ?? null },
     });
@@ -187,11 +224,7 @@ export function detectDegradations(input = {}) {
   if (failedNumbers) {
     degradations.push({
       kind: DEGRADE_KINDS.partialShotFailed,
-      outputs: {
-        video: DEGRADE_OUTPUTS.videoPlaceholder,
-        storyboard: true,
-        referencePack: DEGRADE_OUTPUTS.packPartial,
-      },
+      outputs: DEGRADE_MATRIX[DEGRADE_KINDS.partialShotFailed],
       message: `第 ${failedNumbers} 镜生成失败，已用占位帧占位`,
       details: { shots: failedNumbers.split('、').map(Number) },
     });
@@ -204,11 +237,7 @@ export function detectDegradations(input = {}) {
   if (vramGb !== null && vramGb < requiredGb) {
     degradations.push({
       kind: DEGRADE_KINDS.vramInsufficient,
-      outputs: {
-        video: DEGRADE_OUTPUTS.videoNone,
-        storyboard: true,
-        referencePack: DEGRADE_OUTPUTS.packFull,
-      },
+      outputs: DEGRADE_MATRIX[DEGRADE_KINDS.vramInsufficient],
       message: `显存不足 ${requiredGb}GB，本机跑不动视频阶段；已交付分镜与参考图`,
       details: { vramGb, requiredGb },
     });
@@ -217,11 +246,7 @@ export function detectDegradations(input = {}) {
   if (input.modelChannelReachable === false) {
     degradations.push({
       kind: DEGRADE_KINDS.modelChannelUnreachable,
-      outputs: {
-        video: DEGRADE_OUTPUTS.videoNone,
-        storyboard: true,
-        referencePack: DEGRADE_OUTPUTS.packNone,
-      },
+      outputs: DEGRADE_MATRIX[DEGRADE_KINDS.modelChannelUnreachable],
       message: '模型通道不可达，本次只产出分镜',
       details: {},
     });
@@ -276,4 +301,86 @@ export function evaluateDegradation(input = {}) {
     outputs: resolveOutputs(degradations),
     notices: degradeNotices(degradations),
   };
+}
+
+/**
+ * 降级矩阵（界面用）—— **由 {@link DEGRADE_MATRIX} 生成**，不另写一份。
+ *
+ * 顺序 = `DEGRADE_KINDS` 的声明顺序（字符串键的插入序）。
+ *
+ * @returns {Array<{kind: string, video: string, storyboard: boolean, referencePack: string}>} 矩阵行。
+ */
+export function degradeMatrix() {
+  return Object.keys(DEGRADE_MATRIX).map(kind => {
+    const outputs = DEGRADE_MATRIX[kind];
+    return {
+      kind,
+      video: outputs.video,
+      storyboard: outputs.storyboard,
+      referencePack: outputs.referencePack,
+    };
+  });
+}
+
+/**
+ * 由**能力事实**（探测报告）推出降级条目。
+ *
+ * ## 映射口径（每一条都写清楚为什么）
+ *
+ * | 探测项坏了 | 降级 kind | 为什么 |
+ * | --- | --- | --- |
+ * | `comfy`（本地档 ComfyUI 不可达） | `imageProviderDown` + `videoProviderDown` | 图像与视频两条线都跑不了 |
+ * | `provider`（云端 provider 不可达） | `imageProviderDown` + `videoProviderDown` | 同上，云端侧 |
+ * | `llm`（模型通道不可达） | `modelChannelUnreachable` | 阶段一都跑不了，只剩分镜 |
+ * | `ffmpeg`（缺 ffmpeg） | `ffmpegMissing` | 合成不了成片 |
+ * | `vram` 低于门槛 | `vramInsufficient` | 门槛不足，**明说**不拆批 |
+ * | 失败镜号（会话状态） | `partialShotFailed` | 失败镜用占位帧占位 |
+ * | 缺音色（会话状态） | `voiceMissing` | 软依赖缺失也要说出来 |
+ *
+ * ⚠️ 这只是**能力层面**的降级。项目状态层面的降级（失败镜、缺音色）由调用方从
+ * 会话投影里取出来，用 `extra` 传进来 —— 本模块不碰 ctx，也不读会话。
+ *
+ * @param {object} report `probeCapabilities()` 的报告。
+ * @param {{ failedShots?: Array<number>, missingVoices?: Array<string|{name:string}> }} [extra]
+ *   会话状态层面的事实。
+ * @returns {Array<object>} 降级条目（与 {@link detectDegradations} 同形）。
+ */
+export function degradeFromProbe(report, extra = {}) {
+  const items = Array.isArray(report?.items) ? report.items : [];
+  const byId = new Map(items.map(item => [item.id, item]));
+  const failed = id => byId.get(id)?.status === 'failed';
+  const valueOf = id => byId.get(id)?.value;
+
+  /** @type {object} */
+  const input = {};
+
+  if (failed('comfy')) {
+    const reason = 'ComfyUI 不可达';
+    input.imageProviderDown = { reason };
+    input.videoProviderDown = { reason };
+  }
+  if (failed('provider')) {
+    const reason = `provider ${report?.provider ?? 'cloud'} 不可达`;
+    input.imageProviderDown = input.imageProviderDown ?? { reason };
+    input.videoProviderDown = input.videoProviderDown ?? { reason };
+  }
+  if (failed('llm')) {
+    input.modelChannelReachable = false;
+  }
+  if (failed('ffmpeg')) {
+    input.ffmpegAvailable = false;
+    input.ffmpegReason = byId.get('ffmpeg')?.message ?? null;
+  }
+  const vramGb = Number(valueOf('vram'));
+  if (Number.isFinite(vramGb) && vramGb > 0) {
+    input.vramGb = vramGb;
+  }
+  if (Array.isArray(extra.failedShots) && extra.failedShots.length > 0) {
+    input.failedShots = extra.failedShots;
+  }
+  if (Array.isArray(extra.missingVoices) && extra.missingVoices.length > 0) {
+    input.missingVoices = extra.missingVoices;
+  }
+
+  return detectDegradations(input);
 }

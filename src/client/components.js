@@ -98,14 +98,35 @@
 
   /**
    * 卡片：默认 / 选中 / 禁用。
+   *
+   * ⚠️ 带 `onClick` 的卡片**必须键盘可达**：只挂 `onClick` 的 `div`
+   * 鼠标能用、键盘用不了（实机验证时抓到的：运行位置屏的两张大卡
+   * 与分镜/技能的选择卡都只能靠鼠标）。
+   *
+   * ⇒ 可点时补 `role="button"` + `tabIndex` + Enter/Space 键。
+   * 事件来自卡片**内部**的按钮时**不重复触发**卡片自己的动作
+   * （否则在子按钮上按 Enter 会同时选中卡片）。
+   *
    * @param {{ children: any, state?: string, onClick?: function }} props - 属性。
    * @returns {object} React 元素。
    */
   RF.Card = function Card(props) {
     const state = props.state === 'selected' || props.state === 'disabled' ? props.state : 'default';
+    const clickable = state !== 'disabled' && typeof props.onClick === 'function';
     return h('div', {
       className: `${RF.CLS}-card ${RF.CLS}-card--${state}`,
-      onClick: state === 'disabled' ? undefined : props.onClick,
+      onClick: clickable ? props.onClick : undefined,
+      role: clickable ? 'button' : undefined,
+      tabIndex: clickable ? 0 : undefined,
+      onKeyDown: clickable
+        ? (event) => {
+          if (event?.target !== event?.currentTarget) return;
+          const key = event?.key;
+          if (key !== 'Enter' && key !== ' ' && key !== 'Spacebar') return;
+          if (event?.preventDefault) event.preventDefault();
+          props.onClick(event);
+        }
+        : undefined,
     }, props.children);
   };
 

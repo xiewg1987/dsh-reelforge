@@ -47,6 +47,35 @@
   /** 6 步进度条（需求 · 运行 · 方案 · 生成 · 分镜 · 交付）。 */
   RF.STAGE_STEPS = ['requirement', 'run', 'plan', 'generate', 'storyboard', 'deliver'];
 
+  /**
+   * 流程屏（设计稿 02 / 03 / 04 / 05 / 06 / 16）—— **项目视图之外**的独立屏。
+   *
+   * 设计稿 17 号板自己写明右栏工作台是 **7 个页签**（项目视图）；
+   * 板 02–06 的骨架里**没有页签条**（只有 Header / StageBar / Scroll / Footer），
+   * 它们是按流程串起来的独立屏。⇒ 两层，不是 13 个页签。
+   */
+  RF.FLOW_SCREENS = ['intake', 'runmode', 'device', 'plan', 'stages', 'degraded'];
+
+  /** 每块流程屏归在 6 步进度条的哪一步（与设计稿 §2.1 全表一致）。 */
+  RF.FLOW_SCREEN_STEPS = {
+    intake: 'requirement',
+    runmode: 'run',
+    device: 'run',
+    plan: 'plan',
+    stages: 'generate',
+    degraded: 'generate',
+  };
+
+  /** 6 步进度条每一步点下去落到哪一屏。 */
+  RF.STAGE_STEP_TARGETS = {
+    requirement: { kind: 'flow', screen: 'intake' },
+    run: { kind: 'flow', screen: 'runmode' },
+    plan: { kind: 'flow', screen: 'plan' },
+    generate: { kind: 'flow', screen: 'stages' },
+    storyboard: { kind: 'tab', tab: 'shots' },
+    deliver: { kind: 'tab', tab: 'output' },
+  };
+
   /** 四阶段（固定顺序串行）。 */
   RF.STAGES = ['llm', 'image', 'tts', 'video'];
 

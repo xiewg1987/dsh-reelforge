@@ -20,6 +20,33 @@
   }
 
   /**
+   * 降级入口卡（设计稿 16 号板的入口）。
+   *
+   * ## 为什么它不能挂在「有交付物」分支里
+   *
+   * 降级矩阵是**跨流程规范板**，入口在成片页（交付物最常被降级影响）。
+   *
+   * ⚠️ 但它**必须**在成片页的空态下**也**渲染 ——
+   * 降级恰恰是「**没出成片**」的时候最该看的（设计稿 16 号板：「缺什么就说清楚，
+   * 不假装成功」）。早期版本把它放在 `tabOutput` 的末尾，而空态早退
+   * （`deliverables.length === 0`）会把它整块跳过 ⇒
+   * **最需要降级说明的场景，恰恰看不到降级说明的入口**（实机抓到）。
+   *
+   * @param {{ t: function, state: object }} props - 属性。
+   * @returns {object} React 元素。
+   */
+  function degradeEntryCard(props) {
+    return h(RF.ui.Card, null,
+      h('div', { className: `${RF.CLS}-row__title` }, props.t('flow.degrade.title')),
+      h('div', { className: `${RF.CLS}-row__sub` }, props.t('flow.degrade.subtitle')),
+      h(RF.ui.Button, {
+        label: props.t('flow.degrade.action'),
+        variant: 'secondary',
+        onClick: () => props.state.goFlow('degraded'),
+      }));
+  }
+
+  /**
    * 章节页：章节列表 + 每章四阶段勾选 + 依赖提示。
    * @param {{ t: function, project: object }} props - 属性。
    * @returns {object} React 元素。
@@ -240,7 +267,12 @@
    */
   RF.tabOutput = function tabOutput(props) {
     const deliverables = Array.isArray(props.project.deliverables) ? props.project.deliverables : [];
-    if (deliverables.length === 0) return emptyOf({ t: props.t, key: 'output' });
+    // 空态**也要**给降级入口（见 {@link degradeEntryCard} 的说明）。
+    if (deliverables.length === 0) {
+      return h('div', null,
+        emptyOf({ t: props.t, key: 'output' }),
+        degradeEntryCard(props));
+    }
     const primaryVideo = deliverables.find(item => item.kind === 'video_clean' || item.kind === 'video_subtitled' || (typeof item.path === 'string' && item.path.endsWith('.mp4')));
     const videoSrc = primaryVideo?.path ? RF.deliverableUrl(primaryVideo.path) : '';
     return h('div', null,
@@ -304,7 +336,11 @@
                 download: item.label ?? item.kind,
               }, props.t('common.download'))
               : h(RF.ui.Button, { label: props.t('common.download'), variant: 'secondary' }))))),
-      h('div', { className: `${RF.CLS}-note` }, props.t('deliver.binaryKept')));
+      h('div', { className: `${RF.CLS}-note` }, props.t('deliver.binaryKept')),
+      // ── 降级入口（板 16 号板）──
+      // 降级矩阵是**跨流程规范板**，不该占一个页签；它的入口就在成片页
+      // （交付物最常被降级影响），底栏按钮就是设计稿 16 号板写的那句「查看降级说明」。
+      degradeEntryCard(props));
   };
 
   /**

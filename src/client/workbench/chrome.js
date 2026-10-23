@@ -137,8 +137,8 @@
    *
    * @typedef {object} TabChrome
    * @property {string} titleKey Header 标题词条。
-   * @property {(project: object, t: function) => string} subtitle Header 副标题。
-   * @property {(project: object, t: function) => string} capsule Header 右侧胶囊。
+   * @property {(project: object, t: function, ctx?: object) => string} subtitle Header 副标题。
+   * @property {(project: object, t: function, ctx?: object) => string} capsule Header 右侧胶囊。
    * @property {(project: object, t: function) => string} footerLabel Footer 第一行标签。
    * @property {(project: object, t: function) => string} footerValue Footer 第二行。
    * @property {(project: object) => object} footerAction Footer 按钮。
@@ -150,8 +150,9 @@
    *
    * @typedef {object} FooterAction
    * @property {string} key 按钮文案词条。
-   * @property {string} kind `tab` / `tool` / `export` / `scroll` / `none`。
+   * @property {string} kind `tab` / `tool` / `export` / `scroll` / `flow` / `none`。
    * @property {string} [tab] `kind === 'tab'` 时切到哪个页签。
+   * @property {string} [screen] `kind === 'flow'` 时切到哪块流程屏。
    * @property {string} [tool] `kind === 'tool'` 时调哪个工具。
    * @property {object | function} [params] `kind === 'tool'` 时的参数（可以是函数）。
    * @property {boolean} [disabled] 不可用时置 true。
@@ -327,6 +328,99 @@
       footerLabel: staticText('chrome.log.footerLabel'),
       footerValue: (project, t) => t('chrome.log.footerValue', { count: logCount(project) }),
       footerAction: () => ({ key: 'chrome.log.action', kind: 'export' }),
+    },
+
+    // ══════════════════════════════════════════════════════════════
+    // 流程屏（设计稿 02 / 03 / 04 / 05 / 06 / 16）
+    //
+    // 这些屏**不在页签栏里**（设计稿 17 号板明写右栏是 7 个页签），
+    // 它们的骨架只有 Header / StageBar / Scroll / Footer 四段。
+    // ══════════════════════════════════════════════════════════════
+
+    /**
+     * 02 导入小说：胶囊是「新项目」，底栏指向「选运行位置」。
+     */
+    intake: {
+      titleKey: 'flow.intake.title',
+      subtitle: staticText('flow.intake.subtitle'),
+      capsule: staticText('flow.intake.capsule'),
+      footerLabel: staticText('flow.intake.footerLabel'),
+      footerValue: staticText('flow.intake.footerValue'),
+      footerAction: () => ({ key: 'flow.intake.action', kind: 'flow', screen: 'runmode' }),
+    },
+
+    /**
+     * 03 运行位置：胶囊是「2 种位置」，底栏指向「出执行路径」。
+     */
+    runmode: {
+      titleKey: 'flow.runmode.title',
+      subtitle: staticText('flow.runmode.subtitle'),
+      capsule: (project, t) => t('flow.runmode.capsule', { count: RF.RUN_POSITIONS.length }),
+      footerLabel: staticText('flow.runmode.footerLabel'),
+      footerValue: staticText('flow.runmode.footerValue'),
+      footerAction: () => ({ key: 'flow.runmode.action', kind: 'flow', screen: 'plan' }),
+    },
+
+    /**
+     * 04 设备检查：胶囊是**真实探测项数**（不是写死的 9），
+     * 底栏指向「按探测结果出执行路径」。
+     */
+    device: {
+      titleKey: 'flow.device.title',
+      subtitle: staticText('flow.device.subtitle'),
+      capsule: (project, t, context) => t('flow.device.capsule', {
+        count: Array.isArray(context?.probe?.view?.report?.items)
+          ? context.probe.view.report.items.length
+          : 0,
+      }),
+      footerLabel: staticText('flow.device.footerLabel'),
+      footerValue: staticText('flow.device.footerValue'),
+      footerAction: () => ({ key: 'flow.device.action', kind: 'flow', screen: 'plan' }),
+    },
+
+    /**
+     * 05 执行路径：胶囊是「5 种 kind」，底栏指向「选要跑哪些阶段」。
+     */
+    plan: {
+      titleKey: 'flow.plan.title',
+      subtitle: staticText('flow.plan.subtitle'),
+      capsule: (project, t) => t('flow.plan.capsule', { count: RF.GENERATION_KINDS.length }),
+      footerLabel: staticText('flow.plan.footerLabel'),
+      footerValue: staticText('flow.plan.footerValue'),
+      footerAction: () => ({ key: 'flow.plan.action', kind: 'flow', screen: 'stages' }),
+    },
+
+    /**
+     * 06 执行阶段：胶囊是「4 个阶段」，底栏主按钮**真的开跑阶段一**。
+     */
+    stages: {
+      titleKey: 'flow.stages.title',
+      subtitle: staticText('flow.stages.subtitle'),
+      capsule: (project, t) => t('flow.stages.capsule', { count: RF.STAGES.length }),
+      footerLabel: staticText('flow.stages.footerLabel'),
+      footerValue: staticText('flow.stages.footerValue'),
+      footerAction: () => ({
+        key: 'flow.stages.action',
+        kind: 'tool',
+        tool: RF.TOOL_IDS.runStage,
+        params: { stage: 'llm' },
+      }),
+    },
+
+    /**
+     * 16 降级与失败：胶囊是**真实缺失项数**，底栏指向「回到工作台」。
+     */
+    degraded: {
+      titleKey: 'flow.degrade.title',
+      subtitle: staticText('flow.degrade.subtitle'),
+      capsule: (project, t, context) => t('flow.degrade.capsule', {
+        count: Array.isArray(context?.probe?.view?.degrade?.matrix)
+          ? context.probe.view.degrade.matrix.length
+          : 0,
+      }),
+      footerLabel: staticText('flow.degrade.footerLabel'),
+      footerValue: staticText('flow.degrade.footerValue'),
+      footerAction: () => ({ key: 'flow.degrade.action', kind: 'tab', tab: 'chapters' }),
     },
   };
 

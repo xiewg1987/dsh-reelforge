@@ -249,6 +249,63 @@ export const STAGE_TO_STEP = Object.freeze({
   video: 'generate',
 });
 
+/**
+ * 流程屏（设计稿 02 / 03 / 04 / 05 / 06 / 16）—— **项目视图之外**的独立屏。
+ *
+ * ## 为什么是「两层」而不是 13 个页签
+ *
+ * 设计稿 17 号板自己写明：「对应 §10.2 右栏工作台 **7 个页签**：章节 / 分镜 / 资产 / 上下文 / 技能 / 成片 / 日志」
+ * —— 那 7 个是**项目视图**（板 01 / 07 / 08 / 09 / 10 / 12 / 13）。
+ * 而板 02–06 的公共骨架只有 4 条（Header / StageBar / Scroll / Footer），**没有页签条** ——
+ * 它们是**独立屏**，按用户操作流程串成一条链（导入 → 运行位置 → 设备检查 → 执行路径 → 执行阶段）。
+ * 板 16 是跨流程规范板（降级矩阵）。
+ *
+ * ⇒ 13 个页签在 326–547px 的右栏放不下；而设计稿本来就是两层。两层并存才是按画板做。
+ */
+export const FLOW_SCREENS = Object.freeze([
+  'intake',    // 02 小说导入与自动拆章
+  'runmode',   // 03 运行位置选择
+  'device',    // 04 本地档设备检查
+  'plan',      // 05 执行路径（kind × 位置矩阵）
+  'stages',    // 06 四阶段勾选
+  'degraded',  // 16 降级矩阵
+]);
+
+/**
+ * 每块流程屏归在 6 步进度条的哪一步 —— **与设计稿逐块一致**（§2.1 全表）。
+ *
+ * 03 / 04 都落在「运行」步（04 是 03 的下一跳，不是新的一步）；
+ * 06 / 16 都落在「生成」步。
+ */
+export const FLOW_SCREEN_STEPS = Object.freeze({
+  intake: 'requirement',
+  runmode: 'run',
+  device: 'run',
+  plan: 'plan',
+  stages: 'generate',
+  degraded: 'generate',
+});
+
+/**
+ * 6 步进度条每一步点下去落到哪一屏。
+ *
+ * - 前 3 步（需求 / 运行 / 方案）落**流程屏**（导入 / 运行位置 / 执行路径）；
+ * - 后 3 步（生成 / 分镜 / 交付）里，生成落流程屏「执行阶段」，
+ *   分镜 / 交付落**项目视图页签**（板 09 / 10）。
+ *
+ * 设计稿把 StageBar 定义成**进度指示**（§2.1「结构不变，只有当前步高亮位置 + 计数随画板变」）。
+ * 做成可点是**加法**（结构没变），换来「点哪一步都能到那一屏」——
+ * 否则 02 / 03 / 04 / 05 / 06 这几块屏在右栏里**无处可去**。
+ */
+export const STAGE_STEP_TARGETS = Object.freeze({
+  requirement: Object.freeze({ kind: 'flow', screen: 'intake' }),
+  run: Object.freeze({ kind: 'flow', screen: 'runmode' }),
+  plan: Object.freeze({ kind: 'flow', screen: 'plan' }),
+  generate: Object.freeze({ kind: 'flow', screen: 'stages' }),
+  storyboard: Object.freeze({ kind: 'tab', tab: 'shots' }),
+  deliver: Object.freeze({ kind: 'tab', tab: 'output' }),
+});
+
 // ─────────────────────────────────────────────────────────────
 // 视频参数（§6.1、§7.2）
 // ─────────────────────────────────────────────────────────────

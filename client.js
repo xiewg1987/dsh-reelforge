@@ -59,6 +59,35 @@ window.__ModuleLoader__.load({
   /** 6 步进度条（需求 · 运行 · 方案 · 生成 · 分镜 · 交付）。 */
   RF.STAGE_STEPS = ['requirement', 'run', 'plan', 'generate', 'storyboard', 'deliver'];
 
+  /**
+   * 流程屏（设计稿 02 / 03 / 04 / 05 / 06 / 16）—— **项目视图之外**的独立屏。
+   *
+   * 设计稿 17 号板自己写明右栏工作台是 **7 个页签**（项目视图）；
+   * 板 02–06 的骨架里**没有页签条**（只有 Header / StageBar / Scroll / Footer），
+   * 它们是按流程串起来的独立屏。⇒ 两层，不是 13 个页签。
+   */
+  RF.FLOW_SCREENS = ['intake', 'runmode', 'device', 'plan', 'stages', 'degraded'];
+
+  /** 每块流程屏归在 6 步进度条的哪一步（与设计稿 §2.1 全表一致）。 */
+  RF.FLOW_SCREEN_STEPS = {
+    intake: 'requirement',
+    runmode: 'run',
+    device: 'run',
+    plan: 'plan',
+    stages: 'generate',
+    degraded: 'generate',
+  };
+
+  /** 6 步进度条每一步点下去落到哪一屏。 */
+  RF.STAGE_STEP_TARGETS = {
+    requirement: { kind: 'flow', screen: 'intake' },
+    run: { kind: 'flow', screen: 'runmode' },
+    plan: { kind: 'flow', screen: 'plan' },
+    generate: { kind: 'flow', screen: 'stages' },
+    storyboard: { kind: 'tab', tab: 'shots' },
+    deliver: { kind: 'tab', tab: 'output' },
+  };
+
   /** 四阶段（固定顺序串行）。 */
   RF.STAGES = ['llm', 'image', 'tts', 'video'];
 
@@ -280,6 +309,213 @@ window.__ModuleLoader__.load({
       'chrome.log.capsule': '{count} 条',
       'chrome.log.footerLabel': '全项目',
       'chrome.log.footerValue': '{count} 条',
+      // ── 流程屏（设计稿 02 / 03 / 04 / 05 / 06 / 16）──
+      'flow.backToWorkbench': '回到工作台',
+      'flow.intake.title': '导入小说',
+      'flow.intake.subtitle': '粘贴正文，ReelForge 自动拆章',
+      'flow.intake.capsule': '新项目',
+      'flow.intake.sourceLabel': '小说正文',
+      'flow.intake.chars': '已粘贴字数',
+      'flow.intake.noHeadings': '还没检测到「第N章」标题，将按兜底字数均分。',
+      'flow.intake.fallbackRule': '识别到 {count} 个「第N章」标题 → 拆为 {count} 章；无标题时按 {fallback} 字兜底均分',
+      'flow.intake.importLabel': '导入正文',
+      'flow.intake.importPlaceholder': '把小说正文粘到这里…',
+      'flow.intake.importAction': '导入并拆章',
+      'flow.intake.importDisabled': '正文是空的：至少要有一段正文才能拆章',
+      'flow.intake.safetyNote': '正文只做内容解析，不会被当作指令执行',
+      'flow.intake.previewLabel': '自动拆章预览',
+      'flow.intake.previewEmpty': '还没有章节。导入正文后这里会列出拆出来的章。',
+      'flow.intake.previewRule': '章节标题正则：第N章 / 第N节 / Chapter N',
+      'flow.intake.settingsLabel': '项目设置',
+      'flow.intake.setting.aspectRatio': '画幅',
+      'flow.intake.setting.resolution': '分辨率',
+      'flow.intake.setting.targetDuration': '目标时长',
+      'flow.intake.setting.bgm': 'BGM',
+      'flow.intake.unset': '未设置',
+      'flow.intake.durationUnlimited': '不限（按章）',
+      'flow.intake.settingsReadonly': '这四项目前只能在插件配置里改，面板只读：没有对应的写入工具。',
+      'flow.intake.pendingLabel': '助手提出的待确认项',
+      'flow.intake.pendingEmpty': '暂时没有待确认项。有需要拿主意的地方，助手会列在这里。',
+      'flow.intake.footerLabel': '下一步',
+      'flow.intake.footerValue': '选运行位置：本地还是云端',
+      'flow.intake.action': '继续',
+      'flow.runmode.title': '运行位置',
+      'flow.runmode.subtitle': '同一批工作流，跑在这台机器还是云端',
+      'flow.runmode.capsule': '{count} 种位置',
+      'flow.runmode.sectionLabel': '两种执行位置',
+      'flow.runmode.sectionNote': '本地与云端跑的是同一批 kind，差别只在跑在哪、算不算钱',
+      'flow.runmode.localTitle': '本地运行',
+      'flow.runmode.localSubtitle': '在你机器的 ComfyUI 上跑',
+      'flow.runmode.local.pro1': '数据不出本机',
+      'flow.runmode.local.pro2': '无按次计费',
+      'flow.runmode.local.pro3': '可无限重试',
+      'flow.runmode.local.con1': '需独立显卡 8G 显存',
+      'flow.runmode.local.con2': '需 ComfyUI + CK ≥ 0.2.36',
+      'flow.runmode.local.con3': '速度受本机硬件限制',
+      'flow.runmode.cloudTitle': '云端运行',
+      'flow.runmode.cloudSubtitle': '跑托管工作流，按次计费',
+      'flow.runmode.cloud.pro1': '开箱即用，无需 GPU',
+      'flow.runmode.cloud.pro2': '与本地同一批 kind',
+      'flow.runmode.cloud.pro3': '排队由云端管',
+      'flow.runmode.cloud.con1': '按次计费',
+      'flow.runmode.cloud.con2': '参考图需上传',
+      'flow.runmode.cloud.con3': '需要外网可达',
+      'flow.runmode.deviceCheck': '开始设备检查',
+      'flow.runmode.providersAvailable': '{count} 个 provider 可用',
+      'flow.runmode.providerLabel': '云端 provider',
+      'flow.runmode.providerReadonly': 'provider 由插件配置决定：面板里改不了，改了也不会生效。',
+      'flow.runmode.compareLabel': '运行位置会影响什么',
+      'flow.runmode.compare.kinds': '可用 kind',
+      'flow.runmode.compare.kindsValue': '本地与云端同为 t2i / i2i / r2v / tts / music',
+      'flow.runmode.compare.diff': '差异在哪',
+      'flow.runmode.compare.diffValue': '同一 kind 的两套 sourceFile：本机工作流 vs 托管工作流',
+      'flow.runmode.compare.cost': '成本',
+      'flow.runmode.compare.costValue': '本地无按次费用 · 云端按次计费',
+      'flow.runmode.compare.limit': '限制',
+      'flow.runmode.compare.limitValue': '本地受显存与 CK 版本约束 · 云端受排队与配额约束',
+      'flow.runmode.switchable': '运行位置可以随时改：只影响尚未生成的镜头。已产出的分镜表与参考图不重跑，也不重复计费。',
+      'flow.runmode.footerHint': '不确定？云端随时能切；本地要先过设备检查',
+      'flow.runmode.footerLabel': '下一步',
+      'flow.runmode.footerValue': '探测本机能否本地生成',
+      'flow.runmode.action': '继续，出执行路径',
+      'flow.device.title': '设备检查',
+      'flow.device.subtitle': '本地档要过 9 项探测',
+      'flow.device.capsule': '{count} 项探测',
+      'flow.device.loading': '正在探测…',
+      'flow.device.failed': '探测没跑起来',
+      'flow.device.retry': '重试',
+      'flow.device.recheck': '重新检测',
+      'flow.device.done': '检测完成 · {count} 项 · 用时 {seconds}s',
+      'flow.device.footnote': '探测结果只落在插件状态，不写进会话日志',
+      'flow.device.tableLabel': '本地档探测',
+      'flow.device.tableNote': '探测项与设计稿 §7.1 逐条对应；显存不足是明说，不是静默降级',
+      'flow.device.ok': '已通过',
+      'flow.device.row.comfy': 'ComfyUI 可达',
+      'flow.device.row.ckVersion': 'CK 版本',
+      'flow.device.row.vram': '显存',
+      'flow.device.row.gpu': 'GPU',
+      'flow.device.row.ffmpeg': 'ffmpeg',
+      'flow.device.row.encoders': '编码器',
+      'flow.device.row.disk': '磁盘余量',
+      'flow.device.row.llm': 'LLM 通道',
+      'flow.device.row.provider': 'provider 规格',
+      'flow.device.row.videoBackend': '视频后端硬约束',
+      'flow.device.method.comfy': 'GET :8188/system_stats',
+      'flow.device.method.ckVersion': 'comfy-kitchen',
+      'flow.device.method.vram': 'nvidia-smi',
+      'flow.device.method.gpu': 'nvidia-smi',
+      'flow.device.method.ffmpeg': 'ffmpeg -version',
+      'flow.device.method.encoders': 'ffmpeg -encoders',
+      'flow.device.method.disk': '卷可用空间',
+      'flow.device.method.llm': 'DSH 会话',
+      'flow.device.method.provider': 'workflows/specs',
+      'flow.device.method.videoBackend': '规格声明（静态）',
+      'flow.device.conclusionTitle': '本机跑不满当前方案，缺口如下',
+      'flow.device.toCloud': '改用云端运行',
+      'flow.device.onlyImage': '只跑到 image 阶段',
+      'flow.device.allOk': '本机探测全部通过',
+      'flow.device.localStillLabel': '本地仍可完成',
+      'flow.device.localStill.storyboard': '分镜表',
+      'flow.device.localStill.references': '参考图',
+      'flow.device.localStill.compose': '成片合成（需 ffmpeg）',
+      'flow.device.bottomNote': '探测项与设计稿 §7.1 逐条对应；显存不足是明说，不是静默降级',
+      'flow.device.vramHint': '显存 {have}GB 低于 video 阶段门槛 {need}GB：不自动拆批，显存不够就明说，可先只跑 llm + image',
+      'flow.device.footerLabel': '下一步',
+      'flow.device.footerValue': '按探测结果出执行路径',
+      'flow.device.action': '继续',
+      'flow.plan.title': '执行路径',
+      'flow.plan.subtitle': '哪种生成方式，跑在哪台机器上',
+      'flow.plan.capsule': '{count} 种 kind',
+      'flow.plan.axisLabel': 'kind 类型 × 执行位置',
+      'flow.plan.group.image': '图像',
+      'flow.plan.group.video': '视频',
+      'flow.plan.localSub': '你的 ComfyUI 工作流',
+      'flow.plan.cloudSub': '托管工作流',
+      'flow.plan.specCount': '{count} 套规格',
+      'flow.plan.noSpec': '这一档没有规格',
+      'flow.plan.spec.local': '本地',
+      'flow.plan.spec.cloud': '云端',
+      'flow.plan.billed': '按次计费',
+      'flow.plan.mappingLabel': 'kind → 规格映射',
+      'flow.plan.kind.t2i': '文生图',
+      'flow.plan.kind.i2i': '图生图',
+      'flow.plan.kind.r2v': '参考图生视频',
+      'flow.plan.kind.tts': '语音合成',
+      'flow.plan.kind.music': '配乐',
+      'flow.plan.current': '当前',
+      'flow.plan.mappingNote': '本地与云端是同一 kind 的两套 sourceFile，不是两档能力',
+      'flow.plan.scoreLabel': '辅助评分（不决定路径，只做微调）',
+      'flow.plan.scoreMissing': '还没有评分器：这一栏暂不参与决策，执行矩阵才是决定项。',
+      'flow.plan.bottomNote': '评分是参考，选择权在执行矩阵',
+      'flow.plan.needPosition': '先选运行位置（本地还是云端），再选 kind。',
+      'flow.plan.footerLabel': '下一步',
+      'flow.plan.footerValue': '选要跑哪些阶段',
+      'flow.plan.action': '继续',
+      'flow.stages.title': '执行阶段',
+      'flow.stages.subtitle': '四个阶段，可按章勾选',
+      'flow.stages.capsule': '{count} 个阶段',
+      'flow.stages.llm.sub': '写人物圣经 / 风格指南 / 拆镜 / 写视频提示词',
+      'flow.stages.llm.hint': '需要 LLM 通道 · 不烧渲染时间',
+      'flow.stages.image.sub': '人物 / 场景 / 道具参考图 + 服装与年龄变体',
+      'flow.stages.image.hint': '产出后续两阶段的参考图',
+      'flow.stages.tts.sub': '角色音色样本，只给说话角色生成',
+      'flow.stages.tts.hint': '软依赖：缺失时视频静默降质，界面会标出来',
+      'flow.stages.video.sub': '逐镜出片 → 自审重试 → 背景音乐 → 合成 → 字幕',
+      'flow.stages.video.hint': '硬依赖 image：没有参考图直接报错',
+      'flow.stages.readonly': '阶段开关目前来自插件配置：面板里没有对应的写入工具，所以只读。',
+      'flow.stages.vramTitle': '含 video 阶段需 8GB 显存',
+      'flow.stages.vramNote': '不自动拆批：显存不够就明说，可先只跑 llm + image',
+      'flow.stages.byChapterLabel': '按章勾选（覆盖上面的全局设置）',
+      'flow.stages.noChapter': '还没有章节，所以没有按章设置。',
+      'flow.stages.chapterRow': '第 {seq} 章 {name}',
+      'flow.stages.chapterPending': '待开始',
+      'flow.stages.bottomNote': '阶段按固定顺序串行执行，不按勾选顺序',
+      'flow.stages.footerLabel': '下一步',
+      'flow.stages.footerValue': '准备一致性锚点（人物圣经与风格）',
+      'flow.stages.action': '开始阶段一',
+      'flow.degrade.title': '降级与失败',
+      'flow.degrade.subtitle': '缺什么就说清楚，不假装成功',
+      'flow.degrade.capsule': '{count} 种缺失',
+      'flow.degrade.loading': '正在读取降级状态…',
+      'flow.degrade.failed': '降级状态没读出来',
+      'flow.degrade.missingItem': '缺失项',
+      'flow.degrade.colVideo': '成片',
+      'flow.degrade.colStoryboard': '分镜表',
+      'flow.degrade.colPack': '参考图',
+      'flow.degrade.matrixNote': '软依赖缺失也要说出来：音色缺失只降质，不报错',
+      'flow.degrade.noneTitle': '当前没有降级',
+      'flow.degrade.noneBody': '探测与交付都没发现缺口。',
+      'flow.degrade.outputsLine': '成片 {video} · 分镜表 {storyboard} · 参考图 {pack}',
+      'flow.degrade.rerun': '补跑 tts',
+      'flow.degrade.accept': '接受现状',
+      'flow.degrade.dialogLabel': '对话里怎么说',
+      'flow.degrade.noNotices': '还没有降级话术：没有缺失就没有要说的话。',
+      'flow.degrade.footerLabel': '宁可交付不完整但诚实的结果',
+      'flow.degrade.footerValue': '降级说明',
+      'flow.degrade.action': '查看降级说明',
+      'degrade.kind.video_provider_down': '视频通道不可用',
+      'degrade.kind.image_provider_down': '图像通道不可用',
+      'degrade.kind.voice_missing': '音色缺失',
+      'degrade.kind.ffmpeg_missing': '缺 ffmpeg',
+      'degrade.kind.partial_shot_failed': '部分镜失败',
+      'degrade.kind.vram_insufficient': '显存不足',
+      'degrade.kind.model_channel_unreachable': '模型通道不可达',
+      'degrade.video.none': '无',
+      'degrade.video.text_card': '文字卡',
+      'degrade.video.placeholder': '占位帧',
+      'degrade.video.silent': '静音成片',
+      'degrade.pack.full': '有',
+      'degrade.pack.text_card': '文字卡',
+      'degrade.pack.partial': '部分',
+      'degrade.pack.none': '无',
+      'degrade.storyboard.yes': '有',
+      'degrade.storyboard.no': '无',
+      'stage.go.requirement': '去「需求」这一步',
+      'stage.go.run': '去「运行」这一步',
+      'stage.go.plan': '去「方案」这一步',
+      'stage.go.generate': '去「生成」这一步',
+      'stage.go.storyboard': '去「分镜」这一步',
+      'stage.go.deliver': '去「交付」这一步',
       'chrome.log.action': '导出日志',
       'chrome.stat.row': '{position} · 已用 {spent} / 上限 {cap}',
       'captured.label': '你的需求（自动捕获）',
@@ -296,6 +532,8 @@ window.__ModuleLoader__.load({
       'common.rollback': '回滚',
       'common.loading': '加载中…',
       'common.unknown': '未知',
+      'common.on': '开启',
+      'common.off': '关闭',
       'empty.generic': '这里还是空的。{hint}',
       'empty.chapters': '还没有章节。把小说正文粘到对话框，这里会自动拆章。',
       'empty.shots': '还没有分镜。助手会按上面的需求生成分镜表。',
@@ -517,6 +755,213 @@ window.__ModuleLoader__.load({
       'chrome.log.capsule': '{count} entries',
       'chrome.log.footerLabel': 'Whole project',
       'chrome.log.footerValue': '{count} entries',
+      // ── 流程屏（设计稿 02 / 03 / 04 / 05 / 06 / 16）──
+      'flow.backToWorkbench': 'Back to workbench',
+      'flow.intake.title': 'Import novel',
+      'flow.intake.subtitle': 'Paste the text, ReelForge splits it into chapters',
+      'flow.intake.capsule': 'New project',
+      'flow.intake.sourceLabel': 'Novel text',
+      'flow.intake.chars': 'Pasted characters',
+      'flow.intake.noHeadings': 'No “Chapter N” heading found yet; it will fall back to an even split.',
+      'flow.intake.fallbackRule': '{count} “Chapter N” headings found → split into {count} chapters; without headings it splits every {fallback} characters',
+      'flow.intake.importLabel': 'Import text',
+      'flow.intake.importPlaceholder': 'Paste the novel here…',
+      'flow.intake.importAction': 'Import & split',
+      'flow.intake.importDisabled': 'The text is empty: at least one paragraph is needed to split chapters',
+      'flow.intake.safetyNote': 'The text is only parsed as content, never executed as an instruction',
+      'flow.intake.previewLabel': 'Automatic split preview',
+      'flow.intake.previewEmpty': 'No chapters yet. Import the text and the split chapters show up here.',
+      'flow.intake.previewRule': 'Chapter heading pattern: 第N章 / 第N节 / Chapter N',
+      'flow.intake.settingsLabel': 'Project settings',
+      'flow.intake.setting.aspectRatio': 'Aspect ratio',
+      'flow.intake.setting.resolution': 'Resolution',
+      'flow.intake.setting.targetDuration': 'Target duration',
+      'flow.intake.setting.bgm': 'BGM',
+      'flow.intake.unset': 'Not set',
+      'flow.intake.durationUnlimited': 'Unlimited (per chapter)',
+      'flow.intake.settingsReadonly': 'These four are configurable in the plugin config only — the panel has no write tool for them, so it is read-only.',
+      'flow.intake.pendingLabel': 'Questions from the assistant',
+      'flow.intake.pendingEmpty': 'Nothing to confirm right now. Open questions will be listed here.',
+      'flow.intake.footerLabel': 'Next',
+      'flow.intake.footerValue': 'Pick the run position: local or cloud',
+      'flow.intake.action': 'Continue',
+      'flow.runmode.title': 'Run position',
+      'flow.runmode.subtitle': 'The same workflows, on this machine or in the cloud',
+      'flow.runmode.capsule': '{count} positions',
+      'flow.runmode.sectionLabel': 'Two execution positions',
+      'flow.runmode.sectionNote': 'Local and cloud run the same kinds — the difference is where it runs and whether it costs',
+      'flow.runmode.localTitle': 'Run locally',
+      'flow.runmode.localSubtitle': 'Runs on your own ComfyUI',
+      'flow.runmode.local.pro1': 'Data never leaves the machine',
+      'flow.runmode.local.pro2': 'No per-run fee',
+      'flow.runmode.local.pro3': 'Retry as often as you like',
+      'flow.runmode.local.con1': 'Needs a discrete GPU with 8G VRAM',
+      'flow.runmode.local.con2': 'Needs ComfyUI + CK ≥ 0.2.36',
+      'flow.runmode.local.con3': 'Speed is limited by your hardware',
+      'flow.runmode.cloudTitle': 'Run in the cloud',
+      'flow.runmode.cloudSubtitle': 'Runs hosted workflows, billed per run',
+      'flow.runmode.cloud.pro1': 'Works out of the box, no GPU',
+      'flow.runmode.cloud.pro2': 'Same kinds as local',
+      'flow.runmode.cloud.pro3': 'The cloud handles the queue',
+      'flow.runmode.cloud.con1': 'Billed per run',
+      'flow.runmode.cloud.con2': 'Reference images must be uploaded',
+      'flow.runmode.cloud.con3': 'Needs outbound network access',
+      'flow.runmode.deviceCheck': 'Start device check',
+      'flow.runmode.providersAvailable': '{count} providers available',
+      'flow.runmode.providerLabel': 'Cloud provider',
+      'flow.runmode.providerReadonly': 'The provider comes from the plugin config: the panel cannot change it, and a change here would not take effect.',
+      'flow.runmode.compareLabel': 'What the run position changes',
+      'flow.runmode.compare.kinds': 'Available kinds',
+      'flow.runmode.compare.kindsValue': 'Local and cloud both support t2i / i2i / r2v / tts / music',
+      'flow.runmode.compare.diff': 'Where they differ',
+      'flow.runmode.compare.diffValue': 'Two sourceFile sets per kind: your own workflow vs a hosted one',
+      'flow.runmode.compare.cost': 'Cost',
+      'flow.runmode.compare.costValue': 'Local has no per-run fee · cloud is billed per run',
+      'flow.runmode.compare.limit': 'Limits',
+      'flow.runmode.compare.limitValue': 'Local is bound by VRAM and CK version · cloud is bound by queue and quota',
+      'flow.runmode.switchable': 'You can switch position at any time: it only affects shots that are not generated yet. Existing storyboards and reference images are not re-run and are not billed twice.',
+      'flow.runmode.footerHint': 'Not sure? Cloud can be switched at any time; local has to pass the device check first',
+      'flow.runmode.footerLabel': 'Next',
+      'flow.runmode.footerValue': 'Probe whether this machine can generate locally',
+      'flow.runmode.action': 'Continue to execution path',
+      'flow.device.title': 'Device check',
+      'flow.device.subtitle': 'The local profile must pass 9 probes',
+      'flow.device.capsule': '{count} probes',
+      'flow.device.loading': 'Probing…',
+      'flow.device.failed': 'The probe did not run',
+      'flow.device.retry': 'Retry',
+      'flow.device.recheck': 'Re-check',
+      'flow.device.done': 'Check complete · {count} probes · {seconds}s',
+      'flow.device.footnote': 'Probe results stay in the plugin state and are never written to the session log',
+      'flow.device.tableLabel': 'Local profile probes',
+      'flow.device.tableNote': 'Each probe maps to design §7.1; too little VRAM is stated, never silently downgraded',
+      'flow.device.ok': 'Passed',
+      'flow.device.row.comfy': 'ComfyUI reachable',
+      'flow.device.row.ckVersion': 'CK version',
+      'flow.device.row.vram': 'VRAM',
+      'flow.device.row.gpu': 'GPU',
+      'flow.device.row.ffmpeg': 'ffmpeg',
+      'flow.device.row.encoders': 'Encoders',
+      'flow.device.row.disk': 'Free disk',
+      'flow.device.row.llm': 'LLM channel',
+      'flow.device.row.provider': 'Provider specs',
+      'flow.device.row.videoBackend': 'Video backend constraints',
+      'flow.device.method.comfy': 'GET :8188/system_stats',
+      'flow.device.method.ckVersion': 'comfy-kitchen',
+      'flow.device.method.vram': 'nvidia-smi',
+      'flow.device.method.gpu': 'nvidia-smi',
+      'flow.device.method.ffmpeg': 'ffmpeg -version',
+      'flow.device.method.encoders': 'ffmpeg -encoders',
+      'flow.device.method.disk': 'free space on the volume',
+      'flow.device.method.llm': 'DSH session',
+      'flow.device.method.provider': 'workflows/specs',
+      'flow.device.method.videoBackend': 'spec declaration (static)',
+      'flow.device.conclusionTitle': 'This machine cannot run the current plan. The gaps:',
+      'flow.device.toCloud': 'Switch to cloud',
+      'flow.device.onlyImage': 'Run up to the image stage',
+      'flow.device.allOk': 'All local probes passed',
+      'flow.device.localStillLabel': 'Still possible locally',
+      'flow.device.localStill.storyboard': 'Storyboard',
+      'flow.device.localStill.references': 'Reference images',
+      'flow.device.localStill.compose': 'Compose the film (needs ffmpeg)',
+      'flow.device.bottomNote': 'Each probe maps to design §7.1; too little VRAM is stated, never silently downgraded',
+      'flow.device.vramHint': '{have}GB VRAM is below the {need}GB gate for the video stage: no automatic split — the shortfall is stated, and you can run llm + image only',
+      'flow.device.footerLabel': 'Next',
+      'flow.device.footerValue': 'Derive the execution path from the probe results',
+      'flow.device.action': 'Continue',
+      'flow.plan.title': 'Execution path',
+      'flow.plan.subtitle': 'Which generation mode, on which machine',
+      'flow.plan.capsule': '{count} kinds',
+      'flow.plan.axisLabel': 'Kind × execution position',
+      'flow.plan.group.image': 'Image',
+      'flow.plan.group.video': 'Video',
+      'flow.plan.localSub': 'Your own ComfyUI workflow',
+      'flow.plan.cloudSub': 'Hosted workflow',
+      'flow.plan.specCount': '{count} specs',
+      'flow.plan.noSpec': 'No spec in this column',
+      'flow.plan.spec.local': 'Local',
+      'flow.plan.spec.cloud': 'Cloud',
+      'flow.plan.billed': 'Billed per run',
+      'flow.plan.mappingLabel': 'Kind → spec mapping',
+      'flow.plan.kind.t2i': 'Text to image',
+      'flow.plan.kind.i2i': 'Image to image',
+      'flow.plan.kind.r2v': 'Reference image to video',
+      'flow.plan.kind.tts': 'Speech synthesis',
+      'flow.plan.kind.music': 'Score',
+      'flow.plan.current': 'Current',
+      'flow.plan.mappingNote': 'Local and cloud are two sourceFile sets of the same kind, not two tiers of capability',
+      'flow.plan.scoreLabel': 'Auxiliary score (does not pick the path, only fine-tunes)',
+      'flow.plan.scoreMissing': 'There is no scorer yet: this block takes no part in the decision — the matrix does.',
+      'flow.plan.bottomNote': 'The score is a reference; the execution matrix decides',
+      'flow.plan.needPosition': 'Pick the run position (local or cloud) first, then the kind.',
+      'flow.plan.footerLabel': 'Next',
+      'flow.plan.footerValue': 'Choose which stages to run',
+      'flow.plan.action': 'Continue',
+      'flow.stages.title': 'Execution stages',
+      'flow.stages.subtitle': 'Four stages, selectable per chapter',
+      'flow.stages.capsule': '{count} stages',
+      'flow.stages.llm.sub': 'Write the character bible / style guide / shot breakdown / video prompts',
+      'flow.stages.llm.hint': 'Needs the LLM channel · burns no render time',
+      'flow.stages.image.sub': 'Character / scene / prop reference images + costume and age variants',
+      'flow.stages.image.hint': 'Produces the reference images for the later stages',
+      'flow.stages.tts.sub': 'Voice samples, only for speaking roles',
+      'flow.stages.tts.hint': 'Soft dependency: missing voices silently degrade the video — the UI marks it',
+      'flow.stages.video.sub': 'Shot by shot → self-review retry → score → compose → subtitles',
+      'flow.stages.video.hint': 'Hard dependency on image: no reference image is an error',
+      'flow.stages.readonly': 'The stage switches come from the plugin config: the panel has no write tool for them, so it is read-only.',
+      'flow.stages.vramTitle': 'The video stage needs 8GB VRAM',
+      'flow.stages.vramNote': 'No automatic split: too little VRAM is stated, and you can run llm + image only',
+      'flow.stages.byChapterLabel': 'Per chapter (overrides the global setting above)',
+      'flow.stages.noChapter': 'No chapters yet, so there is nothing to set per chapter.',
+      'flow.stages.chapterRow': 'Chapter {seq} {name}',
+      'flow.stages.chapterPending': 'Not started',
+      'flow.stages.bottomNote': 'Stages always run in a fixed order, not in the order you tick them',
+      'flow.stages.footerLabel': 'Next',
+      'flow.stages.footerValue': 'Prepare the consistency anchors (character bible and style)',
+      'flow.stages.action': 'Start stage one',
+      'flow.degrade.title': 'Degradation & failure',
+      'flow.degrade.subtitle': 'Say what is missing, never pretend it worked',
+      'flow.degrade.capsule': '{count} kinds of missing',
+      'flow.degrade.loading': 'Reading degradation state…',
+      'flow.degrade.failed': 'The degradation state could not be read',
+      'flow.degrade.missingItem': 'Missing item',
+      'flow.degrade.colVideo': 'Film',
+      'flow.degrade.colStoryboard': 'Storyboard',
+      'flow.degrade.colPack': 'Reference images',
+      'flow.degrade.matrixNote': 'Soft dependency loss is stated too: a missing voice only degrades, it is not an error',
+      'flow.degrade.noneTitle': 'No degradation right now',
+      'flow.degrade.noneBody': 'Neither the probe nor the delivery found a gap.',
+      'flow.degrade.outputsLine': 'Film {video} · storyboard {storyboard} · reference images {pack}',
+      'flow.degrade.rerun': 'Re-run tts',
+      'flow.degrade.accept': 'Accept as is',
+      'flow.degrade.dialogLabel': 'How it is phrased in chat',
+      'flow.degrade.noNotices': 'No degradation phrasing yet: nothing missing, nothing to say.',
+      'flow.degrade.footerLabel': 'Prefer an incomplete but honest result',
+      'flow.degrade.footerValue': 'Degradation notes',
+      'flow.degrade.action': 'View degradation notes',
+      'degrade.kind.video_provider_down': 'Video channel down',
+      'degrade.kind.image_provider_down': 'Image channel down',
+      'degrade.kind.voice_missing': 'Voice missing',
+      'degrade.kind.ffmpeg_missing': 'ffmpeg missing',
+      'degrade.kind.partial_shot_failed': 'Some shots failed',
+      'degrade.kind.vram_insufficient': 'Not enough VRAM',
+      'degrade.kind.model_channel_unreachable': 'Model channel unreachable',
+      'degrade.video.none': 'None',
+      'degrade.video.text_card': 'Text card',
+      'degrade.video.placeholder': 'Placeholder frame',
+      'degrade.video.silent': 'Silent film',
+      'degrade.pack.full': 'All',
+      'degrade.pack.text_card': 'Text card',
+      'degrade.pack.partial': 'Partial',
+      'degrade.pack.none': 'None',
+      'degrade.storyboard.yes': 'Yes',
+      'degrade.storyboard.no': 'No',
+      'stage.go.requirement': 'Go to the “Brief” step',
+      'stage.go.run': 'Go to the “Run” step',
+      'stage.go.plan': 'Go to the “Plan” step',
+      'stage.go.generate': 'Go to the “Generate” step',
+      'stage.go.storyboard': 'Go to the “Storyboard” step',
+      'stage.go.deliver': 'Go to the “Deliver” step',
       'chrome.log.action': 'Export log',
       'chrome.stat.row': '{position} · spent {spent} / cap {cap}',
       'captured.label': 'Your brief (auto-captured)',
@@ -533,6 +978,8 @@ window.__ModuleLoader__.load({
       'common.rollback': 'Rollback',
       'common.loading': 'Loading…',
       'common.unknown': 'Unknown',
+      'common.on': 'On',
+      'common.off': 'Off',
       'empty.generic': 'This is empty. {hint}',
       'empty.chapters': 'No chapters yet. Paste the novel in the chat box and it splits here.',
       'empty.shots': 'No shots yet. The assistant writes the storyboard from the brief above.',
@@ -708,12 +1155,49 @@ window.__ModuleLoader__.load({
     skills: [],
     deliverables: [],
     changelog: { entries: [], total: 0, modes: ['single', 'batch', 'timepoint'] },
+    // 需求（板 02）：正文规模 + 检测到的章节标题（**没有正文**）。
+    intake: { chars: 0, headings: [], fallbackChars: 0 },
+    // 项目设置（板 02）：画幅 / 分辨率 / 目标时长 / BGM。
+    settings: {
+      aspectRatio: '',
+      resolution: '',
+      targetDuration: null,
+      enableBgm: false,
+      enableSubtitles: false,
+    },
+    // 执行路径矩阵（板 05）：kind × 位置的规格来源。
+    planMatrix: [],
+    // 执行阶段（板 06）：全局开关 + 按章覆盖。
+    stages: { global: [], byChapter: [] },
     // 对话输入截获（§10.5）：用户在 DSH 输入框里敲的原文，由宿主钩子写进状态。
     input: { text: '' },
     cost: { spent: 0, cap: 0 },
     budget: {},
     workflowAnalysis: null,
   });
+
+  /**
+   * 设备检查 / 降级矩阵的宿主路由 URL（板 04 / 16 号板）。
+   *
+   * 探测结果是**能力事实**，不是会话状态 ⇒ 不进 wire view，走一条独立只读路由
+   * （宿主半 `src/host/probeRoute.js`）。`refresh=1` 绕过宿主侧缓存强制重跑。
+   *
+   * @param {{ position?: string, provider?: string, refresh?: boolean }} [options] - 选项。
+   * @returns {string} 同源 URL。
+   */
+  RF.probeUrl = function probeUrl(options = {}) {
+    const query = new URLSearchParams();
+    const sessionId = RF.currentSessionId ?? '';
+    if (sessionId !== '') query.set('session', sessionId);
+    if (typeof options.position === 'string' && options.position !== '') {
+      query.set('position', options.position);
+    }
+    if (typeof options.provider === 'string' && options.provider !== '') {
+      query.set('provider', options.provider);
+    }
+    if (options.refresh === true) query.set('refresh', '1');
+    return `/api/reelforge.probe?${query.toString()}`;
+  };
 
   /**
    * 会话指令的请求 id。
@@ -1074,14 +1558,35 @@ window.__ModuleLoader__.load({
 
   /**
    * 卡片：默认 / 选中 / 禁用。
+   *
+   * ⚠️ 带 `onClick` 的卡片**必须键盘可达**：只挂 `onClick` 的 `div`
+   * 鼠标能用、键盘用不了（实机验证时抓到的：运行位置屏的两张大卡
+   * 与分镜/技能的选择卡都只能靠鼠标）。
+   *
+   * ⇒ 可点时补 `role="button"` + `tabIndex` + Enter/Space 键。
+   * 事件来自卡片**内部**的按钮时**不重复触发**卡片自己的动作
+   * （否则在子按钮上按 Enter 会同时选中卡片）。
+   *
    * @param {{ children: any, state?: string, onClick?: function }} props - 属性。
    * @returns {object} React 元素。
    */
   RF.Card = function Card(props) {
     const state = props.state === 'selected' || props.state === 'disabled' ? props.state : 'default';
+    const clickable = state !== 'disabled' && typeof props.onClick === 'function';
     return h('div', {
       className: `${RF.CLS}-card ${RF.CLS}-card--${state}`,
-      onClick: state === 'disabled' ? undefined : props.onClick,
+      onClick: clickable ? props.onClick : undefined,
+      role: clickable ? 'button' : undefined,
+      tabIndex: clickable ? 0 : undefined,
+      onKeyDown: clickable
+        ? (event) => {
+          if (event?.target !== event?.currentTarget) return;
+          const key = event?.key;
+          if (key !== 'Enter' && key !== ' ' && key !== 'Spacebar') return;
+          if (event?.preventDefault) event.preventDefault();
+          props.onClick(event);
+        }
+        : undefined,
     }, props.children);
   };
 
@@ -1188,20 +1693,39 @@ window.__ModuleLoader__.load({
 
 /* ── src/client/workbench/breakpoints.js ───────────────────────────── */
 /* ─────────────────────────────────────────────────────────────────────────────
- * 断点判定：**按实测宽度**判，不按窗口宽（§4.3）。
+ * 断点判定：**按实测宽度**判，不按窗口宽（设计方案 §4.3）。
  *
  * 右栏宽度区间 300–1150，永远全高：
- *   < 420        单列；两列网格降为一列；表格降为卡片流
- *   420 – 899    单列为主，两列网格可用
- *   ≥ 900        两列网格启用
+ *   < 420        窄栏：单列；表格降为卡片流
+ *   420 – 559    单列（净宽不足 520，放不下设计稿的两列网格）
+ *   ≥ 560        两列网格启用
+ *
+ * ## 560 这个阈值是**从设计稿栅格推出来的**，不是拍的
+ *
+ * `design/STYLE-SPEC.md` §1 栅格：左右外边距 20px ⇒ 内容净宽 **520**；
+ * **两列网格每列 254、列间距 12**（`20 + 254 + 12 + 254 = 540`）。
+ * ⇒ 面板宽度 ≥ `20 + 520 + 20 = 560` 时，两列网格才与设计稿 **1:1** 对上。
+ *
+ * 设计稿 §6 明确要求两列的画板有三块：`RF/RunMode`（两张并列大卡 254×280）、
+ * `RF/Plan`（**2×2 矩阵** 254×150 四卡）、`RF/Assets`（两列网格 254 宽）。
+ *
+ * ⚠️ 阈值之前写的是 **900** —— 那是把验收门禁的**测试宽度档**
+ * （300 / 560 / 900 / 1150）误当成了列数阈值。后果是：这三块板在右栏里
+ * **永远退化成单列**，与设计稿正好相反（实机截图抓到：板 03 的两张大卡
+ * 上下堆叠、板 05 的 2×2 矩阵竖着排）。
  *
  * 画板 560×900 是**设计稿比例**，不是运行时比例；9:16 只作为成片画幅出现在播放器画面区。
  * ─────────────────────────────────────────────────────────────────────────── */
 ;(function (RF) {
   'use strict';
 
-  /** 断点常量（宽度以 CSS 像素计）。 */
-  RF.BREAKPOINTS = { narrow: 420, wide: 900 };
+  /**
+   * 断点常量（宽度以 CSS 像素计）。
+   *
+   * - `narrow = 420`：窄栏 —— 表格降为卡片流。
+   * - `wide = 560`：**两列网格的门槛**（净宽 ≥ 520 = STYLE-SPEC §1 的两列网格净宽）。
+   */
+  RF.BREAKPOINTS = { narrow: 420, wide: 560 };
 
   /**
    * 宽度 → 断点名。
@@ -1375,8 +1899,8 @@ window.__ModuleLoader__.load({
    *
    * @typedef {object} TabChrome
    * @property {string} titleKey Header 标题词条。
-   * @property {(project: object, t: function) => string} subtitle Header 副标题。
-   * @property {(project: object, t: function) => string} capsule Header 右侧胶囊。
+   * @property {(project: object, t: function, ctx?: object) => string} subtitle Header 副标题。
+   * @property {(project: object, t: function, ctx?: object) => string} capsule Header 右侧胶囊。
    * @property {(project: object, t: function) => string} footerLabel Footer 第一行标签。
    * @property {(project: object, t: function) => string} footerValue Footer 第二行。
    * @property {(project: object) => object} footerAction Footer 按钮。
@@ -1388,8 +1912,9 @@ window.__ModuleLoader__.load({
    *
    * @typedef {object} FooterAction
    * @property {string} key 按钮文案词条。
-   * @property {string} kind `tab` / `tool` / `export` / `scroll` / `none`。
+   * @property {string} kind `tab` / `tool` / `export` / `scroll` / `flow` / `none`。
    * @property {string} [tab] `kind === 'tab'` 时切到哪个页签。
+   * @property {string} [screen] `kind === 'flow'` 时切到哪块流程屏。
    * @property {string} [tool] `kind === 'tool'` 时调哪个工具。
    * @property {object | function} [params] `kind === 'tool'` 时的参数（可以是函数）。
    * @property {boolean} [disabled] 不可用时置 true。
@@ -1566,6 +2091,99 @@ window.__ModuleLoader__.load({
       footerValue: (project, t) => t('chrome.log.footerValue', { count: logCount(project) }),
       footerAction: () => ({ key: 'chrome.log.action', kind: 'export' }),
     },
+
+    // ══════════════════════════════════════════════════════════════
+    // 流程屏（设计稿 02 / 03 / 04 / 05 / 06 / 16）
+    //
+    // 这些屏**不在页签栏里**（设计稿 17 号板明写右栏是 7 个页签），
+    // 它们的骨架只有 Header / StageBar / Scroll / Footer 四段。
+    // ══════════════════════════════════════════════════════════════
+
+    /**
+     * 02 导入小说：胶囊是「新项目」，底栏指向「选运行位置」。
+     */
+    intake: {
+      titleKey: 'flow.intake.title',
+      subtitle: staticText('flow.intake.subtitle'),
+      capsule: staticText('flow.intake.capsule'),
+      footerLabel: staticText('flow.intake.footerLabel'),
+      footerValue: staticText('flow.intake.footerValue'),
+      footerAction: () => ({ key: 'flow.intake.action', kind: 'flow', screen: 'runmode' }),
+    },
+
+    /**
+     * 03 运行位置：胶囊是「2 种位置」，底栏指向「出执行路径」。
+     */
+    runmode: {
+      titleKey: 'flow.runmode.title',
+      subtitle: staticText('flow.runmode.subtitle'),
+      capsule: (project, t) => t('flow.runmode.capsule', { count: RF.RUN_POSITIONS.length }),
+      footerLabel: staticText('flow.runmode.footerLabel'),
+      footerValue: staticText('flow.runmode.footerValue'),
+      footerAction: () => ({ key: 'flow.runmode.action', kind: 'flow', screen: 'plan' }),
+    },
+
+    /**
+     * 04 设备检查：胶囊是**真实探测项数**（不是写死的 9），
+     * 底栏指向「按探测结果出执行路径」。
+     */
+    device: {
+      titleKey: 'flow.device.title',
+      subtitle: staticText('flow.device.subtitle'),
+      capsule: (project, t, context) => t('flow.device.capsule', {
+        count: Array.isArray(context?.probe?.view?.report?.items)
+          ? context.probe.view.report.items.length
+          : 0,
+      }),
+      footerLabel: staticText('flow.device.footerLabel'),
+      footerValue: staticText('flow.device.footerValue'),
+      footerAction: () => ({ key: 'flow.device.action', kind: 'flow', screen: 'plan' }),
+    },
+
+    /**
+     * 05 执行路径：胶囊是「5 种 kind」，底栏指向「选要跑哪些阶段」。
+     */
+    plan: {
+      titleKey: 'flow.plan.title',
+      subtitle: staticText('flow.plan.subtitle'),
+      capsule: (project, t) => t('flow.plan.capsule', { count: RF.GENERATION_KINDS.length }),
+      footerLabel: staticText('flow.plan.footerLabel'),
+      footerValue: staticText('flow.plan.footerValue'),
+      footerAction: () => ({ key: 'flow.plan.action', kind: 'flow', screen: 'stages' }),
+    },
+
+    /**
+     * 06 执行阶段：胶囊是「4 个阶段」，底栏主按钮**真的开跑阶段一**。
+     */
+    stages: {
+      titleKey: 'flow.stages.title',
+      subtitle: staticText('flow.stages.subtitle'),
+      capsule: (project, t) => t('flow.stages.capsule', { count: RF.STAGES.length }),
+      footerLabel: staticText('flow.stages.footerLabel'),
+      footerValue: staticText('flow.stages.footerValue'),
+      footerAction: () => ({
+        key: 'flow.stages.action',
+        kind: 'tool',
+        tool: RF.TOOL_IDS.runStage,
+        params: { stage: 'llm' },
+      }),
+    },
+
+    /**
+     * 16 降级与失败：胶囊是**真实缺失项数**，底栏指向「回到工作台」。
+     */
+    degraded: {
+      titleKey: 'flow.degrade.title',
+      subtitle: staticText('flow.degrade.subtitle'),
+      capsule: (project, t, context) => t('flow.degrade.capsule', {
+        count: Array.isArray(context?.probe?.view?.degrade?.matrix)
+          ? context.probe.view.degrade.matrix.length
+          : 0,
+      }),
+      footerLabel: staticText('flow.degrade.footerLabel'),
+      footerValue: staticText('flow.degrade.footerValue'),
+      footerAction: () => ({ key: 'flow.degrade.action', kind: 'tab', tab: 'chapters' }),
+    },
   };
 
   /**
@@ -1619,6 +2237,12 @@ window.__ModuleLoader__.load({
   background: var(--dsw-alias-brand-primary);
   flex: 0 0 auto;
 }
+/* 流程屏里，面板头 logo 是「回到工作台」的出口。 */
+.rf-header__logo--button {
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
 .rf-header__text { min-width: 0; flex: 1 1 auto; }
 .rf-header__title {
   font-size: 15px;
@@ -1655,6 +2279,13 @@ window.__ModuleLoader__.load({
   border-radius: 6px;
   font-size: 11px;
   white-space: nowrap;
+  /* StageBar 的步点是**可点**的（点哪一步到那一屏）—— 按钮态要复位，
+     底色与文字色交给 current / passed / upcoming 三个修饰类。 */
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  color: inherit;
+  cursor: pointer;
 }
 .rf-stagebar__step--current {
   background: var(--dsw-alias-button-primary-dimmed);
@@ -1777,6 +2408,16 @@ window.__ModuleLoader__.load({
 }
 .rf-input--focus { border-color: var(--dsw-alias-state-business-primary); }
 .rf-input--error { border-color: var(--dsw-alias-state-error-primary); color: var(--dsw-alias-state-error-primary); }
+/* 多行正文（板 02 的「小说正文」输入）。 */
+.rf-textarea {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 120px;
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.5;
+}
 .rf-pill {
   display: inline-flex;
   align-items: center;
@@ -1811,6 +2452,11 @@ window.__ModuleLoader__.load({
 .rf-row__main { flex: 1 1 auto; min-width: 0; }
 .rf-row__title { font-size: 12px; color: var(--dsw-alias-label-primary); }
 .rf-row__sub { font-size: 11px; color: var(--dsw-alias-label-tertiary); }
+/* 降级矩阵（板 16 号板）：缺失项 + 3 列产出形态。
+   第一列吃掉剩余宽度，三列按内容宽度 —— 窄栏（300px）也不破版。 */
+.rf-matrix { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; gap: 8px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--dsw-alias-border-l1); }
+.rf-matrix:last-child { border-bottom: 0; }
+.rf-matrix__head { font-size: 11px; color: var(--dsw-alias-label-tertiary); }
 .rf-note { font-size: 11px; color: var(--dsw-alias-label-caption); margin-top: 8px; }
 .rf-note--warn { color: var(--dsw-alias-state-warn-label); }
 .rf-note--error { color: var(--dsw-alias-state-error-primary); }
@@ -1869,6 +2515,33 @@ window.__ModuleLoader__.load({
       title: props.t(`empty.${props.key}`),
       hint: props.t('empty.hint'),
     });
+  }
+
+  /**
+   * 降级入口卡（设计稿 16 号板的入口）。
+   *
+   * ## 为什么它不能挂在「有交付物」分支里
+   *
+   * 降级矩阵是**跨流程规范板**，入口在成片页（交付物最常被降级影响）。
+   *
+   * ⚠️ 但它**必须**在成片页的空态下**也**渲染 ——
+   * 降级恰恰是「**没出成片**」的时候最该看的（设计稿 16 号板：「缺什么就说清楚，
+   * 不假装成功」）。早期版本把它放在 `tabOutput` 的末尾，而空态早退
+   * （`deliverables.length === 0`）会把它整块跳过 ⇒
+   * **最需要降级说明的场景，恰恰看不到降级说明的入口**（实机抓到）。
+   *
+   * @param {{ t: function, state: object }} props - 属性。
+   * @returns {object} React 元素。
+   */
+  function degradeEntryCard(props) {
+    return h(RF.ui.Card, null,
+      h('div', { className: `${RF.CLS}-row__title` }, props.t('flow.degrade.title')),
+      h('div', { className: `${RF.CLS}-row__sub` }, props.t('flow.degrade.subtitle')),
+      h(RF.ui.Button, {
+        label: props.t('flow.degrade.action'),
+        variant: 'secondary',
+        onClick: () => props.state.goFlow('degraded'),
+      }));
   }
 
   /**
@@ -2092,7 +2765,12 @@ window.__ModuleLoader__.load({
    */
   RF.tabOutput = function tabOutput(props) {
     const deliverables = Array.isArray(props.project.deliverables) ? props.project.deliverables : [];
-    if (deliverables.length === 0) return emptyOf({ t: props.t, key: 'output' });
+    // 空态**也要**给降级入口（见 {@link degradeEntryCard} 的说明）。
+    if (deliverables.length === 0) {
+      return h('div', null,
+        emptyOf({ t: props.t, key: 'output' }),
+        degradeEntryCard(props));
+    }
     const primaryVideo = deliverables.find(item => item.kind === 'video_clean' || item.kind === 'video_subtitled' || (typeof item.path === 'string' && item.path.endsWith('.mp4')));
     const videoSrc = primaryVideo?.path ? RF.deliverableUrl(primaryVideo.path) : '';
     return h('div', null,
@@ -2156,7 +2834,11 @@ window.__ModuleLoader__.load({
                 download: item.label ?? item.kind,
               }, props.t('common.download'))
               : h(RF.ui.Button, { label: props.t('common.download'), variant: 'secondary' }))))),
-      h('div', { className: `${RF.CLS}-note` }, props.t('deliver.binaryKept')));
+      h('div', { className: `${RF.CLS}-note` }, props.t('deliver.binaryKept')),
+      // ── 降级入口（板 16 号板）──
+      // 降级矩阵是**跨流程规范板**，不该占一个页签；它的入口就在成片页
+      // （交付物最常被降级影响），底栏按钮就是设计稿 16 号板写的那句「查看降级说明」。
+      degradeEntryCard(props));
   };
 
   /**
@@ -2209,6 +2891,690 @@ window.__ModuleLoader__.load({
   };
 })(RF);
 
+/* ── src/client/workbench/flow.js ───────────────────────────── */
+/* ─────────────────────────────────────────────────────────────────────────────
+ * 流程屏（设计稿 02 / 03 / 04 / 05 / 06 / 16）。
+ *
+ * ## 为什么是「独立屏」而不是页签
+ *
+ * 设计稿 17 号板自己写明：右栏工作台是 **7 个页签**（章节 / 分镜 / 资产 / 上下文 /
+ * 技能 / 成片 / 日志）—— 那是**项目视图**。
+ * 板 02–06 的公共骨架只有 4 条（Header / StageBar / Scroll / Footer），**没有页签条**，
+ * 它们按用户操作流程串成一条链：导入 → 运行位置 → 设备检查 → 执行路径 → 执行阶段。
+ * 板 16 是跨流程规范板（降级矩阵）。
+ *
+ * ⇒ **两层并存**：项目视图（7 页签）+ 流程屏（这 6 块）。13 个页签在 326–547px 的右栏放不下。
+ *
+ * ## 三条纪律
+ *
+ * 1. **没有写入口的控件一律禁用 + 说清缺什么** —— 不许留「点了没反应」的按钮。
+ * 2. **不编数据**：没有的字段显示「未接入 / 未设置」，不拿样例值冒充真实值。
+ * 3. 业务数据只从宿主投影读（R1）；组件里的 `useState` 只放交互态。
+ * ─────────────────────────────────────────────────────────────────────────── */
+;(function (RF) {
+  'use strict';
+
+  /**
+   * 设备检查的 9 行（设计稿 04 号板的行序）。
+   *
+   * 「GPU」不是独立探测项 —— 型号是 `vram` 探测的副产品（`nvidia-smi` 一次问两件事），
+   * 所以那一行从 `vram` 的 `gpuName` 取。
+   *
+   * @typedef {object} DeviceRow
+   * @property {string} id 探测项 id（`gpu` 是从 `vram` 派生的行）。
+   * @property {string} labelKey 行名词条。
+   * @property {string} methodKey 探测方式词条。
+   * @property {function} extra 补充值（由探测项算出）。
+   */
+
+  /** @type {DeviceRow[]} */
+  var DEVICE_ROWS = [
+    {
+      id: 'comfy',
+      labelKey: 'flow.device.row.comfy',
+      methodKey: 'flow.device.method.comfy',
+      extra: function (item) { return String(item?.value ?? ''); },
+    },
+    {
+      id: 'ckVersion',
+      labelKey: 'flow.device.row.ckVersion',
+      methodKey: 'flow.device.method.ckVersion',
+      extra: function () { return '≥ 0.2.36'; },
+    },
+    {
+      id: 'vram',
+      labelKey: 'flow.device.row.vram',
+      methodKey: 'flow.device.method.vram',
+      extra: function () { return '门槛 8 GB'; },
+    },
+    {
+      id: 'gpu',
+      labelKey: 'flow.device.row.gpu',
+      methodKey: 'flow.device.method.gpu',
+      extra: function (item) { return String(item?.source ?? ''); },
+    },
+    {
+      id: 'ffmpeg',
+      labelKey: 'flow.device.row.ffmpeg',
+      methodKey: 'flow.device.method.ffmpeg',
+      extra: function () { return '在 PATH'; },
+    },
+    {
+      id: 'encoders',
+      labelKey: 'flow.device.row.encoders',
+      methodKey: 'flow.device.method.encoders',
+      extra: function (item) {
+        const list = Array.isArray(item?.value) ? item.value : [];
+        return list.join(' / ');
+      },
+    },
+    {
+      id: 'disk',
+      labelKey: 'flow.device.row.disk',
+      methodKey: 'flow.device.method.disk',
+      extra: function (item) {
+        const value = Number(item?.value);
+        return Number.isFinite(value) ? `${value} GB` : '';
+      },
+    },
+    {
+      id: 'llm',
+      labelKey: 'flow.device.row.llm',
+      methodKey: 'flow.device.method.llm',
+      extra: function () { return '阶段一可用'; },
+    },
+    {
+      id: 'provider',
+      labelKey: 'flow.device.row.provider',
+      methodKey: 'flow.device.method.provider',
+      extra: function (item, view) {
+        const specs = view?.specs ?? {};
+        return `${specs.total ?? 0} 套 · 本地 ${specs.local ?? 0} / 云端 ${specs.cloud ?? 0}`;
+      },
+    },
+  ];
+
+  /**
+   * 找探测项。
+   * @param {object} report 探测报告。
+   * @param {string} id 探测项 id。
+   * @returns {object | undefined} 探测项。
+   */
+  function itemOf(report, id) {
+    const items = Array.isArray(report?.items) ? report.items : [];
+    return items.find(item => item?.id === id);
+  }
+
+  /**
+   * 探测项的状态色（done / failed / queued）。
+   * @param {object | undefined} item 探测项。
+   * @returns {string} 色调。
+   */
+  function itemTone(item) {
+    const status = String(item?.status ?? '');
+    if (status === 'ok') return 'done';
+    if (status === 'failed') return 'failed';
+    if (status === 'warn') return 'queued';
+    return 'queued';
+  }
+
+  /**
+   * 探测结论的文案（状态点旁边的字）。
+   * @param {object | undefined} item 探测项。
+   * @returns {string} 结论。
+   */
+  function itemVerdict(item) {
+    const status = String(item?.status ?? '');
+    if (status === 'ok') return RF.locale?.zh?.['flow.device.ok'] ?? '已通过';
+    if (status === 'warn') return String(item?.message ?? '');
+    return String(item?.message ?? '');
+  }
+
+  /**
+   * 02 · 小说导入与自动拆章。
+   * @param {{ t: function, project: object, state: object }} props - 属性。
+   * @returns {object} React 元素。
+   */
+  RF.flowIntake = function flowIntake(props) {
+    const t = props.t;
+    const project = props.project ?? {};
+    const intake = project.intake ?? {};
+    const settings = project.settings ?? {};
+    const chapters = Array.isArray(project.chapters) ? project.chapters : [];
+    const headings = Array.isArray(intake.headings) ? intake.headings : [];
+    const fallbackChars = Number(intake.fallbackChars) || 0;
+    const text = String(props.state.novelText ?? '');
+
+    return h('div', null,
+      // ── 来源卡 ──
+      h(RF.ui.Card, null,
+        h(RF.ui.SectionLabel, null, t('flow.intake.sourceLabel')),
+        h(RF.ui.MetaRow, { label: t('flow.intake.chars'), value: String(intake.chars ?? 0) }),
+        headings.length === 0
+          ? h('div', { className: `${RF.CLS}-note` }, t('flow.intake.noHeadings'))
+          : h('div', null, headings.slice(0, 5).map(heading => h('div', {
+            key: `heading-${heading.seq}`,
+            className: `${RF.CLS}-row`,
+          },
+          h('span', { className: `${RF.CLS}-row__title` }, heading.title ?? '')))),
+        h('div', { className: `${RF.CLS}-note` }, t('flow.intake.fallbackRule', {
+          count: headings.length,
+          fallback: fallbackChars,
+        }))),
+
+      // ── 导入入口（正文 + 导入按钮）──
+      h(RF.ui.Card, null,
+        h(RF.ui.SectionLabel, null, t('flow.intake.importLabel')),
+        h('textarea', {
+          className: `${RF.CLS}-input ${RF.CLS}-textarea`,
+          value: text,
+          placeholder: t('flow.intake.importPlaceholder'),
+          onChange: event => props.state.setNovelText(event?.target?.value ?? ''),
+        }),
+        h('div', { className: `${RF.CLS}-row` },
+          h(RF.ui.Button, {
+            label: t('flow.intake.importAction'),
+            variant: 'primary',
+            disabled: text.trim() === '',
+            title: text.trim() === '' ? t('flow.intake.importDisabled') : undefined,
+            onClick: () => props.state.importNovel(),
+          })),
+        h('div', { className: `${RF.CLS}-note` }, t('flow.intake.safetyNote'))),
+
+      // ── 自动拆章预览卡 ──
+      h(RF.ui.Card, null,
+        h(RF.ui.SectionLabel, null, t('flow.intake.previewLabel')),
+        chapters.length === 0
+          ? h('div', { className: `${RF.CLS}-note` }, t('flow.intake.previewEmpty'))
+          : h('div', null, chapters.map(chapter => h('div', {
+            key: chapter.id ?? chapter.title,
+            className: `${RF.CLS}-row`,
+          },
+          h('div', { className: `${RF.CLS}-row__main` },
+            h('div', { className: `${RF.CLS}-row__title` }, chapter.title ?? ''),
+            h('div', { className: `${RF.CLS}-row__sub` },
+              `${chapter.shotCount ?? 0} ${t('unit.shot')} · ${RF.formatDuration(chapter.durationSec ?? 0)}`))))),
+        h('div', { className: `${RF.CLS}-note` }, t('flow.intake.previewRule'))),
+
+      // ── 项目设置卡（只读 + 说清为什么改不了）──
+      h(RF.ui.Card, null,
+        h(RF.ui.SectionLabel, null, t('flow.intake.settingsLabel')),
+        h(RF.ui.MetaRow, {
+          label: t('flow.intake.setting.aspectRatio'),
+          value: settings.aspectRatio === '' ? t('flow.intake.unset') : settings.aspectRatio,
+        }),
+        h(RF.ui.MetaRow, {
+          label: t('flow.intake.setting.resolution'),
+          value: settings.resolution === '' ? t('flow.intake.unset') : settings.resolution,
+        }),
+        h(RF.ui.MetaRow, {
+          label: t('flow.intake.setting.targetDuration'),
+          value: settings.targetDuration === null || settings.targetDuration === undefined
+            ? t('flow.intake.durationUnlimited')
+            : `${settings.targetDuration}s`,
+        }),
+        h(RF.ui.MetaRow, {
+          label: t('flow.intake.setting.bgm'),
+          value: settings.enableBgm === true ? t('common.on') : t('common.off'),
+        }),
+        h('div', { className: `${RF.CLS}-note ${RF.CLS}-note--warn` }, t('flow.intake.settingsReadonly'))),
+
+      // ── 待确认卡 ──
+      h(RF.ui.Card, null,
+        h(RF.ui.SectionLabel, null, t('flow.intake.pendingLabel')),
+        h('div', { className: `${RF.CLS}-note` }, t('flow.intake.pendingEmpty'))));
+  };
+
+  /**
+   * 03 · 运行位置选择。
+   * @param {{ t: function, project: object, state: object }} props - 属性。
+   * @returns {object} React 元素。
+   */
+  RF.flowRunMode = function flowRunMode(props) {
+    const t = props.t;
+    const project = props.project ?? {};
+    const plan = project.plan ?? null;
+    const current = String(project.runPosition ?? '');
+    const pending = String(props.state.pendingPosition ?? '');
+    const provider = String(project.provider ?? '');
+    const clouds = RF.CLOUD_PROVIDERS;
+
+    const positionCard = (position, title, subtitle, pros, cons) => {
+      const selected = (current !== '' ? current : pending) === position;
+      return h(RF.ui.Card, {
+        key: position,
+        state: selected ? 'selected' : 'default',
+        onClick: () => props.state.choosePosition(position),
+      },
+      h(RF.ui.Pill, { label: position.toUpperCase(), tone: selected ? 'running' : 'queued' }),
+      h('div', { className: `${RF.CLS}-row__title` }, t(title)),
+      h('div', { className: `${RF.CLS}-row__sub` }, t(subtitle)),
+      h('div', null, pros.map(pro => h('div', { key: `pro-${pro}`, className: `${RF.CLS}-row__sub` },
+        `· ${t(pro)}`))),
+      h('div', null, cons.map(con => h('div', { key: `con-${con}`, className: `${RF.CLS}-note ${RF.CLS}-note--warn` },
+        `· ${t(con)}`))),
+      position === 'local'
+        ? h('div', { className: `${RF.CLS}-row` }, h(RF.ui.Button, {
+          label: t('flow.runmode.deviceCheck'),
+          variant: 'secondary',
+          onClick: event => {
+            if (event?.stopPropagation) event.stopPropagation();
+            props.state.goFlow('device');
+          },
+        }))
+        : h('div', { className: `${RF.CLS}-row__sub` }, t('flow.runmode.providersAvailable', { count: clouds.length })));
+    };
+
+    return h('div', null,
+      h(RF.ui.SectionLabel, null, t('flow.runmode.sectionLabel')),
+      h('div', { className: `${RF.CLS}-note` }, t('flow.runmode.sectionNote')),
+      h('div', { className: `${RF.CLS}-grid${props.state.twoColumns ? ` ${RF.CLS}-grid--two` : ''}` },
+        positionCard(
+          'local',
+          'flow.runmode.localTitle',
+          'flow.runmode.localSubtitle',
+          ['flow.runmode.local.pro1', 'flow.runmode.local.pro2', 'flow.runmode.local.pro3'],
+          ['flow.runmode.local.con1', 'flow.runmode.local.con2', 'flow.runmode.local.con3'],
+        ),
+        positionCard(
+          'cloud',
+          'flow.runmode.cloudTitle',
+          'flow.runmode.cloudSubtitle',
+          ['flow.runmode.cloud.pro1', 'flow.runmode.cloud.pro2', 'flow.runmode.cloud.pro3'],
+          ['flow.runmode.cloud.con1', 'flow.runmode.cloud.con2', 'flow.runmode.cloud.con3'],
+        )),
+
+      // ── 云端 provider 三选一（当前配置值是唯一事实源）──
+      h(RF.ui.Card, null,
+        h(RF.ui.SectionLabel, null, t('flow.runmode.providerLabel')),
+        h('div', { className: `${RF.CLS}-row` }, clouds.map(item => h(RF.ui.Pill, {
+          key: item,
+          label: RF.labelOf('provider', item, t),
+          tone: provider === item ? 'done' : 'queued',
+        }))),
+        h('div', { className: `${RF.CLS}-note ${RF.CLS}-note--warn` }, t('flow.runmode.providerReadonly'))),
+
+      // ── 影响对照表四行 ──
+      h(RF.ui.Card, null,
+        h(RF.ui.SectionLabel, null, t('flow.runmode.compareLabel')),
+        h(RF.ui.MetaRow, { label: t('flow.runmode.compare.kinds'), value: t('flow.runmode.compare.kindsValue') }),
+        h(RF.ui.MetaRow, { label: t('flow.runmode.compare.diff'), value: t('flow.runmode.compare.diffValue') }),
+        h(RF.ui.MetaRow, { label: t('flow.runmode.compare.cost'), value: t('flow.runmode.compare.costValue') }),
+        h(RF.ui.MetaRow, { label: t('flow.runmode.compare.limit'), value: t('flow.runmode.compare.limitValue') })),
+
+      h(RF.ui.Card, null,
+        h('div', { className: `${RF.CLS}-row__sub` }, t('flow.runmode.switchable'))),
+      h('div', { className: `${RF.CLS}-note` }, t('flow.runmode.footerHint')));
+  };
+
+  /**
+   * 04 · 本地档设备检查。
+   * @param {{ t: function, project: object, state: object }} props - 属性。
+   * @returns {object} React 元素。
+   */
+  RF.flowDevice = function flowDevice(props) {
+    const t = props.t;
+    const probe = props.state.probe ?? null;
+
+    if (probe === null) {
+      return h('div', null, h(RF.ui.EmptyState, { title: t('flow.device.loading'), hint: t('empty.hint') }));
+    }
+    if (probe.error !== undefined && probe.error !== null && probe.error !== '') {
+      return h('div', null, h(RF.ui.EmptyState, {
+        title: t('flow.device.failed'),
+        hint: String(probe.error),
+        tone: 'error',
+      }), h(RF.ui.Button, {
+        label: t('flow.device.retry'),
+        variant: 'secondary',
+        onClick: () => props.state.reloadProbe(),
+      }));
+    }
+
+    const view = probe.view ?? {};
+    const report = view.report ?? {};
+    const items = Array.isArray(report.items) ? report.items : [];
+    const blockers = Array.isArray(report.blockers) ? report.blockers : [];
+    const warnings = Array.isArray(report.warnings) ? report.warnings : [];
+    const vram = itemOf(report, 'vram');
+    const vramGb = Number(vram?.value);
+    const vramOk = Number.isFinite(vramGb) && vramGb >= 8;
+
+    // 设计稿 9 行之外的探测项：**失败才显示**（成功的那条没有信息量）。
+    const extraFailures = items.filter(item => (
+      !DEVICE_ROWS.some(row => row.id === item?.id) && String(item?.status ?? '') === 'failed'
+    ));
+
+    return h('div', null,
+      // ── 检测状态条 ──
+      h(RF.ui.Card, null,
+        h('div', { className: `${RF.CLS}-row` },
+          h('div', { className: `${RF.CLS}-row__main` },
+            h('div', { className: `${RF.CLS}-row__title` }, t('flow.device.done', {
+              count: items.length,
+              seconds: ((Number(view.at) || 0) > 0 ? ((Date.now() - Number(view.at)) / 1000).toFixed(1) : '0.0'),
+            })),
+            h('div', { className: `${RF.CLS}-row__sub` }, t('flow.device.footnote'))),
+          h(RF.ui.Button, {
+            label: t('flow.device.recheck'),
+            variant: 'secondary',
+            disabled: probe.loading === true,
+            onClick: () => props.state.reloadProbe(),
+          }))),
+
+      // ── 9 行探测表 ──
+      h(RF.ui.SectionLabel, null, t('flow.device.tableLabel')),
+      h(RF.ui.Card, null,
+        DEVICE_ROWS.map(row => {
+          const item = row.id === 'gpu' ? vram : itemOf(report, row.id);
+          return h('div', { key: row.id, className: `${RF.CLS}-row` },
+            h('div', { className: `${RF.CLS}-row__main` },
+              h('div', { className: `${RF.CLS}-row__title` }, t(row.labelKey)),
+              h('div', { className: `${RF.CLS}-row__sub` }, t(row.methodKey))),
+            h(RF.ui.Pill, {
+              label: itemVerdict(item),
+              tone: itemTone(item),
+            }));
+        }),
+        extraFailures.map(item => h('div', { key: `extra-${item.id}`, className: `${RF.CLS}-row` },
+          h('div', { className: `${RF.CLS}-row__main` },
+            h('div', { className: `${RF.CLS}-row__title` }, t('flow.device.row.videoBackend')),
+            h('div', { className: `${RF.CLS}-row__sub` }, t('flow.device.method.videoBackend'))),
+          h(RF.ui.Pill, { label: String(item.message ?? ''), tone: 'failed' }))),
+        h('div', { className: `${RF.CLS}-row__sub` }, t('flow.device.tableNote'))),
+
+      // ── 结论卡 ──
+      blockers.length > 0
+        ? h(RF.ui.Card, null,
+          h('div', { className: `${RF.CLS}-row__title ${RF.CLS}-note--error` }, t('flow.device.conclusionTitle')),
+          blockers.map(blocker => h('div', {
+            key: `blocker-${blocker.id}`,
+            className: `${RF.CLS}-row__sub`,
+          }, `· ${String(blocker.message ?? '')}`)),
+          h('div', { className: `${RF.CLS}-row` },
+            h(RF.ui.Button, {
+              label: t('flow.device.toCloud'),
+              variant: 'primary',
+              onClick: () => props.state.choosePosition('cloud'),
+            }),
+            h(RF.ui.Button, {
+              label: t('flow.device.onlyImage'),
+              variant: 'secondary',
+              onClick: () => props.state.runStage('image'),
+            })))
+        : h(RF.ui.Card, null,
+          h('div', { className: `${RF.CLS}-row__title` }, t('flow.device.allOk')),
+          warnings.map(warning => h('div', {
+            key: `warn-${warning.id}`,
+            className: `${RF.CLS}-note ${RF.CLS}-note--warn`,
+          }, `· ${String(warning.message ?? '')}`))),
+
+      // ── 本地仍可完成 ──
+      h(RF.ui.Card, null,
+        h('div', { className: `${RF.CLS}-row__sub` }, t('flow.device.localStillLabel')),
+        h('div', { className: `${RF.CLS}-row` },
+          h(RF.ui.Pill, { label: t('flow.device.localStill.storyboard'), tone: 'queued' }),
+          h(RF.ui.Pill, { label: t('flow.device.localStill.references'), tone: 'queued' }),
+          h(RF.ui.Pill, { label: t('flow.device.localStill.compose'), tone: 'queued' })),
+        h('div', { className: `${RF.CLS}-note` }, t('flow.device.bottomNote'))),
+
+      vramOk
+        ? null
+        : h('div', { className: `${RF.CLS}-note ${RF.CLS}-note--warn` }, t('flow.device.vramHint', {
+          have: Number.isFinite(vramGb) ? vramGb : 0,
+          need: 8,
+        })));
+  };
+
+  /**
+   * 05 · 执行路径（kind × 位置矩阵）。
+   * @param {{ t: function, project: object, state: object }} props - 属性。
+   * @returns {object} React 元素。
+   */
+  RF.flowPlan = function flowPlan(props) {
+    const t = props.t;
+    const project = props.project ?? {};
+    const plan = project.plan ?? null;
+    const matrix = Array.isArray(project.planMatrix) ? project.planMatrix : [];
+    const position = String(props.state.pendingPosition ?? (plan?.position ?? ''));
+
+    /** 矩阵里 kind 的分组（设计稿：图像 = t2i/i2i，视频 = r2v/tts/music）。 */
+    var GROUPS = [
+      { key: 'image', kinds: ['t2i', 'i2i'], label: 'flow.plan.group.image' },
+      { key: 'video', kinds: ['r2v', 'tts', 'music'], label: 'flow.plan.group.video' },
+    ];
+
+    const cell = (group, where) => {
+      const rows = matrix.filter(row => group.kinds.includes(String(row?.kind ?? '')));
+      const brief = where === 'local'
+        ? rows.map(row => row?.local).find(Boolean)
+        : rows.map(row => row?.cloud).find(Boolean);
+      const selected = plan !== null
+        && String(plan.position ?? '') === where
+        && group.kinds.includes(String(plan.kind ?? ''));
+      return h(RF.ui.Card, {
+        key: `${group.key}-${where}`,
+        state: selected ? 'selected' : 'default',
+        onClick: () => props.state.choosePosition(where),
+      },
+      h('div', { className: `${RF.CLS}-row__title` }, t(group.label)),
+      h('div', { className: `${RF.CLS}-row__sub` }, t(where === 'local' ? 'flow.plan.localSub' : 'flow.plan.cloudSub')),
+      h('div', { className: `${RF.CLS}-row__sub` }, t('flow.plan.specCount', { count: rows.length })),
+      brief
+        ? h('div', { className: `${RF.CLS}-row__sub` }, brief.sourceFile ?? '')
+        : h('div', { className: `${RF.CLS}-note ${RF.CLS}-note--warn` }, t('flow.plan.noSpec')),
+      where === 'cloud'
+        ? h('div', { className: `${RF.CLS}-row__sub` }, t('flow.plan.billed'))
+        : null);
+    };
+
+    /**
+     * 规格 id（拿不到就说「这一档没有规格」，不编）。
+     * @param {object | null | undefined} brief 规格摘要。
+     * @returns {string} 规格 id。
+     */
+    const specIdOf = (brief) => {
+      const id = String(brief?.id ?? '');
+      return id === '' ? t('flow.plan.noSpec') : id;
+    };
+
+    return h('div', null,
+      h(RF.ui.SectionLabel, null, t('flow.plan.axisLabel')),
+      h('div', { className: `${RF.CLS}-grid${props.state.twoColumns ? ` ${RF.CLS}-grid--two` : ''}` },
+        cell(GROUPS[0], 'local'),
+        cell(GROUPS[0], 'cloud'),
+        cell(GROUPS[1], 'local'),
+        cell(GROUPS[1], 'cloud')),
+
+      // ── kind → 规格映射 ──
+      h(RF.ui.Card, null,
+        h(RF.ui.SectionLabel, null, t('flow.plan.mappingLabel')),
+        matrix.map(row => h('div', {
+          key: String(row?.kind ?? ''),
+          className: `${RF.CLS}-row`,
+          onClick: () => props.state.chooseKind(String(row?.kind ?? '')),
+        },
+        h('div', { className: `${RF.CLS}-row__main` },
+          h('div', { className: `${RF.CLS}-row__title` }, String(row?.kind ?? '')),
+          // 板 05 号板：「t2i → 文生图 · local_sdxl_t2i / cloud_h3_t2i」
+          // —— 同一 kind 的**两套 sourceFile**，不是两档能力（少一列就讲不清这件事）。
+          h('div', { className: `${RF.CLS}-row__sub` },
+            `${t(`flow.plan.kind.${row?.kind ?? ''}`)} · `
+            + `${t('flow.plan.spec.local')} ${specIdOf(row?.local)} / `
+            + `${t('flow.plan.spec.cloud')} ${specIdOf(row?.cloud)}`)),
+        h(RF.ui.Pill, {
+          label: plan !== null && String(plan.kind ?? '') === String(row?.kind ?? '') ? t('flow.plan.current') : '',
+          tone: plan !== null && String(plan.kind ?? '') === String(row?.kind ?? '') ? 'running' : 'queued',
+        }))),
+        h('div', { className: `${RF.CLS}-note` }, t('flow.plan.mappingNote'))),
+
+      // ── 辅助评分（没有评分器 ⇒ 明说，不编数字）──
+      h(RF.ui.Card, null,
+        h(RF.ui.SectionLabel, null, t('flow.plan.scoreLabel')),
+        h('div', { className: `${RF.CLS}-note ${RF.CLS}-note--warn` }, t('flow.plan.scoreMissing')),
+        h('div', { className: `${RF.CLS}-note` }, t('flow.plan.bottomNote'))));
+  };
+
+  /**
+   * 06 · 四阶段勾选。
+   * @param {{ t: function, project: object, state: object }} props - 属性。
+   * @returns {object} React 元素。
+   */
+  RF.flowStages = function flowStages(props) {
+    const t = props.t;
+    const project = props.project ?? {};
+    const stages = project.stages ?? {};
+    const global = Array.isArray(stages.global) ? stages.global : [];
+    const byChapter = Array.isArray(stages.byChapter) ? stages.byChapter : [];
+    const chapters = Array.isArray(project.chapters) ? project.chapters : [];
+
+    return h('div', null,
+      // ── 四张全局阶段卡 ──
+      RF.STAGES.map((stage, index) => {
+        const enabled = global.includes(stage);
+        return h(RF.ui.Card, { key: stage, state: enabled ? 'selected' : 'default' },
+          h('div', { className: `${RF.CLS}-row` },
+            h('div', { className: `${RF.CLS}-row__main` },
+              h('div', { className: `${RF.CLS}-row__title` }, stage),
+              h('div', { className: `${RF.CLS}-row__sub` }, t(`flow.stages.${stage}.sub`)),
+              h('div', { className: `${RF.CLS}-note` }, t(`flow.stages.${stage}.hint`))),
+            h(RF.ui.Pill, { label: `STAGE ${index + 1}`, tone: enabled ? 'running' : 'queued' })));
+        }),
+      h('div', { className: `${RF.CLS}-note ${RF.CLS}-note--warn` }, t('flow.stages.readonly')),
+
+      // ── 显存门槛提示条 ──
+      h(RF.ui.Card, null,
+        h('div', { className: `${RF.CLS}-row__title ${RF.CLS}-note--warn` }, t('flow.stages.vramTitle')),
+        h('div', { className: `${RF.CLS}-note` }, t('flow.stages.vramNote'))),
+
+      // ── 按章勾选 ──
+      h(RF.ui.Card, null,
+        h(RF.ui.SectionLabel, null, t('flow.stages.byChapterLabel')),
+        byChapter.length === 0
+          ? h('div', { className: `${RF.CLS}-note` }, t('flow.stages.noChapter'))
+          : byChapter.map(row => {
+            const chapter = chapters.find(item => Number(item?.id) === Number(row?.seq));
+            const list = Array.isArray(row?.stages) ? row.stages : [];
+            return h('div', { key: String(row?.seq ?? ''), className: `${RF.CLS}-row` },
+              h('div', { className: `${RF.CLS}-row__main` },
+                h('div', { className: `${RF.CLS}-row__title` },
+                  t('flow.stages.chapterRow', {
+                    seq: row?.seq ?? '',
+                    name: chapter?.title ?? '',
+                  })),
+                h('div', { className: `${RF.CLS}-row__sub` },
+                  list.length === 0
+                    ? t('flow.stages.chapterPending')
+                    : list.map(stage => t(`stages.${stage}`)).join(' · '))));
+          }),
+        h('div', { className: `${RF.CLS}-note` }, t('flow.stages.bottomNote'))));
+  };
+
+  /**
+   * 16 · 降级矩阵。
+   * @param {{ t: function, project: object, state: object }} props - 属性。
+   * @returns {object} React 元素。
+   */
+  RF.flowDegraded = function flowDegraded(props) {
+    const t = props.t;
+    const probe = props.state.probe ?? null;
+
+    if (probe === null) {
+      return h('div', null, h(RF.ui.EmptyState, { title: t('flow.degrade.loading'), hint: t('empty.hint') }));
+    }
+    if (probe.error !== undefined && probe.error !== null && probe.error !== '') {
+      return h('div', null, h(RF.ui.EmptyState, {
+        title: t('flow.degrade.failed'),
+        hint: String(probe.error),
+        tone: 'error',
+      }), h(RF.ui.Button, {
+        label: t('flow.device.retry'),
+        variant: 'secondary',
+        onClick: () => props.state.reloadProbe(),
+      }));
+    }
+
+    const degrade = probe.view?.degrade ?? {};
+    const rows = Array.isArray(degrade.matrix) ? degrade.matrix : [];
+    const degradations = Array.isArray(degrade.degradations) ? degrade.degradations : [];
+    const notices = Array.isArray(degrade.notices) ? degrade.notices : [];
+
+    /**
+     * 产出形态 → 胶囊色调。
+     * @param {string} form 形态（`none` / `text_card` / `placeholder` / `silent` / `full` / `partial`）。
+     * @returns {string} 色调。
+     */
+    const formTone = (form) => {
+      if (form === 'none') return 'failed';
+      if (form === 'full') return 'done';
+      return 'queued';
+    };
+
+    return h('div', null,
+      // ── 降级矩阵表（板 16 号板：缺失项 × 成片 / 分镜表 / 参考图，7 行 3 列值）──
+      // ⚠️ 三列值**都要显示** —— 只显示成片那一列，
+      // 「分镜表还在、参考图没了」这种关键事实就说不出来了。
+      h(RF.ui.Card, null,
+        h('div', { className: `${RF.CLS}-matrix` },
+          h('div', { className: `${RF.CLS}-matrix__head` }, t('flow.degrade.missingItem')),
+          h('div', { className: `${RF.CLS}-matrix__head` }, t('flow.degrade.colVideo')),
+          h('div', { className: `${RF.CLS}-matrix__head` }, t('flow.degrade.colStoryboard')),
+          h('div', { className: `${RF.CLS}-matrix__head` }, t('flow.degrade.colPack'))),
+        rows.map(row => h('div', { key: String(row?.kind ?? ''), className: `${RF.CLS}-matrix` },
+          h('div', { className: `${RF.CLS}-row__title` }, t(`degrade.kind.${row?.kind ?? ''}`)),
+          h(RF.ui.Pill, {
+            label: t(`degrade.video.${row?.video ?? 'none'}`),
+            tone: formTone(String(row?.video ?? 'none')),
+          }),
+          h(RF.ui.Pill, {
+            label: row?.storyboard === false ? t('degrade.storyboard.no') : t('degrade.storyboard.yes'),
+            tone: row?.storyboard === false ? 'failed' : 'done',
+          }),
+          h(RF.ui.Pill, {
+            label: t(`degrade.pack.${row?.referencePack ?? 'none'}`),
+            tone: formTone(String(row?.referencePack ?? 'none')),
+          }))),
+        h('div', { className: `${RF.CLS}-note` }, t('flow.degrade.matrixNote'))),
+
+      // ── 一次真实降级 ──
+      degradations.length === 0
+        ? h(RF.ui.Card, null,
+          h('div', { className: `${RF.CLS}-row__title` }, t('flow.degrade.noneTitle')),
+          h('div', { className: `${RF.CLS}-note` }, t('flow.degrade.noneBody')))
+        : h(RF.ui.Card, null,
+          h('div', { className: `${RF.CLS}-row__title` }, t(`degrade.kind.${degradations[0].kind ?? ''}`)),
+          h('div', { className: `${RF.CLS}-row__sub` }, String(degradations[0].message ?? '')),
+          h('div', { className: `${RF.CLS}-row__sub` }, t('flow.degrade.outputsLine', {
+            video: t(`degrade.video.${degrade.outputs?.video ?? 'none'}`),
+            storyboard: degrade.outputs?.storyboard === false
+              ? t('degrade.storyboard.no')
+              : t('degrade.storyboard.yes'),
+            pack: t(`degrade.pack.${degrade.outputs?.referencePack ?? 'none'}`),
+          })),
+          h('div', { className: `${RF.CLS}-row` },
+            h(RF.ui.Button, {
+              label: t('flow.degrade.rerun'),
+              variant: 'secondary',
+              onClick: () => props.state.runStage('tts'),
+            }),
+            h(RF.ui.Button, {
+              label: t('flow.degrade.accept'),
+              variant: 'secondary',
+              onClick: () => props.state.goFlow('stages'),
+            }))),
+
+      // ── 对话话术 ──
+      h(RF.ui.Card, null,
+        h(RF.ui.SectionLabel, null, t('flow.degrade.dialogLabel')),
+        notices.length === 0
+          ? h('div', { className: `${RF.CLS}-note` }, t('flow.degrade.noNotices'))
+          : h('div', null, notices.slice(0, 4).map((notice, index) => h('div', {
+            key: `notice-${index}`,
+            className: `${RF.CLS}-row__sub`,
+          }, `· ${String(notice)}`)))));
+  };
+})(RF);
+
 /* ── src/client/workbench/Workbench.js ───────────────────────────── */
 /* ─────────────────────────────────────────────────────────────────────────────
  * 右栏工作台主壳：Header / StageBar / Scroll（**唯一滚动容器**）/ Footer。
@@ -2219,6 +3585,15 @@ window.__ModuleLoader__.load({
  *
  * 断点按**实测宽度**判（`ResizeObserver` 量容器宽度），不按窗口宽。
  * 组件里的 `useState` 只放交互态，业务数据只从宿主投影读（R1）。
+ *
+ * ── 两层导航（2026-10-24）────────────────────────────────────────────
+ *
+ * - **项目视图**（默认）：7 个页签（设计稿 17 号板明写「右栏工作台 7 个页签」）。
+ * - **流程屏**：设计稿 02 / 03 / 04 / 05 / 06 / 16 —— 它们的骨架里**没有页签条**
+ *   （只有 Header / StageBar / Scroll / Footer），按用户操作流程串成一条链。
+ *
+ * 进入流程屏的入口：**StageBar 的 6 个步点**（点哪一步到那一屏）+ 流程屏自己的
+ * 「继续」链（底栏按钮）。退出：StageBar 的后 3 步 + 面板头的返回按钮。
  * ─────────────────────────────────────────────────────────────────────────── */
 ;(function (RF) {
   'use strict';
@@ -2232,6 +3607,16 @@ window.__ModuleLoader__.load({
     skills: RF.tabSkills,
     output: RF.tabOutput,
     log: RF.tabLog,
+  };
+
+  /** 6 块流程屏 → 渲染函数（设计稿 02 / 03 / 04 / 05 / 06 / 16）。 */
+  RF.FLOW_RENDERERS = {
+    intake: RF.flowIntake,
+    runmode: RF.flowRunMode,
+    device: RF.flowDevice,
+    plan: RF.flowPlan,
+    stages: RF.flowStages,
+    degraded: RF.flowDegraded,
   };
 
   /**
@@ -2264,6 +3649,8 @@ window.__ModuleLoader__.load({
     const project = RF.useProjection(React);
 
     const [activeTab, setActiveTab] = React.useState('chapters');
+    const [mode, setMode] = React.useState('tabs');
+    const [flowScreen, setFlowScreen] = React.useState('intake');
     const [selectedShotId, setSelectedShotId] = React.useState(null);
     const [assetCategory, setAssetCategory] = React.useState('all');
     const [skillSource, setSkillSource] = React.useState('all');
@@ -2273,6 +3660,11 @@ window.__ModuleLoader__.load({
     const [voice, setVoice] = React.useState(true);
     const [bgm, setBgm] = React.useState(false);
     const [rollbackMode, setRollbackMode] = React.useState('single');
+    const [novelText, setNovelText] = React.useState('');
+    const [pendingPosition, setPendingPosition] = React.useState('');
+    const [planHint, setPlanHint] = React.useState('');
+    const [probe, setProbe] = React.useState(null);
+    const [probeLoading, setProbeLoading] = React.useState(false);
     const [width, setWidth] = React.useState(0);
 
     const shellRef = React.useRef(null);
@@ -2292,17 +3684,67 @@ window.__ModuleLoader__.load({
 
     const twoColumns = RF.columnsFor(width) === 2;
     const stage = RF.stageStepsState(project);
-    const render = RF.TAB_RENDERERS[activeTab] ?? RF.tabChapters;
+    const inFlow = mode === 'flow';
+    const activeScreen = inFlow ? flowScreen : activeTab;
+    const render = inFlow
+      ? (RF.FLOW_RENDERERS[flowScreen] ?? RF.flowIntake)
+      : (RF.TAB_RENDERERS[activeTab] ?? RF.tabChapters);
+
+    // 流程屏里，StageBar 高亮的是**这一屏所属的那一步**（设计稿 §2.1 全表）。
+    const flowStepIndex = RF.STAGE_STEPS.indexOf(RF.FLOW_SCREEN_STEPS[flowScreen] ?? '');
+    const currentIndex = inFlow ? (flowStepIndex >= 0 ? flowStepIndex : 0) : stage.current;
+    const passedIndex = inFlow
+      ? RF.STAGE_STEPS.map((_, index) => index).filter(index => index < currentIndex)
+      : stage.passed;
+
+    // ── 探测数据（设备检查 / 降级矩阵两屏用）──
+    // ⚠️ 这里**不用** `useCallback`：客户端测试用的最小 hook 运行时没有它。
+    // `loadProbe` 只依赖模块级函数与两个稳定的 setter，所以依赖数组窄一点也安全。
+    const loadProbe = (refresh) => {
+      if (typeof fetch !== 'function') {
+        setProbe({ view: null, error: '当前环境没有 fetch，读不到探测结果' });
+        return;
+      }
+      setProbeLoading(true);
+      fetch(RF.probeUrl({ refresh: refresh === true }))
+        .then(response => response.json())
+        .then(view => {
+          setProbe({ view, error: null });
+          setProbeLoading(false);
+        })
+        .catch(error => {
+          setProbe({ view: null, error: error?.message ?? String(error) });
+          setProbeLoading(false);
+        });
+    };
+
+    React.useEffect(() => {
+      if (activeScreen === 'device' || activeScreen === 'degraded') loadProbe(false);
+    }, [activeScreen]);
 
     // 快捷键带 `params.focus` 打开某个页签（`ctx.sidebarRight.openTab(kind, { params })`）。
     const tabInfo = typeof props.useTabInfo === 'function' ? props.useTabInfo() : undefined;
     const focus = tabInfo?.tab?.navigation?.params?.focus;
     React.useEffect(() => {
-      if (typeof focus === 'string' && RF.WORKBENCH_TABS.some(tab => tab.id === focus)) setActiveTab(focus);
+      if (typeof focus === 'string' && RF.WORKBENCH_TABS.some(tab => tab.id === focus)) {
+        setMode('tabs');
+        setActiveTab(focus);
+      }
     }, [focus]);
     React.useEffect(() => {
       if (typeof props.sessionId === 'string') RF.currentSessionId = props.sessionId;
     }, [props.sessionId]);
+
+    const goFlow = (screen) => {
+      if (typeof screen !== 'string' || RF.FLOW_RENDERERS[screen] === undefined) return;
+      setMode('flow');
+      setFlowScreen(screen);
+    };
+    const goTab = (tab) => {
+      if (typeof tab !== 'string' || RF.TAB_RENDERERS[tab] === undefined) return;
+      setMode('tabs');
+      setActiveTab(tab);
+    };
 
     const state = {
       selectedShotId,
@@ -2343,6 +3785,58 @@ window.__ModuleLoader__.load({
         ...(force === true ? { force: true } : {}),
       }),
       twoColumns,
+      // ── 流程屏相关 ──
+      goFlow,
+      goTab,
+      novelText,
+      setNovelText,
+      pendingPosition,
+      planHint,
+      probe: probe === null ? null : { ...probe, loading: probeLoading },
+      reloadProbe: () => loadProbe(true),
+      /**
+       * 导入小说：走 `reelforge.import_novel`（`novel` 是必填）。
+       */
+      importNovel: () => {
+        const text = String(novelText).trim();
+        if (text === '') return;
+        RF.actions?.callTool?.(RF.TOOL_IDS.importNovel, { novel: text });
+      },
+      /**
+       * 选运行位置。
+       *
+       * ⚠️ `reelforge.update_plan` 的 `kind` 与 `position` **都是必填** ——
+       * 只发位置会被宿主整条拒收。所以：
+       *   已经选过 kind → 直接改位置；
+       *   还没选 kind   → 先记住位置（客户端交互态），等「执行路径」选完 kind 一起写入。
+       */
+      choosePosition: (position) => {
+        const kind = project.plan?.kind;
+        if (typeof kind === 'string' && kind !== '') {
+          RF.actions?.callTool?.(RF.TOOL_IDS.updatePlan, { kind, position });
+          return;
+        }
+        setPendingPosition(position);
+        setPlanHint('');
+      },
+      /**
+       * 选生成 kind（写进 `reelforge.update_plan`）。
+       */
+      chooseKind: (kind) => {
+        const position = pendingPosition !== '' ? pendingPosition : String(project.plan?.position ?? '');
+        if (position === '') {
+          setPlanHint(t('flow.plan.needPosition'));
+          return;
+        }
+        setPlanHint('');
+        RF.actions?.callTool?.(RF.TOOL_IDS.updatePlan, { kind, position });
+      },
+      /**
+       * 跑一个阶段（`reelforge.run_stage`，触发类 ⇒ 宿主会弹授权）。
+       */
+      runStage: (stage) => {
+        RF.actions?.callTool?.(RF.TOOL_IDS.runStage, { stage });
+      },
     };
 
     // 底栏第二行：当前跑到第几章的第几镜（成本行已按 owner 裁决移进滚动区底部）。
@@ -2354,7 +3848,7 @@ window.__ModuleLoader__.load({
     // ── 按屏外壳（Header 三件套 + Footer 三件套）──
     // owner 裁决「按屏变化」（Q1 底栏 / Q3 胶囊）：设计稿 17 块板的胶囊与底栏文案
     // 每块都不同，以前实现是全局固定的一套。每屏长什么样在 `workbench/chrome.js`。
-    const chrome = RF.tabChrome(activeTab);
+    const chrome = RF.tabChrome(activeScreen);
     // 底栏动作**由屏上的数据决定**：没章时「生成第 1 章」不能是可点的按钮，
     // 没有交付物时「交付物」也不能点了没反应 —— 都要禁用 + 说清缺什么。
     const chromeAction = typeof chrome.footerAction === 'function'
@@ -2363,8 +3857,10 @@ window.__ModuleLoader__.load({
     const chromeTitle = chrome.titleKey === undefined ? '' : t(chrome.titleKey);
     // 外壳契约：subtitle / capsule / footerLabel / footerValue **一律是函数**
     // （静态文案在 chrome.js 里就包好了，渲染层不再判类型）。
-    const chromeSubtitle = chrome.subtitle(project, t);
-    const chromeCapsule = chrome.capsule(project, t);
+    // 第三个参数 `ctx` 带的是**屏外数据**（目前只有设备检查 / 降级矩阵的探测结果）。
+    const chromeContext = { probe };
+    const chromeSubtitle = chrome.subtitle(project, t, chromeContext);
+    const chromeCapsule = chrome.capsule(project, t, chromeContext);
     const chromeLabel = chrome.footerLabel(project, t);
     const chromeValue = chrome.footerValue(project, t);
     const chromeDisabled = chromeAction.disabled === true || chromeAction.kind === 'none';
@@ -2382,11 +3878,15 @@ window.__ModuleLoader__.load({
       URL.revokeObjectURL(url);
     };
 
-    // 底栏主按钮：切页签 / 调工具 / 导出文件 / 暂不可用。
+    // 底栏主按钮：切页签 / 调工具 / 导出文件 / 切流程屏 / 暂不可用。
     const runChromeAction = () => {
       const action = chromeAction;
       if (action.kind === 'tab') {
-        setActiveTab(action.tab);
+        goTab(action.tab);
+        return;
+      }
+      if (action.kind === 'flow') {
+        goFlow(action.screen);
         return;
       }
       if (action.kind === 'tool') {
@@ -2404,36 +3904,60 @@ window.__ModuleLoader__.load({
       }
     };
 
+    // StageBar 点哪一步 → 到那一屏（设计稿把 StageBar 定义成进度指示，这里加成可点）。
+    const goStageStep = (step) => {
+      const target = RF.STAGE_STEP_TARGETS[step];
+      if (target === undefined) return;
+      if (target.kind === 'flow') goFlow(target.screen);
+      else goTab(target.tab);
+    };
+
     return h('section', { className: `${RF.CLS}-root`, ref: shellRef },
       h('header', { className: `${RF.CLS}-header` },
-        h('div', { className: `${RF.CLS}-header__logo`, 'aria-hidden': true }),
+        inFlow
+          ? h('button', {
+            type: 'button',
+            className: `${RF.CLS}-header__logo ${RF.CLS}-header__logo--button`,
+            title: t('flow.backToWorkbench'),
+            'aria-label': t('flow.backToWorkbench'),
+            onClick: () => goTab('chapters'),
+          })
+          : h('div', { className: `${RF.CLS}-header__logo`, 'aria-hidden': true }),
         h('div', { className: `${RF.CLS}-header__text` },
           h('div', { className: `${RF.CLS}-header__title` }, chromeTitle),
           h('div', { className: `${RF.CLS}-header__subtitle` }, chromeSubtitle)),
         h('span', { className: `${RF.CLS}-header__status` }, chromeCapsule)),
       h('nav', { className: `${RF.CLS}-stagebar`, 'aria-label': t('title') },
         RF.STAGE_STEPS.map((step, index) => {
-          const tone = index === stage.current ? 'current' : stage.passed.indexOf(index) >= 0 ? 'passed' : 'upcoming';
-          return h('span', { key: step, className: `${RF.CLS}-stagebar__step ${RF.CLS}-stagebar__step--${tone}` },
-            h('span', { className: `${RF.CLS}-stagebar__dot ${RF.CLS}-stagebar__dot--${tone}` }),
-            h('span', null, t(`stage.${step}`)));
+          const tone = index === currentIndex ? 'current' : passedIndex.indexOf(index) >= 0 ? 'passed' : 'upcoming';
+          return h('button', {
+            key: step,
+            type: 'button',
+            className: `${RF.CLS}-stagebar__step ${RF.CLS}-stagebar__step--${tone}`,
+            title: t(`stage.go.${step}`),
+            onClick: () => goStageStep(step),
+          },
+          h('span', { className: `${RF.CLS}-stagebar__dot ${RF.CLS}-stagebar__dot--${tone}` }),
+          h('span', null, t(`stage.${step}`)));
         }),
-        h('span', { className: `${RF.CLS}-stagebar__count` }, t('stage.count', { current: stage.current + 1 }))),
-      h('div', { className: `${RF.CLS}-tabs`, role: 'tablist' },
-        RF.WORKBENCH_TABS.map(tab => h('button', {
-          key: tab.id,
-          type: 'button',
-          role: 'tab',
-          'aria-selected': tab.id === activeTab ? 'true' : 'false',
-          className: `${RF.CLS}-tabs__item${tab.id === activeTab ? ` ${RF.CLS}-tabs__item--active` : ''}`,
-          onClick: () => setActiveTab(tab.id),
-        }, t(`tab.${tab.labelKey}`)))),
+        h('span', { className: `${RF.CLS}-stagebar__count` }, t('stage.count', { current: currentIndex + 1 }))),
+      inFlow
+        ? null
+        : h('div', { className: `${RF.CLS}-tabs`, role: 'tablist' },
+          RF.WORKBENCH_TABS.map(tab => h('button', {
+            key: tab.id,
+            type: 'button',
+            role: 'tab',
+            'aria-selected': tab.id === activeTab ? 'true' : 'false',
+            className: `${RF.CLS}-tabs__item${tab.id === activeTab ? ` ${RF.CLS}-tabs__item--active` : ''}`,
+            onClick: () => goTab(tab.id),
+          }, t(`tab.${tab.labelKey}`)))),
       h('div', { className: `${RF.CLS}-scroll` },
         RF.renderCapturedInput({ t, project }),
         render({ t, project, state, width }),
         // 成本与进度**移进滚动区底部**（owner 裁决 Q2：设计稿 01 号板把它放在滚动区内，
         // y=816；底栏只留「本屏标签 + 本屏主文案 + 本屏主按钮」）。
-        activeTab === 'chapters'
+        activeTab === 'chapters' && !inFlow
           ? h('div', { className: `${RF.CLS}-note` }, t('chrome.stat.row', {
             position: positionLabel,
             spent: RF.formatMoney(project.cost?.spent ?? 0),

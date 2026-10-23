@@ -13,6 +13,7 @@ import path from 'node:path';
 import { resolveConfig } from './config.js';
 import { registerInputHook } from './inputHook.js';
 import { BUNDLED_SKILLS_DIR, PRIVATE_DIR } from './paths.js';
+import { buildProbeView } from './probeRoute.js';
 import { resolveProjectPath, resolveWorkspaceRoot } from './workspace.js';
 import {
   ProjectionStore,
@@ -27,6 +28,8 @@ import { createToolDefinitions } from './tools.js';
 const STATE_PATH = '/api/reelforge.state';
 const CAPABILITIES_PATH = '/api/reelforge.capabilities';
 const FILE_PATH = '/api/reelforge.file';
+/** 设备检查 + 降级矩阵（板 04 / 16 号板）。探测结果是能力事实，不进会话投影。 */
+const PROBE_PATH = '/api/reelforge.probe';
 
 /** 汇总响应不应被任何中间缓存。 */
 const NO_STORE = { 'cache-control': 'no-store' };
@@ -105,10 +108,7 @@ export function applyReelForge(ctx, rawConfig) {
         viewSchema: { parse: assertPlainObject },
         // `budgetLimitCny` 来自 Config：工作台要显示真实预算上限，不能写死 0。
         // `skills` 来自技能目录扫描：技能文件是磁盘上的只读资源，不是会话状态。
-        view: (state) => buildWireView(state, {
-          budgetLimitCny: config.budgetLimitCny,
-          skills: skillViews(),
-        }),
+        view: (state) => buildWireView(state, wireOptions(config)),
       },
       stateVersion: STATE_VERSION,
     }));
@@ -157,6 +157,31 @@ function assertPlainObject(value) {
     throw new Error('ReelForge 投影状态必须是普通对象');
   }
   return value;
+}
+
+/**
+ * wire view 的**外部参数**（会话状态之外的来源）。
+ *
+ * - `budgetLimitCny` / `stages` / `defaults` 来自 Config —— 可调值的唯一来源；
+ * - `skills` 来自技能目录扫描 —— 磁盘上的只读资源。
+ *
+ * 两处调用（会话投影的 `wire.view` 与 `/api/reelforge.state`）必须用同一份，
+ * 否则两条路读到的视图会不一样。
+ *
+ * @param {object} config 归一化后的 Config。
+ * @returns {object} wire view 的外部参数。
+ */
+function wireOptions(config) {
+  return {
+    budgetLimitCny: config.budgetLimitCny,
+    skills: skillViews(),
+    stages: config.stages,
+    defaults: {
+      enableBgm: config.enableBgm,
+      enableSubtitles: config.enableSubtitles,
+      targetDuration: config.targetDuration,
+    },
+  };
 }
 
 /**
@@ -240,10 +265,7 @@ function registerRoutes(ctx, store, config, sessionCwds) {
       const state = sessionId
         ? store.stateOf(sessionId)
         : store.stateOf(store.lastSessionId());
-      return Response.json(buildWireView(state, {
-        budgetLimitCny: config.budgetLimitCny,
-        skills: skillViews(),
-      }), { headers: NO_STORE });
+      return Response.json(buildWireView(state, wireOptions(config)), { headers: NO_STORE });
     },
   }));
 
@@ -266,6 +288,47 @@ function registerRoutes(ctx, store, config, sessionCwds) {
       },
       { headers: NO_STORE },
     ),
+  }));
+
+  disposers.push(ctx.connection.fetch.register({
+    path: PROBE_PATH,
+    methods: ['GET'],
+    requestBody: 'buffered',
+    fetch: async (request) => {
+      const sessionId = readSessionParam(request);
+      const resolvedId = sessionId || store.lastSessionId();
+      const cwd = sessionCwds.get(resolvedId) ?? '';
+      // 没有会话时**不建**一个空会话状态（`stateOf(undefined)` 会塞一个 undefined 键）。
+      const state = resolvedId === '' ? null : store.stateOf(resolvedId);
+      let position = 'local';
+      let provider = 'native';
+      let refresh = false;
+      try {
+        const url = new URL(request.url);
+        position = url.searchParams.get('position') ?? 'local';
+        provider = url.searchParams.get('provider')
+          ?? (position === 'cloud' ? config.cloudProvider : 'native');
+        refresh = url.searchParams.get('refresh') === '1';
+      } catch {
+        // 参数读不出来就用默认值 —— 探测本身会照常跑。
+      }
+      try {
+        const view = await buildProbeView({
+          config,
+          state,
+          position,
+          provider,
+          refresh,
+          cwd,
+        });
+        return Response.json(view, { headers: NO_STORE });
+      } catch (error) {
+        return Response.json(
+          { ok: false, error: error instanceof Error ? error.message : String(error) },
+          { status: 500, headers: NO_STORE },
+        );
+      }
+    },
   }));
 
   disposers.push(ctx.connection.fetch.register({
