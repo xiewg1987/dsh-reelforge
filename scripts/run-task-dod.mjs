@@ -30,6 +30,23 @@ const REPORT_DIR = path.join(ROOT, 'docs', '开发任务', 'reports');
 const SAMPLE_DIR = path.join(REPORT_DIR, 'samples');
 
 /**
+ * 归一化命令输出里的**易变值**（耗时等）。
+ *
+ * 为什么要做：报告里嵌的是命令原始输出，`# duration_ms 13182.28` 这类
+ * 每次跑都不同的数字会让「重跑报告 = 字节一致」这条可复现性失效，
+ * 提交后 git 每次都出假 diff。判定语义不受影响（只丢耗时，保留
+ * tests / pass / fail / skipped 等**结论字段**）。
+ *
+ * @param {string} text 原始输出。
+ * @returns {string} 归一化后的输出。
+ */
+function normalizeVolatile(text) {
+  return String(text)
+    .replace(/^([ \t]*(?:#[ \t]*)?duration_ms[:\s]+)[\d.]+$/gim, '$1<elapsed>')
+    .replace(/^([ \t]*(?:#[ \t]*)?time[:\s]+)[\d.]+[ \t]*ms$/gim, '$1<elapsed>');
+}
+
+/**
  * 跑一条 shell 命令并返回 stdout+stderr。
  * @param {string} command 可执行文件。
  * @param {string[]} args 参数。
@@ -43,7 +60,7 @@ function run(command, args) {
     maxBuffer: 64 * 1024 * 1024,
   });
   const text = `${result.stdout ?? ''}${result.stderr ?? ''}`.trim();
-  return { code: result.status ?? 1, text };
+  return { code: result.status ?? 1, text: normalizeVolatile(text) };
 }
 
 /**
