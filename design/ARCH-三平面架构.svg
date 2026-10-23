@@ -1,0 +1,143 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700">
+  <rect x="0" y="0" width="1200" height="700" fill="#0B0E14"/>
+
+  <!-- ============ TITLE 0..70 ============ -->
+  <text x="40" y="36" font-family="Noto Sans SC" font-size="15" fill="#F2F5F9">ReelForge 三平面架构</text>
+  <text x="40" y="56" font-family="Noto Sans SC" font-size="11" fill="#5B6472">宿主 ↔ 插件 ↔ 生成 · 事实源只有会话日志 · 生成面是「五种 kind × 两种位置」</text>
+  <rect x="1004" y="24" width="156" height="24" rx="6" fill="#16203A"/>
+  <circle cx="1020" cy="36" r="3.5" fill="#4C8DFF"/>
+  <text x="1032" y="40" font-family="Noto Sans SC" font-size="11" fill="#4C8DFF">对应文档 §5 · §8.1</text>
+
+  <!-- ============ COLUMN HEADERS 86..116 ============ -->
+  <rect x="40" y="86" width="300" height="30" rx="6" fill="#171A20" stroke="#23262B" stroke-width="1"/>
+  <text x="56" y="106" font-family="Noto Sans SC" font-size="12" fill="#8A93A5">宿主平面 · DSH</text>
+  <rect x="450" y="86" width="300" height="30" rx="6" fill="#171A20" stroke="#23262B" stroke-width="1"/>
+  <text x="466" y="106" font-family="Noto Sans SC" font-size="12" fill="#8A93A5">插件平面 · ReelForge</text>
+  <rect x="860" y="86" width="300" height="30" rx="6" fill="#171A20" stroke="#23262B" stroke-width="1"/>
+  <text x="876" y="106" font-family="Noto Sans SC" font-size="12" fill="#8A93A5">生成平面</text>
+
+  <!-- ============ ARROWS gap1 340..450 ============ -->
+  <rect x="344" y="180" width="88" height="1" fill="#4C8DFF"/>
+  <polygon points="432,173 448,180.5 432,188" fill="#4C8DFF"/>
+  <text x="396" y="172" text-anchor="middle" font-family="Noto Sans SC" font-size="10" fill="#5B6472">调用 / 事件</text>
+  <rect x="344" y="320" width="88" height="1" fill="#4C8DFF"/>
+  <polygon points="432,313 448,320.5 432,328" fill="#4C8DFF"/>
+  <text x="396" y="312" text-anchor="middle" font-family="Noto Sans SC" font-size="10" fill="#5B6472">投影 / 物化</text>
+
+  <!-- ============ ARROWS gap2 750..860 ============ -->
+  <rect x="754" y="180" width="88" height="1" fill="#4C8DFF"/>
+  <polygon points="842,173 858,180.5 842,188" fill="#4C8DFF"/>
+  <text x="806" y="172" text-anchor="middle" font-family="Noto Sans SC" font-size="10" fill="#5B6472">规格 / 作业</text>
+  <rect x="754" y="320" width="88" height="1" fill="#4C8DFF"/>
+  <polygon points="842,313 858,320.5 842,328" fill="#4C8DFF"/>
+  <text x="806" y="312" text-anchor="middle" font-family="Noto Sans SC" font-size="10" fill="#5B6472">产物 / 状态</text>
+
+  <!-- ============ HOST BLOCKS ============ -->
+  <rect x="40" y="132" width="300" height="76" rx="8" fill="#171A20" stroke="#23262B" stroke-width="1"/>
+  <text x="56" y="156" font-family="Noto Sans SC" font-size="13" fill="#F2F5F9">DSH 会话</text>
+  <text x="56" y="176" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">对话即入口，说一句就完事</text>
+  <text x="56" y="194" font-family="Noto Sans SC" font-size="10" fill="#5B6472">模型直接调用 12 个插件工具</text>
+
+  <rect x="40" y="220" width="300" height="76" rx="8" fill="#171A20" stroke="#4C8DFF" stroke-width="1"/>
+  <text x="56" y="244" font-family="Noto Sans SC" font-size="13" fill="#F2F5F9">会话日志（唯一事实源）</text>
+  <text x="56" y="264" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">fork / resume / replay 的唯一依据</text>
+  <text x="56" y="282" font-family="Noto Sans SC" font-size="10" fill="#D29922">插件不得 append 新事件 type</text>
+
+  <rect x="40" y="308" width="300" height="76" rx="8" fill="#171A20" stroke="#23262B" stroke-width="1"/>
+  <text x="56" y="332" font-family="Noto Sans SC" font-size="13" fill="#F2F5F9">存储服务</text>
+  <text x="56" y="352" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">插件私有：资产 / 任务历史 / 变更日志</text>
+  <text x="56" y="370" font-family="Noto Sans SC" font-size="10" fill="#5B6472">不回写会话日志 · 探测结果也只落这里</text>
+
+  <rect x="40" y="396" width="300" height="76" rx="8" fill="#171A20" stroke="#23262B" stroke-width="1"/>
+  <text x="56" y="420" font-family="Noto Sans SC" font-size="13" fill="#F2F5F9">右栏 Tab（工作台）</text>
+  <text x="56" y="440" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">宽 300–1150px · 永远全高</text>
+  <text x="56" y="458" font-family="Noto Sans SC" font-size="10" fill="#5B6472">7 页签 · 面板自建滚动容器</text>
+
+  <rect x="40" y="486" width="300" height="52" rx="8" fill="#12151B"/>
+  <text x="56" y="508" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">Tab kind 一经发布不可改名</text>
+  <text x="56" y="526" font-family="Noto Sans SC" font-size="10" fill="#5B6472">TAB_ID 可改 · kind 不可改</text>
+
+  <!-- ============ PLUGIN BLOCKS ============ -->
+  <rect x="450" y="132" width="300" height="54" rx="8" fill="#171A20" stroke="#4C8DFF" stroke-width="1"/>
+  <text x="466" y="156" font-family="Inter" font-size="12" fill="#F2F5F9">src/core/constants.js</text>
+  <text x="466" y="174" font-family="Noto Sans SC" font-size="10" fill="#8A93A5">单一事实来源 · 枚举 / 映射 / 匹配规则</text>
+
+  <rect x="450" y="194" width="300" height="54" rx="8" fill="#171A20" stroke="#23262B" stroke-width="1"/>
+  <text x="466" y="218" font-family="Noto Sans SC" font-size="12" fill="#F2F5F9">技能引擎</text>
+  <text x="466" y="236" font-family="Inter" font-size="10" fill="#8A93A5">SKILL.md 契约 · skill() / skill_reference()</text>
+
+  <rect x="450" y="256" width="300" height="54" rx="8" fill="#171A20" stroke="#23262B" stroke-width="1"/>
+  <text x="466" y="280" font-family="Noto Sans SC" font-size="12" fill="#F2F5F9">写入门禁</text>
+  <text x="466" y="298" font-family="Noto Sans SC" font-size="10" fill="#8A93A5">内容字段 vs 产物字段 · 白名单外报错</text>
+
+  <rect x="450" y="318" width="300" height="54" rx="8" fill="#171A20" stroke="#23262B" stroke-width="1"/>
+  <text x="466" y="342" font-family="Noto Sans SC" font-size="12" fill="#F2F5F9">阶段编排</text>
+  <text x="466" y="360" font-family="Inter" font-size="10" fill="#8A93A5">llm → image → tts → video · 固定串行</text>
+
+  <rect x="450" y="380" width="300" height="54" rx="8" fill="#171A20" stroke="#23262B" stroke-width="1"/>
+  <text x="466" y="404" font-family="Noto Sans SC" font-size="12" fill="#F2F5F9">项目投影</text>
+  <text x="466" y="422" font-family="Noto Sans SC" font-size="10" fill="#8A93A5">会话日志 → project.json 三层物化</text>
+
+  <rect x="450" y="442" width="300" height="54" rx="8" fill="#171A20" stroke="#23262B" stroke-width="1"/>
+  <text x="466" y="466" font-family="Noto Sans SC" font-size="12" fill="#F2F5F9">工具注册（12 个）</text>
+  <text x="466" y="484" font-family="Noto Sans SC" font-size="10" fill="#8A93A5">触发类工具一律走 ask 人工授权</text>
+
+  <rect x="450" y="504" width="300" height="76" rx="8" fill="#12151B"/>
+  <text x="466" y="528" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">变更日志 + 三级回滚</text>
+  <text x="466" y="548" font-family="Noto Sans SC" font-size="10" fill="#5B6472">单条 / 整批 / 按时间点 · 漂移保护</text>
+  <text x="466" y="566" font-family="Noto Sans SC" font-size="10" fill="#5B6472">媒体二进制不随回滚删除</text>
+
+  <!-- ============ GENERATION MATRIX ============ -->
+  <rect x="860" y="132" width="300" height="274" rx="8" fill="#171A20" stroke="#23262B" stroke-width="1"/>
+  <text x="876" y="156" font-family="Noto Sans SC" font-size="13" fill="#F2F5F9">kind × 执行位置</text>
+  <text x="876" y="174" font-family="Noto Sans SC" font-size="10" fill="#5B6472">同一批 kind，两套 sourceFile</text>
+
+  <rect x="876" y="184" width="268" height="26" rx="4" fill="#12151B"/>
+  <text x="886" y="202" font-family="Inter" font-size="10" fill="#5B6472">KIND</text>
+  <text x="928" y="202" font-family="Noto Sans SC" font-size="10" fill="#5B6472">本地 local</text>
+  <text x="1038" y="202" font-family="Noto Sans SC" font-size="10" fill="#5B6472">云端 cloud</text>
+
+  <rect x="876" y="210" width="268" height="1" fill="#23262B"/>
+  <text x="886" y="234" font-family="Inter" font-size="11" fill="#F2F5F9">t2i</text>
+  <text x="928" y="234" font-family="Inter" font-size="10" fill="#8A93A5">krea2_hyperreal</text>
+  <text x="1038" y="234" font-family="Inter" font-size="10" fill="#8A93A5">runninghub_krea2</text>
+
+  <rect x="876" y="246" width="268" height="1" fill="#23262B"/>
+  <text x="886" y="270" font-family="Inter" font-size="11" fill="#F2F5F9">i2i</text>
+  <text x="928" y="270" font-family="Inter" font-size="10" fill="#8A93A5">qwen_edit_2511</text>
+  <text x="1038" y="270" font-family="Inter" font-size="10" fill="#8A93A5">runninghub_qwen_img</text>
+
+  <rect x="876" y="282" width="268" height="1" fill="#23262B"/>
+  <text x="886" y="306" font-family="Inter" font-size="11" fill="#F2F5F9">r2v</text>
+  <text x="928" y="306" font-family="Inter" font-size="10" fill="#8A93A5">minimax_h3_r2v</text>
+  <text x="1038" y="306" font-family="Inter" font-size="10" fill="#8A93A5">runninghub_h3_r2v</text>
+
+  <rect x="876" y="318" width="268" height="1" fill="#23262B"/>
+  <text x="886" y="342" font-family="Inter" font-size="11" fill="#F2F5F9">tts</text>
+  <text x="928" y="342" font-family="Inter" font-size="10" fill="#8A93A5">qwen3_tts_design</text>
+  <text x="1038" y="342" font-family="Inter" font-size="10" fill="#8A93A5">runninghub_qwen3</text>
+
+  <rect x="876" y="354" width="268" height="1" fill="#23262B"/>
+  <text x="886" y="378" font-family="Inter" font-size="11" fill="#F2F5F9">music</text>
+  <text x="928" y="378" font-family="Inter" font-size="10" fill="#8A93A5">minimax_music3</text>
+  <text x="1038" y="378" font-family="Inter" font-size="10" fill="#8A93A5">runninghub_music3</text>
+
+  <rect x="876" y="390" width="268" height="1" fill="#23262B"/>
+  <text x="876" y="402" font-family="Noto Sans SC" font-size="10" fill="#5B6472">完整 sourceFile 名见文档 §2.3 ③</text>
+
+  <rect x="860" y="420" width="300" height="76" rx="8" fill="#12151B" stroke="#23262B" stroke-width="1"/>
+  <text x="876" y="444" font-family="Noto Sans SC" font-size="12" fill="#F2F5F9">本地 · ComfyUI</text>
+  <text x="876" y="464" font-family="Inter" font-size="10" fill="#8A93A5">CK ≥ 0.2.36 · image 禁带 ck attention</text>
+  <text x="876" y="482" font-family="Noto Sans SC" font-size="10" fill="#D29922">含 video 阶段需 8GB 显存 · 并发 video 1</text>
+
+  <rect x="860" y="508" width="300" height="76" rx="8" fill="#12151B" stroke="#23262B" stroke-width="1"/>
+  <text x="876" y="532" font-family="Noto Sans SC" font-size="12" fill="#F2F5F9">云端 · 三个 provider</text>
+  <text x="876" y="552" font-family="Noto Sans SC" font-size="10" fill="#8A93A5">RunningHub standard / plus · 在线 API</text>
+  <text x="876" y="570" font-family="Noto Sans SC" font-size="10" fill="#8A93A5">DSH 通道 · 宿主已验证模型</text>
+
+  <!-- ============ SOURCE OF TRUTH BAND 600..670 ============ -->
+  <rect x="40" y="600" width="1120" height="66" rx="8" fill="#16203A"/>
+  <text x="56" y="624" font-family="Noto Sans SC" font-size="12" fill="#4C8DFF">事实源与物化链路</text>
+  <text x="56" y="646" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">会话日志 → 投影 → project.json（项目 / 章节 / 分镜）→ 右栏 7 页签 + 对话 7 类消息行</text>
+  <text x="56" y="662" font-family="Noto Sans SC" font-size="10" fill="#5B6472">存储服务只存插件私有数据，不回写会话日志 · 写入即校验，写入门禁挡在落库之前</text>
+</svg>

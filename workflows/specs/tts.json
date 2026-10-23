@@ -1,0 +1,50 @@
+{
+  "kind": "tts",
+  "specs": {
+    "local-nvidia": {
+      "id": "qwen3_tts_voice_design",
+      "kind": "tts",
+      "name": "Qwen3 TTS 音色设计（本地 · N 卡）",
+      "description": "角色音色样本（voice_ref）。与背景音乐（music）是两件独立的事，不要混。",
+      "sourceFile": "templates/qwen3_tts_voice_design.json",
+      "roles": {
+        "text": { "node": "20", "field": "text" },
+        "voice_description": { "node": "20", "field": "voice_description" },
+        "seed": { "node": "20", "field": "seed" },
+        "filename_prefix": { "node": "21", "field": "filename_prefix" }
+      },
+      "media": null,
+      "outputs": ["SaveAudio"]
+    },
+    "local-amd": {
+      "id": "qwen3_tts_voice_design_gguf",
+      "kind": "tts",
+      "name": "Qwen3 TTS 音色设计 GGUF（本地 · AMD）",
+      "description": "GGUF 量化版。角色音色样本（voice_ref）。",
+      "sourceFile": "templates/qwen3_tts_voice_design_gguf.json",
+      "roles": {
+        "text": { "node": "20", "field": "text" },
+        "voice_description": { "node": "20", "field": "voice_description" },
+        "seed": { "node": "20", "field": "seed" },
+        "filename_prefix": { "node": "21", "field": "filename_prefix" }
+      },
+      "media": null,
+      "outputs": ["SaveAudio"]
+    },
+    "cloud-runninghub": {
+      "id": "runninghub_qwen3_tts_voice_design",
+      "kind": "tts",
+      "name": "Qwen3 TTS 音色设计（云端 RunningHub）",
+      "description": "云端跑**同一批 kind** 里的 tts。按次计费。",
+      "sourceFile": "templates/runninghub_qwen3_tts_voice_design.json",
+      "roles": {
+        "text": { "node": "20", "field": "text" },
+        "voice_description": { "node": "20", "field": "voice_description" },
+        "seed": { "node": "20", "field": "seed" },
+        "filename_prefix": { "node": "21", "field": "filename_prefix" }
+      },
+      "media": null,
+      "outputs": ["SaveAudio"]
+    }
+  }
+}

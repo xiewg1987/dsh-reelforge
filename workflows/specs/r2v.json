@@ -1,0 +1,95 @@
+{
+  "kind": "r2v",
+  "specs": {
+    "local-nvidia": {
+      "id": "minimax_h3_r2v",
+      "kind": "r2v",
+      "name": "MiniMax H3 · 参考图生视频（本地 · N 卡）",
+      "description": "逐镜片段。硬依赖 image（缺参考图不出片），软依赖 tts（缺参考音降质并显式标出）。",
+      "sourceFile": "templates/minimax_h3_r2v.json",
+      "roles": {
+        "positive_prompt": { "node": "10", "field": "prompt" },
+        "seconds": { "node": "10", "field": "duration" },
+        "resolution": { "node": "10", "field": "resolution" },
+        "aspect_ratio": { "node": "10", "field": "aspect_ratio" },
+        "seed": { "node": "10", "field": "seed" },
+        "filename_prefix": { "node": "20", "field": "filename_prefix" }
+      },
+      "media": {
+        "targetNode": "10",
+        "fieldsByType": {
+          "image": "ref_images.ref_image_",
+          "audio": "ref_audios.ref_audio_"
+        },
+        "loaders": {
+          "image": { "class_type": "LoadImage", "inputs": { "image": "" }, "fileField": "image" },
+          "audio": { "class_type": "LoadAudio", "inputs": { "audio": "" }, "fileField": "audio" }
+        },
+        "reusePool": ["11", "12"],
+        "maxImages": 9,
+        "maxAudioVideo": 3
+      },
+      "outputs": ["SaveVideo"]
+    },
+    "local-amd": {
+      "id": "minimax_h3_r2v_gguf",
+      "kind": "r2v",
+      "name": "MiniMax H3 GGUF · 参考图生视频（本地 · AMD）",
+      "description": "GGUF 量化版。AMD 档默认每 3 次生成后调 /free 释放显存（所有 kind 都计数）。",
+      "sourceFile": "templates/minimax_h3_r2v_gguf.json",
+      "roles": {
+        "positive_prompt": { "node": "10", "field": "prompt" },
+        "seconds": { "node": "10", "field": "duration" },
+        "resolution": { "node": "10", "field": "resolution" },
+        "aspect_ratio": { "node": "10", "field": "aspect_ratio" },
+        "seed": { "node": "10", "field": "seed" },
+        "filename_prefix": { "node": "20", "field": "filename_prefix" }
+      },
+      "media": {
+        "targetNode": "10",
+        "fieldsByType": {
+          "image": "ref_images.ref_image_",
+          "audio": "ref_audios.ref_audio_"
+        },
+        "loaders": {
+          "image": { "class_type": "LoadImage", "inputs": { "image": "" }, "fileField": "image" },
+          "audio": { "class_type": "LoadAudio", "inputs": { "audio": "" }, "fileField": "audio" }
+        },
+        "reusePool": ["11", "12"],
+        "maxImages": 9,
+        "maxAudioVideo": 3
+      },
+      "outputs": ["SaveVideo"]
+    },
+    "cloud-runninghub": {
+      "id": "runninghub_minimax_h3_r2v",
+      "kind": "r2v",
+      "name": "MiniMax H3 · 参考图生视频（云端 RunningHub）",
+      "description": "云端跑**同一批 kind** 里的 r2v。按次计费，不占本机显存。",
+      "sourceFile": "templates/runninghub_minimax_h3_r2v.json",
+      "roles": {
+        "positive_prompt": { "node": "10", "field": "prompt" },
+        "seconds": { "node": "10", "field": "duration" },
+        "resolution": { "node": "10", "field": "resolution" },
+        "aspect_ratio": { "node": "10", "field": "aspect_ratio" },
+        "seed": { "node": "10", "field": "seed" },
+        "filename_prefix": { "node": "20", "field": "filename_prefix" }
+      },
+      "media": {
+        "targetNode": "10",
+        "fieldsByType": {
+          "image": "ref_images.ref_image_",
+          "audio": "ref_audios.ref_audio_"
+        },
+        "loaders": {
+          "image": { "class_type": "LoadImage", "inputs": { "image": "" }, "fileField": "image" },
+          "audio": { "class_type": "LoadAudio", "inputs": { "audio": "" }, "fileField": "audio" }
+        },
+        "reusePool": ["11", "12"],
+        "maxImages": 9,
+        "maxAudioVideo": 3
+      },
+      "outputs": ["SaveVideo"]
+    }
+  }
+}

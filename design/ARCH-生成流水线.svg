@@ -1,0 +1,165 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700">
+  <rect x="0" y="0" width="1200" height="700" fill="#0B0E14"/>
+
+  <!-- ============ TITLE ============ -->
+  <text x="40" y="36" font-family="Noto Sans SC" font-size="15" fill="#F2F5F9">ReelForge 生成流水线</text>
+  <text x="40" y="56" font-family="Noto Sans SC" font-size="11" fill="#5B6472">运行位置分流 → 四阶段（固定顺序串行）→ 按章交付 · 每张卡片标注对应画板编号</text>
+  <rect x="1004" y="24" width="156" height="24" rx="6" fill="#16203A"/>
+  <circle cx="1020" cy="36" r="3.5" fill="#4C8DFF"/>
+  <text x="1032" y="40" font-family="Noto Sans SC" font-size="11" fill="#4C8DFF">对应文档 §7 · §8</text>
+
+  <!-- ============ ROW A · 运行位置分流 84..176 ============ -->
+  <rect x="40" y="84" width="270" height="92" rx="8" fill="#171A20" stroke="#4C8DFF" stroke-width="1"/>
+  <text x="56" y="108" font-family="Noto Sans SC" font-size="13" fill="#F2F5F9">本地 local</text>
+  <text x="56" y="128" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">你的机器 · ComfyUI 工作流</text>
+  <text x="56" y="146" font-family="Noto Sans SC" font-size="10" fill="#5B6472">CK ≥ 0.2.36 · 8GB 显存门槛</text>
+  <text x="56" y="164" font-family="Noto Sans SC" font-size="10" fill="#3FB950">无按次费用 · 数据不出本机</text>
+
+  <rect x="330" y="84" width="270" height="92" rx="8" fill="#171A20" stroke="#23262B" stroke-width="1"/>
+  <text x="346" y="108" font-family="Noto Sans SC" font-size="13" fill="#F2F5F9">云端 cloud</text>
+  <text x="346" y="128" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">托管工作流 · 三个 provider</text>
+  <text x="346" y="146" font-family="Noto Sans SC" font-size="10" fill="#5B6472">RunningHub / 在线 API / DSH 通道</text>
+  <text x="346" y="164" font-family="Noto Sans SC" font-size="10" fill="#D29922">按次计费 · 无需 GPU · 受配额约束</text>
+
+  <rect x="630" y="84" width="530" height="92" rx="8" fill="#12151B" stroke="#23262B" stroke-width="1"/>
+  <text x="646" y="108" font-family="Noto Sans SC" font-size="12" fill="#4C8DFF">两种位置跑的是同一批 kind</text>
+  <text x="646" y="130" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">差异只在跑在哪、计不计费、受什么约束 —— 不是两档能力</text>
+  <text x="646" y="150" font-family="Inter" font-size="10" fill="#5B6472">kind：t2i / i2i / r2v / tts / music</text>
+  <text x="646" y="168" font-family="Noto Sans SC" font-size="10" fill="#5B6472">对应画板 03 · 04 · 05</text>
+
+  <!-- ============ ROW B · 四阶段流水线 ============ -->
+  <text x="40" y="198" font-family="Noto Sans SC" font-size="12" fill="#8A93A5">四阶段流水线 · 固定顺序串行 · 可按章勾选</text>
+
+  <rect x="40" y="208" width="260" height="130" rx="8" fill="#171A20" stroke="#23262B" stroke-width="1"/>
+  <rect x="56" y="222" width="56" height="20" rx="4" fill="#16203A"/>
+  <text x="84" y="236" text-anchor="middle" font-family="Inter" font-size="10" fill="#4C8DFF">STAGE 1</text>
+  <text x="122" y="238" font-family="Noto Sans SC" font-size="13" fill="#F2F5F9">llm 文本创作</text>
+  <text x="56" y="270" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">写人物圣经 / 风格指南</text>
+  <text x="56" y="290" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">拆镜 → 写视频提示词</text>
+  <text x="56" y="310" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">写入即校验（白名单）</text>
+  <text x="56" y="330" font-family="Noto Sans SC" font-size="10" fill="#5B6472">对应画板 06 · 07</text>
+
+  <rect x="320" y="208" width="260" height="130" rx="8" fill="#171A20" stroke="#23262B" stroke-width="1"/>
+  <rect x="336" y="222" width="56" height="20" rx="4" fill="#16203A"/>
+  <text x="364" y="236" text-anchor="middle" font-family="Inter" font-size="10" fill="#4C8DFF">STAGE 2</text>
+  <text x="402" y="238" font-family="Noto Sans SC" font-size="13" fill="#F2F5F9">image 资产生图</text>
+  <text x="336" y="270" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">人物 / 场景 / 道具参考图</text>
+  <text x="336" y="290" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">服装与年龄变体</text>
+  <text x="336" y="310" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">产出后续两阶段的参考图</text>
+  <text x="336" y="330" font-family="Noto Sans SC" font-size="10" fill="#5B6472">对应画板 06 · 08</text>
+
+  <rect x="600" y="208" width="260" height="130" rx="8" fill="#171A20" stroke="#23262B" stroke-width="1"/>
+  <rect x="616" y="222" width="56" height="20" rx="4" fill="#16203A"/>
+  <text x="644" y="236" text-anchor="middle" font-family="Inter" font-size="10" fill="#4C8DFF">STAGE 3</text>
+  <text x="682" y="238" font-family="Noto Sans SC" font-size="13" fill="#F2F5F9">tts 音色设计</text>
+  <text x="616" y="270" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">角色音色样本</text>
+  <text x="616" y="290" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">只给说话角色生成</text>
+  <text x="616" y="310" font-family="Noto Sans SC" font-size="10" fill="#D29922">软依赖：缺失时降质但要说出来</text>
+  <text x="616" y="330" font-family="Noto Sans SC" font-size="10" fill="#5B6472">对应画板 06</text>
+
+  <rect x="880" y="208" width="260" height="130" rx="8" fill="#171A20" stroke="#4C8DFF" stroke-width="1"/>
+  <rect x="896" y="222" width="56" height="20" rx="4" fill="#16203A"/>
+  <text x="924" y="236" text-anchor="middle" font-family="Inter" font-size="10" fill="#4C8DFF">STAGE 4</text>
+  <text x="962" y="238" font-family="Noto Sans SC" font-size="13" fill="#F2F5F9">video 分镜视频</text>
+  <text x="896" y="270" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">逐镜出片 → 自审重试</text>
+  <text x="896" y="290" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">背景音乐 → 合成 → 字幕</text>
+  <text x="896" y="310" font-family="Noto Sans SC" font-size="10" fill="#D29922">硬依赖 image：无参考图直接报错</text>
+  <text x="896" y="330" font-family="Noto Sans SC" font-size="10" fill="#5B6472">对应画板 06 · 09 · 10 · 11</text>
+
+  <rect x="302" y="275" width="12" height="1" fill="#4C8DFF"/>
+  <polygon points="314,269 320,275.5 314,282" fill="#4C8DFF"/>
+  <rect x="582" y="275" width="12" height="1" fill="#4C8DFF"/>
+  <polygon points="594,269 600,275.5 594,282" fill="#4C8DFF"/>
+  <rect x="862" y="275" width="12" height="1" fill="#4C8DFF"/>
+  <polygon points="874,269 880,275.5 874,282" fill="#4C8DFF"/>
+
+  <!-- ============ DEPENDENCY BAND 346..382 ============ -->
+  <rect x="40" y="346" width="360" height="36" rx="6" fill="#2A2214"/>
+  <circle cx="56" cy="364" r="3.5" fill="#D29922"/>
+  <text x="68" y="368" font-family="Noto Sans SC" font-size="10" fill="#D29922">硬依赖：video 依赖 image，缺参考图直接报错</text>
+
+  <rect x="416" y="346" width="360" height="36" rx="6" fill="#2A2214"/>
+  <circle cx="432" cy="364" r="3.5" fill="#D29922"/>
+  <text x="444" y="368" font-family="Noto Sans SC" font-size="10" fill="#D29922">软依赖：video 依赖 tts，降质但要说出来</text>
+
+  <rect x="792" y="346" width="368" height="36" rx="6" fill="#12151B"/>
+  <circle cx="808" cy="364" r="3.5" fill="#4C8DFF"/>
+  <text x="820" y="368" font-family="Noto Sans SC" font-size="10" fill="#8A93A5">llm 与渲染阶段双向互斥 · 并发 video 1 / image 2</text>
+
+  <!-- ============ ROW C · 交付物 + 降级路径 ============ -->
+  <text x="40" y="406" font-family="Noto Sans SC" font-size="12" fill="#8A93A5">交付物 · 降级路径</text>
+
+  <rect x="40" y="416" width="700" height="120" rx="8" fill="#171A20" stroke="#23262B" stroke-width="1"/>
+  <text x="56" y="442" font-family="Noto Sans SC" font-size="13" fill="#F2F5F9">交付物（按章组织，一章一集）</text>
+  <text x="56" y="466" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">成片（带字幕 / 无字幕）· SRT · 分镜表 · 参考图包 · 资产原件 · 背景音乐库</text>
+  <text x="56" y="486" font-family="Noto Sans SC" font-size="10" fill="#5B6472">ffmpeg 按章合成 · H.264 / AAC / 24fps · 烧录时剥离角色名前缀</text>
+  <text x="56" y="506" font-family="Noto Sans SC" font-size="10" fill="#4C8DFF">对应画板 11 · 交付物按章下载</text>
+  <text x="56" y="526" font-family="Noto Sans SC" font-size="10" fill="#5B6472">成片必须落盘，不只存链接</text>
+
+  <rect x="780" y="416" width="380" height="120" rx="8" fill="#12151B" stroke="#2A2214" stroke-width="1"/>
+  <text x="796" y="440" font-family="Noto Sans SC" font-size="12" fill="#D29922">降级路径</text>
+  <text x="796" y="462" font-family="Noto Sans SC" font-size="10" fill="#8A93A5">显存不足 → 本地只出到图（静帧成片）</text>
+  <text x="796" y="484" font-family="Noto Sans SC" font-size="10" fill="#8A93A5">ComfyUI 不可达 → 切云端</text>
+  <text x="796" y="506" font-family="Noto Sans SC" font-size="10" fill="#8A93A5">缺 ffmpeg → 交付分镜表 + 参考图</text>
+  <text x="796" y="528" font-family="Noto Sans SC" font-size="10" fill="#8A93A5">音色缺失 → 静音成片</text>
+
+  <!-- ============ ROW D · BOARD FLOW ============ -->
+  <text x="40" y="564" font-family="Noto Sans SC" font-size="12" fill="#8A93A5">BOARD FLOW · 界面稿编号（01–13 主流程）</text>
+
+  <rect x="40" y="572" width="78" height="44" rx="4" fill="#12151B" stroke="#23262B" stroke-width="1"/>
+  <text x="79" y="590" text-anchor="middle" font-family="Inter" font-size="12" fill="#8A93A5">01</text>
+  <text x="79" y="608" text-anchor="middle" font-family="Noto Sans SC" font-size="10" fill="#5B6472">工作台</text>
+
+  <rect x="126" y="572" width="78" height="44" rx="4" fill="#12151B" stroke="#23262B" stroke-width="1"/>
+  <text x="165" y="590" text-anchor="middle" font-family="Inter" font-size="12" fill="#8A93A5">02</text>
+  <text x="165" y="608" text-anchor="middle" font-family="Noto Sans SC" font-size="10" fill="#5B6472">导入</text>
+
+  <rect x="212" y="572" width="78" height="44" rx="4" fill="#12151B" stroke="#23262B" stroke-width="1"/>
+  <text x="251" y="590" text-anchor="middle" font-family="Inter" font-size="12" fill="#8A93A5">03</text>
+  <text x="251" y="608" text-anchor="middle" font-family="Noto Sans SC" font-size="10" fill="#5B6472">运行</text>
+
+  <rect x="298" y="572" width="78" height="44" rx="4" fill="#12151B" stroke="#23262B" stroke-width="1"/>
+  <text x="337" y="590" text-anchor="middle" font-family="Inter" font-size="12" fill="#8A93A5">04</text>
+  <text x="337" y="608" text-anchor="middle" font-family="Noto Sans SC" font-size="10" fill="#5B6472">检查</text>
+
+  <rect x="384" y="572" width="78" height="44" rx="4" fill="#12151B" stroke="#23262B" stroke-width="1"/>
+  <text x="423" y="590" text-anchor="middle" font-family="Inter" font-size="12" fill="#8A93A5">05</text>
+  <text x="423" y="608" text-anchor="middle" font-family="Noto Sans SC" font-size="10" fill="#5B6472">路径</text>
+
+  <rect x="470" y="572" width="78" height="44" rx="4" fill="#12151B" stroke="#23262B" stroke-width="1"/>
+  <text x="509" y="590" text-anchor="middle" font-family="Inter" font-size="12" fill="#8A93A5">06</text>
+  <text x="509" y="608" text-anchor="middle" font-family="Noto Sans SC" font-size="10" fill="#5B6472">阶段</text>
+
+  <rect x="556" y="572" width="78" height="44" rx="4" fill="#12151B" stroke="#23262B" stroke-width="1"/>
+  <text x="595" y="590" text-anchor="middle" font-family="Inter" font-size="12" fill="#8A93A5">07</text>
+  <text x="595" y="608" text-anchor="middle" font-family="Noto Sans SC" font-size="10" fill="#5B6472">上下文</text>
+
+  <rect x="642" y="572" width="78" height="44" rx="4" fill="#12151B" stroke="#23262B" stroke-width="1"/>
+  <text x="681" y="590" text-anchor="middle" font-family="Inter" font-size="12" fill="#8A93A5">08</text>
+  <text x="681" y="608" text-anchor="middle" font-family="Noto Sans SC" font-size="10" fill="#5B6472">资产</text>
+
+  <rect x="728" y="572" width="78" height="44" rx="4" fill="#12151B" stroke="#23262B" stroke-width="1"/>
+  <text x="767" y="590" text-anchor="middle" font-family="Inter" font-size="12" fill="#8A93A5">09</text>
+  <text x="767" y="608" text-anchor="middle" font-family="Noto Sans SC" font-size="10" fill="#5B6472">分镜</text>
+
+  <rect x="814" y="572" width="78" height="44" rx="4" fill="#12151B" stroke="#23262B" stroke-width="1"/>
+  <text x="853" y="590" text-anchor="middle" font-family="Inter" font-size="12" fill="#8A93A5">10</text>
+  <text x="853" y="608" text-anchor="middle" font-family="Noto Sans SC" font-size="10" fill="#5B6472">播放</text>
+
+  <rect x="900" y="572" width="78" height="44" rx="4" fill="#12151B" stroke="#23262B" stroke-width="1"/>
+  <text x="939" y="590" text-anchor="middle" font-family="Inter" font-size="12" fill="#8A93A5">11</text>
+  <text x="939" y="608" text-anchor="middle" font-family="Noto Sans SC" font-size="10" fill="#5B6472">交付</text>
+
+  <rect x="986" y="572" width="78" height="44" rx="4" fill="#12151B" stroke="#23262B" stroke-width="1"/>
+  <text x="1025" y="590" text-anchor="middle" font-family="Inter" font-size="12" fill="#8A93A5">12</text>
+  <text x="1025" y="608" text-anchor="middle" font-family="Noto Sans SC" font-size="10" fill="#5B6472">技能</text>
+
+  <rect x="1072" y="572" width="78" height="44" rx="4" fill="#12151B" stroke="#23262B" stroke-width="1"/>
+  <text x="1111" y="590" text-anchor="middle" font-family="Inter" font-size="12" fill="#8A93A5">13</text>
+  <text x="1111" y="608" text-anchor="middle" font-family="Noto Sans SC" font-size="10" fill="#5B6472">日志</text>
+
+  <!-- ============ FOOTER 632..688 ============ -->
+  <rect x="40" y="632" width="1120" height="56" rx="8" fill="#16203A"/>
+  <text x="56" y="656" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">画板顺序 == 用户流程顺序 · 架构图与界面稿共用同一套编号，两边对得上</text>
+  <text x="56" y="676" font-family="Noto Sans SC" font-size="10" fill="#5B6472">对应文档 §10.6 · 可编辑源文件 design/ARCH-生成流水线.svg · 降级矩阵见画板 16</text>
+</svg>

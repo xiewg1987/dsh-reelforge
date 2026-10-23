@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="900" viewBox="0 0 560 900">
+  <rect x="0" y="0" width="560" height="900" fill="#0B0E14"/>
+
+  <!-- ============ HEADER 0..60 ============ -->
+  <rect x="0" y="0" width="560" height="60" fill="#171A20"/>
+  <rect x="0" y="59" width="560" height="1" fill="#23262B"/>
+  <rect x="20" y="16" width="28" height="28" rx="8" fill="#4C8DFF"/>
+  <polygon points="30,22 30,38 40,30" fill="#FFFFFF"/>
+  <text x="60" y="31" font-family="Noto Sans SC" font-size="15" fill="#F2F5F9">运行方式</text>
+  <text x="60" y="49" font-family="Noto Sans SC" font-size="11" fill="#5B6472">本地还是云端，决定能出什么成片</text>
+  <rect x="452" y="19" width="88" height="22" rx="6" fill="#16203A"/>
+  <circle cx="464" cy="30" r="3.5" fill="#4C8DFF"/>
+  <text x="474" y="34" font-family="Noto Sans SC" font-size="11" fill="#4C8DFF">2 种模式</text>
+
+  <!-- ============ STAGEBAR 60..110 ============ -->
+  <rect x="0" y="60" width="560" height="50" fill="#12151B"/>
+  <circle cx="24" cy="85" r="3.5" fill="#3FB950"/>
+  <text x="33" y="89" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">需求</text>
+  <rect x="88" y="74" width="56" height="22" rx="6" fill="#16203A"/>
+  <circle cx="100" cy="85" r="3.5" fill="#4C8DFF"/>
+  <text x="110" y="89" font-family="Noto Sans SC" font-size="11" fill="#F2F5F9">运行</text>
+  <circle cx="176" cy="85" r="3.5" fill="#2D3035"/>
+  <text x="185" y="89" font-family="Noto Sans SC" font-size="11" fill="#5B6472">方案</text>
+  <circle cx="252" cy="85" r="3.5" fill="#2D3035"/>
+  <text x="261" y="89" font-family="Noto Sans SC" font-size="11" fill="#5B6472">生成</text>
+  <circle cx="328" cy="85" r="3.5" fill="#2D3035"/>
+  <text x="337" y="89" font-family="Noto Sans SC" font-size="11" fill="#5B6472">分镜</text>
+  <circle cx="404" cy="85" r="3.5" fill="#2D3035"/>
+  <text x="413" y="89" font-family="Noto Sans SC" font-size="11" fill="#5B6472">交付</text>
+  <text x="540" y="89" text-anchor="end" font-family="Inter" font-size="11" fill="#5B6472">2 / 6</text>
+  <rect x="0" y="109" width="560" height="1" fill="#23262B"/>
+
+  <!-- ============ SCROLL 110..830 ============ -->
+  <text x="20" y="130" font-family="Noto Sans SC" font-size="12" fill="#8A93A5">选择运行方式</text>
+  <text x="20" y="152" font-family="Noto Sans SC" font-size="11" fill="#5B6472">后端跑在哪台机器上，决定可用模型、成本和单镜时长上限</text>
+
+  <!-- 本地运行 -->
+  <rect x="20" y="172" width="254" height="262" rx="10" fill="#171A20" stroke="#23262B" stroke-width="1"/>
+  <rect x="32" y="184" width="52" height="20" rx="4" fill="#1F2127"/>
+  <text x="58" y="198" text-anchor="middle" font-family="Inter" font-size="10" fill="#8A93A5">LOCAL</text>
+  <text x="32" y="226" font-family="Noto Sans SC" font-size="13" fill="#F2F5F9">本地运行</text>
+  <text x="32" y="246" font-family="Noto Sans SC" font-size="11" fill="#5B6472">在这台机器上生成</text>
+  <rect x="32" y="258" width="230" height="1" fill="#23262B"/>
+  <circle cx="34" cy="276" r="3.5" fill="#3FB950"/>
+  <text x="44" y="280" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">数据不出本机</text>
+  <circle cx="34" cy="294" r="3.5" fill="#3FB950"/>
+  <text x="44" y="298" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">无按次计费</text>
+  <circle cx="34" cy="312" r="3.5" fill="#3FB950"/>
+  <text x="44" y="316" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">可无限重试</text>
+  <circle cx="34" cy="338" r="3.5" fill="#D29922"/>
+  <text x="44" y="342" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">需独立显卡 12G 显存</text>
+  <circle cx="34" cy="356" r="3.5" fill="#D29922"/>
+  <text x="44" y="360" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">需自备 ComfyUI 工作流</text>
+  <circle cx="34" cy="374" r="3.5" fill="#D29922"/>
+  <text x="44" y="378" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">速度受本机硬件限制</text>
+  <rect x="32" y="398" width="120" height="28" rx="8" fill="#1F2127" stroke="#2D3035" stroke-width="1"/>
+  <text x="92" y="416" text-anchor="middle" font-family="Noto Sans SC" font-size="11" fill="#F2F5F9">开始设备检查</text>
+
+  <!-- 云端运行 -->
+  <rect x="286" y="172" width="254" height="262" rx="10" fill="#171A20" stroke="#4C8DFF" stroke-width="1"/>
+  <rect x="298" y="184" width="52" height="20" rx="4" fill="#16203A"/>
+  <text x="324" y="198" text-anchor="middle" font-family="Inter" font-size="10" fill="#4C8DFF">CLOUD</text>
+  <text x="298" y="226" font-family="Noto Sans SC" font-size="13" fill="#F2F5F9">云端运行</text>
+  <text x="298" y="246" font-family="Noto Sans SC" font-size="11" fill="#5B6472">走 DSH 模型通道</text>
+  <rect x="298" y="258" width="230" height="1" fill="#23262B"/>
+  <circle cx="300" cy="276" r="3.5" fill="#3FB950"/>
+  <text x="310" y="280" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">开箱即用</text>
+  <circle cx="300" cy="294" r="3.5" fill="#3FB950"/>
+  <text x="310" y="298" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">H3 原生音画同步</text>
+  <circle cx="300" cy="312" r="3.5" fill="#3FB950"/>
+  <text x="310" y="316" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">无需本地 GPU</text>
+  <circle cx="300" cy="338" r="3.5" fill="#D29922"/>
+  <text x="310" y="342" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">按次计费</text>
+  <circle cx="300" cy="356" r="3.5" fill="#D29922"/>
+  <text x="310" y="360" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">单镜 4-15s 硬约束</text>
+  <circle cx="300" cy="374" r="3.5" fill="#D29922"/>
+  <text x="310" y="378" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">需要外网可达</text>
+  <rect x="298" y="398" width="230" height="28" rx="8" fill="#16203A"/>
+  <text x="413" y="416" text-anchor="middle" font-family="Noto Sans SC" font-size="11" fill="#4C8DFF">3 个视频后端可用</text>
+
+  <!-- 混合模式 -->
+  <rect x="20" y="448" width="520" height="72" rx="10" fill="#12151B"/>
+  <text x="32" y="472" font-family="Noto Sans SC" font-size="13" fill="#8A93A5">混合模式</text>
+  <text x="32" y="494" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">图在本地渲染 · 视频走云端 · 成片在本机合成</text>
+  <text x="32" y="512" font-family="Noto Sans SC" font-size="10" fill="#5B6472">前提：本机有 ffmpeg 且磁盘余量够</text>
+  <rect x="456" y="460" width="72" height="20" rx="4" fill="#2A2214"/>
+  <text x="492" y="474" text-anchor="middle" font-family="Noto Sans SC" font-size="10" fill="#D29922">更复杂</text>
+
+  <!-- 影响 -->
+  <text x="20" y="548" font-family="Noto Sans SC" font-size="12" fill="#8A93A5">运行方式会影响什么</text>
+  <rect x="20" y="562" width="520" height="1" fill="#23262B"/>
+  <text x="20" y="586" font-family="Noto Sans SC" font-size="11" fill="#5B6472">可用模型</text>
+  <text x="140" y="586" font-family="Noto Sans SC" font-size="11" fill="#F2F5F9">本地 = 你的工作流 · 云端 = H3 / H3-Max / Hailuo</text>
+  <rect x="20" y="600" width="520" height="1" fill="#23262B"/>
+  <text x="20" y="624" font-family="Noto Sans SC" font-size="11" fill="#5B6472">成本</text>
+  <text x="140" y="624" font-family="Noto Sans SC" font-size="11" fill="#F2F5F9">本地 = 无按次费用 · 云端 = 按次计费，上限 ¥5.00</text>
+  <rect x="20" y="638" width="520" height="1" fill="#23262B"/>
+  <text x="20" y="662" font-family="Noto Sans SC" font-size="11" fill="#5B6472">单镜时长</text>
+  <text x="140" y="662" font-family="Noto Sans SC" font-size="11" fill="#F2F5F9">本地 = 工作流自定 · 云端 = H3 4-15s 硬约束</text>
+  <rect x="20" y="676" width="520" height="1" fill="#23262B"/>
+
+  <rect x="20" y="694" width="520" height="64" rx="8" fill="#16203A"/>
+  <text x="32" y="720" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">运行方式可以随时改：只影响尚未生成的镜头</text>
+  <text x="32" y="740" font-family="Noto Sans SC" font-size="11" fill="#5B6472">已产出的分镜表与参考图不重跑，也不重复计费</text>
+
+  <text x="20" y="788" font-family="Noto Sans SC" font-size="11" fill="#5B6472">不确定？先选云端随时能切，本地要先过设备检查</text>
+  <rect x="548" y="126" width="3" height="150" rx="1.5" fill="#2D3035"/>
+
+  <!-- ============ FOOTER 830..900 ============ -->
+  <rect x="0" y="830" width="560" height="70" fill="#171A20"/>
+  <rect x="0" y="830" width="560" height="1" fill="#23262B"/>
+  <text x="20" y="862" font-family="Noto Sans SC" font-size="11" fill="#5B6472">下一步</text>
+  <text x="20" y="884" font-family="Noto Sans SC" font-size="12" fill="#F2F5F9">按探测到的能力推荐方案</text>
+  <rect x="436" y="846" width="104" height="32" rx="8" fill="#4C8DFF"/>
+  <text x="488" y="866" text-anchor="middle" font-family="Noto Sans SC" font-size="12" fill="#FFFFFF">继续，出方案</text>
+</svg>

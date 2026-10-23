@@ -1,0 +1,53 @@
+{
+  "kind": "music",
+  "specs": {
+    "local-nvidia": {
+      "id": "minimax_music3",
+      "kind": "music",
+      "name": "MiniMax Music 3（本地 · N 卡）",
+      "description": "章节背景音乐（BGM）。整章引用，不是角色音色——与 tts 是两件独立的事。",
+      "sourceFile": "templates/minimax_music3.json",
+      "roles": {
+        "caption": { "node": "30", "field": "caption" },
+        "lyrics": { "node": "30", "field": "lyrics" },
+        "max_duration": { "node": "30", "field": "max_duration" },
+        "seed": { "node": "30", "field": "seed" },
+        "filename_prefix": { "node": "31", "field": "filename_prefix" }
+      },
+      "media": null,
+      "outputs": ["SaveAudio"]
+    },
+    "local-amd": {
+      "id": "minimax_music3",
+      "kind": "music",
+      "name": "MiniMax Music 3（本地 · AMD）",
+      "description": "int8 量化工作流。章节背景音乐（BGM）。",
+      "sourceFile": "templates/minimax_music3.json",
+      "roles": {
+        "caption": { "node": "30", "field": "caption" },
+        "lyrics": { "node": "30", "field": "lyrics" },
+        "max_duration": { "node": "30", "field": "max_duration" },
+        "seed": { "node": "30", "field": "seed" },
+        "filename_prefix": { "node": "31", "field": "filename_prefix" }
+      },
+      "media": null,
+      "outputs": ["SaveAudio"]
+    },
+    "cloud-runninghub": {
+      "id": "runninghub_minimax_music3",
+      "kind": "music",
+      "name": "MiniMax Music 3（云端 RunningHub）",
+      "description": "fp16 云端工作流。章节背景音乐（BGM）。按次计费。",
+      "sourceFile": "templates/runninghub_minimax_music3.json",
+      "roles": {
+        "caption": { "node": "30", "field": "caption" },
+        "lyrics": { "node": "30", "field": "lyrics" },
+        "max_duration": { "node": "30", "field": "max_duration" },
+        "seed": { "node": "30", "field": "seed" },
+        "filename_prefix": { "node": "31", "field": "filename_prefix" }
+      },
+      "media": null,
+      "outputs": ["SaveAudio"]
+    }
+  }
+}

@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="900" viewBox="0 0 560 900">
+  <rect x="0" y="0" width="560" height="900" fill="#0B0E14"/>
+
+  <!-- ============ HEADER 0..60 ============ -->
+  <rect x="0" y="0" width="560" height="60" fill="#171A20"/>
+  <rect x="0" y="59" width="560" height="1" fill="#23262B"/>
+  <rect x="20" y="16" width="28" height="28" rx="8" fill="#4C8DFF"/>
+  <polygon points="30,22 30,38 40,30" fill="#FFFFFF"/>
+  <text x="60" y="31" font-family="Noto Sans SC" font-size="15" fill="#F2F5F9">执行阶段</text>
+  <text x="60" y="49" font-family="Noto Sans SC" font-size="11" fill="#5B6472">四个阶段，可按章勾选</text>
+  <rect x="452" y="19" width="88" height="22" rx="6" fill="#16203A"/>
+  <circle cx="464" cy="30" r="3.5" fill="#4C8DFF"/>
+  <text x="474" y="34" font-family="Noto Sans SC" font-size="11" fill="#4C8DFF">4 个阶段</text>
+
+  <!-- ============ STAGEBAR 60..110 ============ -->
+  <rect x="0" y="60" width="560" height="50" fill="#12151B"/>
+  <circle cx="24" cy="85" r="3.5" fill="#3FB950"/>
+  <text x="33" y="89" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">需求</text>
+  <circle cx="100" cy="85" r="3.5" fill="#3FB950"/>
+  <text x="109" y="89" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">运行</text>
+  <circle cx="176" cy="85" r="3.5" fill="#3FB950"/>
+  <text x="185" y="89" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">方案</text>
+  <rect x="240" y="74" width="56" height="22" rx="6" fill="#16203A"/>
+  <circle cx="252" cy="85" r="3.5" fill="#4C8DFF"/>
+  <text x="262" y="89" font-family="Noto Sans SC" font-size="11" fill="#F2F5F9">生成</text>
+  <circle cx="328" cy="85" r="3.5" fill="#2D3035"/>
+  <text x="337" y="89" font-family="Noto Sans SC" font-size="11" fill="#5B6472">分镜</text>
+  <circle cx="404" cy="85" r="3.5" fill="#2D3035"/>
+  <text x="413" y="89" font-family="Noto Sans SC" font-size="11" fill="#5B6472">交付</text>
+  <text x="540" y="89" text-anchor="end" font-family="Inter" font-size="11" fill="#5B6472">4 / 6</text>
+  <rect x="0" y="109" width="560" height="1" fill="#23262B"/>
+
+  <!-- ============ SCROLL 110..830 ============ -->
+
+  <!-- 阶段 1 · llm（勾选） -->
+  <rect x="20" y="126" width="520" height="96" rx="10" fill="#171A20" stroke="#4C8DFF" stroke-width="1"/>
+  <rect x="20" y="140" width="4" height="68" fill="#4C8DFF"/>
+  <rect x="32" y="140" width="16" height="16" rx="4" fill="#4C8DFF"/>
+  <rect x="36" y="144" width="8" height="8" rx="2" fill="#FFFFFF"/>
+  <rect x="476" y="138" width="52" height="20" rx="4" fill="#16203A"/>
+  <text x="60" y="154" font-family="Noto Sans SC" font-size="13" fill="#F2F5F9">llm</text>
+  <text x="502" y="152" text-anchor="middle" font-family="Inter" font-size="10" fill="#4C8DFF">STAGE 1</text>
+  <text x="60" y="176" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">写人物圣经 / 风格指南 / 拆镜 / 写视频提示词</text>
+  <circle cx="66" cy="190" r="3.5" fill="#3FB950"/>
+  <text x="76" y="196" font-family="Noto Sans SC" font-size="10" fill="#8A93A5">需要 LLM 通道 · 不烧渲染时间</text>
+
+  <!-- 阶段 2 · image（勾选） -->
+  <rect x="20" y="238" width="520" height="96" rx="10" fill="#171A20" stroke="#4C8DFF" stroke-width="1"/>
+  <rect x="20" y="252" width="4" height="68" fill="#4C8DFF"/>
+  <rect x="32" y="252" width="16" height="16" rx="4" fill="#4C8DFF"/>
+  <rect x="36" y="256" width="8" height="8" rx="2" fill="#FFFFFF"/>
+  <rect x="476" y="250" width="52" height="20" rx="4" fill="#16203A"/>
+  <text x="60" y="266" font-family="Noto Sans SC" font-size="13" fill="#F2F5F9">image</text>
+  <text x="502" y="264" text-anchor="middle" font-family="Inter" font-size="10" fill="#4C8DFF">STAGE 2</text>
+  <text x="60" y="288" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">人物 / 场景 / 道具参考图 + 服装与年龄变体</text>
+  <circle cx="66" cy="302" r="3.5" fill="#3FB950"/>
+  <text x="76" y="308" font-family="Noto Sans SC" font-size="10" fill="#8A93A5">产出后续两阶段的参考图</text>
+
+  <!-- 阶段 3 · tts（勾选，软依赖） -->
+  <rect x="20" y="350" width="520" height="96" rx="10" fill="#171A20" stroke="#4C8DFF" stroke-width="1"/>
+  <rect x="20" y="364" width="4" height="68" fill="#4C8DFF"/>
+  <rect x="32" y="364" width="16" height="16" rx="4" fill="#4C8DFF"/>
+  <rect x="36" y="368" width="8" height="8" rx="2" fill="#FFFFFF"/>
+  <rect x="476" y="362" width="52" height="20" rx="4" fill="#16203A"/>
+  <text x="60" y="378" font-family="Noto Sans SC" font-size="13" fill="#F2F5F9">tts</text>
+  <text x="502" y="376" text-anchor="middle" font-family="Inter" font-size="10" fill="#4C8DFF">STAGE 3</text>
+  <text x="60" y="400" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">角色音色样本，只给说话角色生成</text>
+  <circle cx="66" cy="414" r="3.5" fill="#D29922"/>
+  <text x="76" y="420" font-family="Noto Sans SC" font-size="10" fill="#D29922">软依赖：缺失时视频静默降质，界面会标出来</text>
+
+  <!-- 阶段 4 · video（未勾选，硬依赖 + 显存不足） -->
+  <rect x="20" y="462" width="520" height="96" rx="10" fill="#171A20" stroke="#23262B" stroke-width="1"/>
+  <rect x="32" y="476" width="16" height="16" rx="4" fill="#1F2127" stroke="#2D3035" stroke-width="1"/>
+  <rect x="476" y="474" width="52" height="20" rx="4" fill="#1F2127"/>
+  <text x="60" y="490" font-family="Noto Sans SC" font-size="13" fill="#F2F5F9">video</text>
+  <text x="502" y="488" text-anchor="middle" font-family="Inter" font-size="10" fill="#8A93A5">STAGE 4</text>
+  <text x="60" y="512" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">逐镜出片 → 自审重试 → 背景音乐 → 合成 → 字幕</text>
+  <circle cx="66" cy="526" r="3.5" fill="#D29922"/>
+  <text x="76" y="532" font-family="Noto Sans SC" font-size="10" fill="#D29922">硬依赖 image：没有参考图直接报错</text>
+
+  <!-- 显存门槛提示条 -->
+  <rect x="20" y="574" width="520" height="64" rx="8" fill="#2A2214"/>
+  <circle cx="38" cy="598" r="4" fill="#D29922"/>
+  <text x="50" y="602" font-family="Noto Sans SC" font-size="12" fill="#D29922">含 video 阶段需 8GB 显存，当前 6GB</text>
+  <text x="50" y="622" font-family="Noto Sans SC" font-size="10" fill="#5B6472">不自动拆批：显存不够就明说，可先只跑 llm + image</text>
+
+  <!-- 按章勾选 -->
+  <rect x="20" y="654" width="520" height="96" rx="8" fill="#12151B"/>
+  <text x="32" y="676" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">按章勾选（覆盖上面的全局设置）</text>
+  <rect x="32" y="687" width="12" height="12" rx="3" fill="#4C8DFF"/>
+  <rect x="32" y="705" width="12" height="12" rx="3" fill="#4C8DFF"/>
+  <rect x="32" y="723" width="12" height="12" rx="3" fill="#1F2127" stroke="#2D3035" stroke-width="1"/>
+  <text x="52" y="696" font-family="Noto Sans SC" font-size="11" fill="#F2F5F9">第 1 章 全阶段</text>
+  <text x="52" y="714" font-family="Noto Sans SC" font-size="11" fill="#F2F5F9">第 2 章 视频+合成</text>
+  <text x="52" y="732" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">第 3 章 待开始</text>
+  <text x="528" y="696" text-anchor="end" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">8 镜全跑</text>
+  <text x="528" y="714" text-anchor="end" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">跳过 tts</text>
+  <text x="528" y="732" text-anchor="end" font-family="Noto Sans SC" font-size="11" fill="#5B6472">未排期</text>
+
+  <text x="20" y="782" font-family="Noto Sans SC" font-size="11" fill="#5B6472">阶段按固定顺序串行执行，不按勾选顺序</text>
+  <rect x="548" y="126" width="3" height="150" rx="1.5" fill="#2D3035"/>
+
+  <!-- ============ FOOTER 830..900 ============ -->
+  <rect x="0" y="830" width="560" height="70" fill="#171A20"/>
+  <rect x="0" y="830" width="560" height="1" fill="#23262B"/>
+  <text x="20" y="862" font-family="Noto Sans SC" font-size="11" fill="#5B6472">下一步</text>
+  <text x="20" y="884" font-family="Noto Sans SC" font-size="12" fill="#F2F5F9">准备一致性锚点（人物圣经与风格）</text>
+  <rect x="436" y="846" width="104" height="32" rx="8" fill="#4C8DFF"/>
+  <text x="488" y="866" text-anchor="middle" font-family="Noto Sans SC" font-size="12" fill="#FFFFFF">开始阶段一</text>
+</svg>

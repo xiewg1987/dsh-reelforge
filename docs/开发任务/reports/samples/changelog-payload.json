@@ -1,0 +1,16 @@
+{
+  "entries": [
+    {
+      "id": "e1",
+      "at": "2026-10-23T03:00:00.000Z",
+      "summary": "改分镜",
+      "field": "shots",
+      "batchId": "b1"
+    }
+  ],
+  "modes": [
+    "single",
+    "batch",
+    "timepoint"
+  ]
+}

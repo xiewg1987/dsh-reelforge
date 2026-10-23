@@ -1,0 +1,65 @@
+{
+  "kind": "i2i",
+  "specs": {
+    "local-nvidia": {
+      "id": "qwen_image_edit_2511_i2i",
+      "kind": "i2i",
+      "name": "Qwen-Image-Edit 2511 · 图生图（本地 · N 卡）",
+      "description": "换装 / 年龄变体 / 图像编辑。参考图走 image 角色（指向第一个 image loader）。",
+      "sourceFile": "templates/qwen_image_edit_2511_i2i.json",
+      "roles": {
+        "positive_prompt": { "node": "2", "field": "text" },
+        "negative_prompt": { "node": "3", "field": "text" },
+        "width": { "node": "4", "field": "width" },
+        "height": { "node": "4", "field": "height" },
+        "aspect_ratio": { "node": "4", "field": "aspect_ratio" },
+        "resolution": { "node": "4", "field": "resolution" },
+        "seed": { "node": "5", "field": "seed" },
+        "image": { "node": "10", "field": "image" },
+        "filename_prefix": { "node": "7", "field": "filename_prefix" }
+      },
+      "media": null,
+      "outputs": ["SaveImage"]
+    },
+    "local-amd": {
+      "id": "qwen_image_2_1_i2i_gguf",
+      "kind": "i2i",
+      "name": "Qwen-Image 2.1 GGUF · 图生图（本地 · AMD）",
+      "description": "GGUF 量化工作流，低显存可跑。换装 / 年龄变体 / 图像编辑。",
+      "sourceFile": "templates/qwen_image_2_1_i2i_gguf.json",
+      "roles": {
+        "positive_prompt": { "node": "2", "field": "text" },
+        "negative_prompt": { "node": "3", "field": "text" },
+        "width": { "node": "4", "field": "width" },
+        "height": { "node": "4", "field": "height" },
+        "aspect_ratio": { "node": "4", "field": "aspect_ratio" },
+        "resolution": { "node": "4", "field": "resolution" },
+        "seed": { "node": "5", "field": "seed" },
+        "image": { "node": "10", "field": "image" },
+        "filename_prefix": { "node": "7", "field": "filename_prefix" }
+      },
+      "media": null,
+      "outputs": ["SaveImage"]
+    },
+    "cloud-runninghub": {
+      "id": "runninghub_qwen_image_edit_2511_i2i",
+      "kind": "i2i",
+      "name": "Qwen-Image-Edit 2511 · 图生图（云端 RunningHub）",
+      "description": "云端跑**同一批 kind** 里的 i2i。换装 / 年龄变体 / 图像编辑。",
+      "sourceFile": "templates/runninghub_qwen_image_edit_2511_i2i.json",
+      "roles": {
+        "positive_prompt": { "node": "2", "field": "text" },
+        "negative_prompt": { "node": "3", "field": "text" },
+        "width": { "node": "4", "field": "width" },
+        "height": { "node": "4", "field": "height" },
+        "aspect_ratio": { "node": "4", "field": "aspect_ratio" },
+        "resolution": { "node": "4", "field": "resolution" },
+        "seed": { "node": "5", "field": "seed" },
+        "image": { "node": "10", "field": "image" },
+        "filename_prefix": { "node": "7", "field": "filename_prefix" }
+      },
+      "media": null,
+      "outputs": ["SaveImage"]
+    }
+  }
+}

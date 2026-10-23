@@ -1,0 +1,49 @@
+# ── 依赖与安装产物 ─────────────────────────────────────────────
+node_modules/
+
+# 本插件**零 npm 运行时依赖**，lockfile 里没有任何信息量；CI 也因此不用
+# `npm ci`（没有 lockfile 会直接失败），统一用 `npm install`。
+# 不提交它，免得本地与 CI 各自生成一份、版本号还漂移。
+# （将来真要加 npm 依赖，删掉这一行、把 lockfile 提交上来即可。）
+package-lock.json
+
+# `npm pack` 产出的包（local-reelforge-<version>.tgz）
+*.tgz
+
+# ── 临时渲染产物 ───────────────────────────────────────────────
+# design/_tmp 是渲染工具的临时输出（PNG 截图）。
+# 正式设计稿在 design/ 根目录（design/*.png / design/*.svg），**不**忽略。
+design/_tmp/
+
+# exports/ 是端到端测试把「工作区」指向仓库根时产出的交付物
+# （ch01.mp4 / ch01.srt / ch01_分镜表.html / ch01_分镜表.jpg / 参考图包.zip …）。
+# 它是**测试产物**，不是仓库内容 —— 真实交付物落在会话工作区的 .reelforge/ 下。
+exports/
+.reelforge/
+
+# ── 编辑器 / IDE ───────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── 操作系统垃圾 ───────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# ── 日志与临时文件 ─────────────────────────────────────────────
+*.log
+npm-debug.log*
+yarn-error.log*
+*.tmp
+*.temp
+
+# ── 明确**不**忽略的交付物（这里只做提醒，别手滑加进来）────────
+#   docs/开发任务/reports/ —— 交付报告，要提交
+#   client.js              —— 客户端构建产物（**是**被发布的产物），要提交
+#   design/*.png / *.svg   —— 设计稿，要提交
+#   references/            —— 第三方参考图（huaban / pinterest），不擅自忽略或删除；
+#                             版权与体积影响由 owner 判断

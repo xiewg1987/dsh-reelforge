@@ -1,0 +1,16 @@
+# 统一行尾：本仓库的工作区与产物一律用 LF。
+#
+# Windows 上的 git 默认 core.autocrlf=true，会把 LF 存成 LF、检出成 CRLF，
+# 于是每次 clone/checkout 都产生整仓行尾 diff（`git diff` 全文件变红）。
+# 显式声明 eol=lf，让「仓库里是什么、检出就是什么」。
+* text=auto eol=lf
+
+# 二进制文件：不做行尾转换、不做 diff。
+*.png binary
+*.jpg binary
+*.webp binary
+*.zip binary
+*.mp4 binary
+*.ico binary
+*.figcraft binary
+*.fig binary

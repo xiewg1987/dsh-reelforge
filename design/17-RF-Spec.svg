@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="900" viewBox="0 0 560 900">
+  <rect x="0" y="0" width="560" height="900" fill="#0B0E14"/>
+
+  <!-- ============ RECTS ============ -->
+  <!-- HEADER 0..60 -->
+  <rect x="0" y="0" width="560" height="60" fill="#171A20"/>
+  <rect x="0" y="59" width="560" height="1" fill="#23262B"/>
+  <rect x="20" y="16" width="28" height="28" rx="8" fill="#4C8DFF"/>
+  <rect x="452" y="19" width="88" height="22" rx="6" fill="#16203A"/>
+  <!-- STAGEBAR 60..110 -->
+  <rect x="0" y="60" width="560" height="50" fill="#12151B"/>
+  <rect x="240" y="74" width="56" height="22" rx="6" fill="#16203A"/>
+  <rect x="0" y="109" width="560" height="1" fill="#23262B"/>
+  <!-- 颜色令牌 126..330 -->
+  <rect x="20" y="126" width="520" height="204" rx="10" fill="#171A20"/>
+  <!-- 行 1 -->
+  <rect x="32" y="164" width="28" height="28" rx="4" fill="#0B0E14" stroke="#2D3035" stroke-width="1"/>
+  <rect x="136" y="164" width="28" height="28" rx="4" fill="#171A20" stroke="#2D3035" stroke-width="1"/>
+  <rect x="240" y="164" width="28" height="28" rx="4" fill="#12151B" stroke="#2D3035" stroke-width="1"/>
+  <rect x="344" y="164" width="28" height="28" rx="4" fill="#1F2127" stroke="#2D3035" stroke-width="1"/>
+  <rect x="448" y="164" width="28" height="28" rx="4" fill="#23262B" stroke="#2D3035" stroke-width="1"/>
+  <!-- 行 2 -->
+  <rect x="32" y="198" width="28" height="28" rx="4" fill="#2D3035" stroke="#2D3035" stroke-width="1"/>
+  <rect x="136" y="198" width="28" height="28" rx="4" fill="#F2F5F9" stroke="#2D3035" stroke-width="1"/>
+  <rect x="240" y="198" width="28" height="28" rx="4" fill="#8A93A5" stroke="#2D3035" stroke-width="1"/>
+  <rect x="344" y="198" width="28" height="28" rx="4" fill="#5B6472" stroke="#2D3035" stroke-width="1"/>
+  <rect x="448" y="198" width="28" height="28" rx="4" fill="#4C8DFF" stroke="#2D3035" stroke-width="1"/>
+  <!-- 行 3 -->
+  <rect x="32" y="232" width="28" height="28" rx="4" fill="#16203A" stroke="#2D3035" stroke-width="1"/>
+  <rect x="136" y="232" width="28" height="28" rx="4" fill="#3FB950" stroke="#2D3035" stroke-width="1"/>
+  <rect x="240" y="232" width="28" height="28" rx="4" fill="#D29922" stroke="#2D3035" stroke-width="1"/>
+  <rect x="344" y="232" width="28" height="28" rx="4" fill="#2A2214" stroke="#2D3035" stroke-width="1"/>
+  <rect x="448" y="232" width="28" height="28" rx="4" fill="#F85149" stroke="#2D3035" stroke-width="1"/>
+  <!-- 行 4 -->
+  <rect x="32" y="266" width="28" height="28" rx="4" fill="#2A1618" stroke="#2D3035" stroke-width="1"/>
+  <rect x="136" y="266" width="28" height="28" rx="4" fill="#FFFFFF" stroke="#2D3035" stroke-width="1"/>
+  <!-- 字阶 342..478 -->
+  <rect x="20" y="342" width="520" height="136" rx="10" fill="#12151B"/>
+  <!-- 间距与圆角 490..590 -->
+  <rect x="20" y="490" width="520" height="100" rx="10" fill="#12151B"/>
+  <!-- 组件清单 602..752 -->
+  <rect x="20" y="602" width="520" height="150" rx="10" fill="#12151B"/>
+  <!-- 映射 764..822 -->
+  <rect x="20" y="764" width="520" height="58" rx="10" fill="#16203A"/>
+  <!-- 滚动条 -->
+  <rect x="548" y="126" width="3" height="180" rx="1.5" fill="#2D3035"/>
+  <!-- FOOTER 830..900 -->
+  <rect x="0" y="830" width="560" height="70" fill="#171A20"/>
+  <rect x="0" y="830" width="560" height="1" fill="#23262B"/>
+  <rect x="436" y="846" width="104" height="32" rx="8" fill="#4C8DFF"/>
+
+  <!-- ============ CIRCLES / POLYGONS ============ -->
+  <polygon points="30,22 30,38 40,30" fill="#FFFFFF"/>
+  <circle cx="24" cy="85" r="3.5" fill="#3FB950"/>
+  <circle cx="100" cy="85" r="3.5" fill="#3FB950"/>
+  <circle cx="176" cy="85" r="3.5" fill="#3FB950"/>
+  <circle cx="252" cy="85" r="3.5" fill="#4C8DFF"/>
+  <circle cx="328" cy="85" r="3.5" fill="#2D3035"/>
+  <circle cx="404" cy="85" r="3.5" fill="#2D3035"/>
+
+  <!-- ============ TEXTS ============ -->
+  <!-- HEADER -->
+  <text x="60" y="31" font-family="Noto Sans SC" font-size="15" fill="#F2F5F9">设计令牌</text>
+  <text x="60" y="49" font-family="Noto Sans SC" font-size="11" fill="#5B6472">颜色 / 字阶 / 间距 / 组件清单</text>
+  <text x="496" y="34" text-anchor="middle" font-family="Inter" font-size="11" fill="#4C8DFF">v4</text>
+  <!-- STAGEBAR -->
+  <text x="33" y="89" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">需求</text>
+  <text x="109" y="89" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">运行</text>
+  <text x="185" y="89" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">方案</text>
+  <text x="262" y="89" font-family="Noto Sans SC" font-size="11" fill="#F2F5F9">生成</text>
+  <text x="337" y="89" font-family="Noto Sans SC" font-size="11" fill="#5B6472">分镜</text>
+  <text x="413" y="89" font-family="Noto Sans SC" font-size="11" fill="#5B6472">交付</text>
+  <text x="540" y="89" text-anchor="end" font-family="Inter" font-size="11" fill="#5B6472">4 / 6</text>
+  <!-- 颜色 -->
+  <text x="32" y="150" font-family="Noto Sans SC" font-size="12" fill="#8A93A5">颜色</text>
+  <text x="64" y="182" font-family="Inter" font-size="10" fill="#5B6472">#0B0E14</text>
+  <text x="168" y="182" font-family="Inter" font-size="10" fill="#5B6472">#171A20</text>
+  <text x="272" y="182" font-family="Inter" font-size="10" fill="#5B6472">#12151B</text>
+  <text x="376" y="182" font-family="Inter" font-size="10" fill="#5B6472">#1F2127</text>
+  <text x="480" y="182" font-family="Inter" font-size="10" fill="#5B6472">#23262B</text>
+  <text x="64" y="216" font-family="Inter" font-size="10" fill="#5B6472">#2D3035</text>
+  <text x="168" y="216" font-family="Inter" font-size="10" fill="#5B6472">#F2F5F9</text>
+  <text x="272" y="216" font-family="Inter" font-size="10" fill="#5B6472">#8A93A5</text>
+  <text x="376" y="216" font-family="Inter" font-size="10" fill="#5B6472">#5B6472</text>
+  <text x="480" y="216" font-family="Inter" font-size="10" fill="#5B6472">#4C8DFF</text>
+  <text x="64" y="250" font-family="Inter" font-size="10" fill="#5B6472">#16203A</text>
+  <text x="168" y="250" font-family="Inter" font-size="10" fill="#5B6472">#3FB950</text>
+  <text x="272" y="250" font-family="Inter" font-size="10" fill="#5B6472">#D29922</text>
+  <text x="376" y="250" font-family="Inter" font-size="10" fill="#5B6472">#2A2214</text>
+  <text x="480" y="250" font-family="Inter" font-size="10" fill="#5B6472">#F85149</text>
+  <text x="64" y="284" font-family="Inter" font-size="10" fill="#5B6472">#2A1618</text>
+  <text x="168" y="284" font-family="Inter" font-size="10" fill="#5B6472">#FFFFFF</text>
+  <!-- 字阶 -->
+  <text x="32" y="368" font-family="Noto Sans SC" font-size="12" fill="#8A93A5">字阶</text>
+  <text x="32" y="392" font-family="Noto Sans SC" font-size="10" fill="#5B6472">标题</text>
+  <text x="120" y="392" font-family="Noto Sans SC" font-size="15" fill="#F2F5F9">ReelForge 面板</text>
+  <text x="528" y="392" text-anchor="end" font-family="Inter" font-size="10" fill="#5B6472">15px</text>
+  <text x="32" y="410" font-family="Noto Sans SC" font-size="10" fill="#5B6472">小节标题</text>
+  <text x="120" y="410" font-family="Noto Sans SC" font-size="13" fill="#F2F5F9">降级与失败</text>
+  <text x="528" y="410" text-anchor="end" font-family="Inter" font-size="10" fill="#5B6472">13px</text>
+  <text x="32" y="428" font-family="Noto Sans SC" font-size="10" fill="#5B6472">正文</text>
+  <text x="120" y="428" font-family="Noto Sans SC" font-size="12" fill="#8A93A5">缺什么就说清楚</text>
+  <text x="528" y="428" text-anchor="end" font-family="Inter" font-size="10" fill="#5B6472">12px</text>
+  <text x="32" y="446" font-family="Noto Sans SC" font-size="10" fill="#5B6472">辅助说明</text>
+  <text x="120" y="446" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">状态色只用令牌色</text>
+  <text x="528" y="446" text-anchor="end" font-family="Inter" font-size="10" fill="#5B6472">11px</text>
+  <text x="32" y="464" font-family="Noto Sans SC" font-size="10" fill="#5B6472">脚注</text>
+  <text x="120" y="464" font-family="Noto Sans SC" font-size="10" fill="#5B6472">仅描边 · 不做渐变</text>
+  <text x="528" y="464" text-anchor="end" font-family="Inter" font-size="10" fill="#5B6472">10px</text>
+  <!-- 间距与圆角 -->
+  <text x="32" y="514" font-family="Noto Sans SC" font-size="12" fill="#8A93A5">间距与圆角</text>
+  <text x="32" y="538" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">间距 4 / 8 / 12 / 16 / 20 / 24 · 圆角 列表 8 / 面板 10 / 气泡 12 / 芯片 4</text>
+  <text x="32" y="558" font-family="Noto Sans SC" font-size="10" fill="#5B6472">描边 1px #23262B · 卡片内元素离卡边 12px</text>
+  <text x="32" y="576" font-family="Noto Sans SC" font-size="10" fill="#5B6472">内容不得越过 y=826（底栏顶在 830）</text>
+  <!-- 组件清单 -->
+  <text x="32" y="626" font-family="Noto Sans SC" font-size="12" fill="#8A93A5">组件清单</text>
+  <text x="32" y="652" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">按钮</text>
+  <text x="528" y="652" text-anchor="end" font-family="Noto Sans SC" font-size="10" fill="#5B6472">4 态</text>
+  <text x="32" y="670" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">胶囊</text>
+  <text x="528" y="670" text-anchor="end" font-family="Noto Sans SC" font-size="10" fill="#5B6472">4 态</text>
+  <text x="32" y="688" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">进度条</text>
+  <text x="528" y="688" text-anchor="end" font-family="Noto Sans SC" font-size="10" fill="#5B6472">3 态</text>
+  <text x="32" y="706" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">输入框</text>
+  <text x="528" y="706" text-anchor="end" font-family="Noto Sans SC" font-size="10" fill="#5B6472">3 态</text>
+  <text x="32" y="724" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">空态</text>
+  <text x="528" y="724" text-anchor="end" font-family="Noto Sans SC" font-size="10" fill="#5B6472">2 态</text>
+  <text x="32" y="742" font-family="Inter" font-size="11" fill="#8A93A5">Toast</text>
+  <text x="528" y="742" text-anchor="end" font-family="Noto Sans SC" font-size="10" fill="#5B6472">3 态</text>
+  <!-- 映射 -->
+  <text x="32" y="786" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">对照文档 §4.3 客户端插槽与 UI 规则</text>
+  <text x="32" y="806" font-family="Noto Sans SC" font-size="10" fill="#5B6472">对应 §10.2 右栏工作台 7 个页签：章节 / 分镜 / 资产 / 上下文 / 技能 / 成片 / 日志</text>
+  <!-- FOOTER -->
+  <text x="20" y="862" font-family="Noto Sans SC" font-size="11" fill="#5B6472">画板规格</text>
+  <text x="20" y="884" font-family="Noto Sans SC" font-size="12" fill="#F2F5F9">560×900 · 桌面端右栏面板</text>
+  <text x="488" y="866" text-anchor="middle" font-family="Noto Sans SC" font-size="12" fill="#FFFFFF">复制令牌</text>
+</svg>

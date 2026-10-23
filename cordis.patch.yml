@@ -1,0 +1,37 @@
+# ReelForge bundle patch.
+#
+# R7（包名三处相等）：本行的 `name` 必须与
+#   ① package.json 的 "name"
+#   ② client.js 里 window.__ModuleLoader__.load({ id })
+# 三者**完全相等**，否则 client 半静默不加载——控制台不报错，右栏就是没这个 Tab。
+# 改包名时三处一起改，并跑 `npm run check:identity`。
+#
+# R5（可调值进 Config）：用户 patch 层覆盖本文件的 config 能在插件升级中存活，
+# 所以可调值写在这里，不要硬编码进 src/。
+- insert:
+    - id: reelforge
+      name: '@local/reelforge'
+      config:
+        # 工作区根目录（相对插件工作目录）。所有产物落在这里。
+        workspaceDir: '.reelforge'
+        # 运行位置：local | cloud（§7.1 探测范围随位置变）
+        runPosition: 'cloud'
+        # 本地 ComfyUI 地址（仅 local 档使用）
+        comfyBaseUrl: 'http://127.0.0.1:8188'
+        # 云端 provider：runninghub | online-api | dsh（§7.3 三个并列，不是一个笼统的"云端"）
+        cloudProvider: 'dsh'
+        # 四阶段默认开关（§8.4 固定顺序 llm → image → tts → video）
+        stages:
+          llm: true
+          image: true
+          tts: true
+          video: true
+        # 成本上限（界面成本位常驻显示已用/上限）
+        budgetLimitCny: 12
+        # 默认输出开关（项目级可覆盖）
+        enableBgm: true
+        enableSubtitles: true
+        # 目标时长（秒）；null = 不限，按章交付
+        targetDuration: null
+        # 历史运行 Tab（可选第二个右栏 Tab，kind 不可改名）
+        enableRunsTab: false

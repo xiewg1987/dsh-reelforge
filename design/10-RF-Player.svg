@@ -1,0 +1,149 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="900" viewBox="0 0 560 900">
+  <rect x="0" y="0" width="560" height="900" fill="#0B0E14"/>
+
+  <!-- ============ HEADER 0..60 ============ -->
+  <rect x="0" y="0" width="560" height="60" fill="#171A20"/>
+  <rect x="0" y="59" width="560" height="1" fill="#23262B"/>
+  <rect x="20" y="16" width="28" height="28" rx="8" fill="#4C8DFF"/>
+  <rect x="452" y="19" width="88" height="22" rx="6" fill="#16203A"/>
+
+  <!-- ============ STAGEBAR 60..110 ============ -->
+  <rect x="0" y="60" width="560" height="50" fill="#12151B"/>
+  <rect x="392" y="74" width="56" height="22" rx="6" fill="#16203A"/>
+  <rect x="0" y="109" width="560" height="1" fill="#23262B"/>
+
+  <!-- ============ SCROLL 110..830 ============ -->
+  <!-- 左栏：9:16 画面区 -->
+  <rect x="20" y="150" width="240" height="426" rx="10" fill="#1F2127"/>
+  <rect x="20" y="638" width="240" height="4" rx="2" fill="#1F2127"/>
+  <rect x="20" y="638" width="88" height="4" rx="2" fill="#4C8DFF"/>
+
+  <!-- 左栏：本章 8 镜缩略图条 -->
+  <rect x="20" y="702" width="26" height="46" rx="4" fill="#1F2127"/>
+  <rect x="50" y="702" width="26" height="46" rx="4" fill="#1F2127"/>
+  <rect x="80" y="702" width="26" height="46" rx="4" fill="#16203A"/>
+  <rect x="80" y="746" width="26" height="2" fill="#4C8DFF"/>
+  <rect x="110" y="702" width="26" height="46" rx="4" fill="#1F2127"/>
+  <rect x="140" y="702" width="26" height="46" rx="4" fill="#1F2127"/>
+  <rect x="170" y="702" width="26" height="46" rx="4" fill="#1F2127"/>
+  <rect x="200" y="702" width="26" height="46" rx="4" fill="#1F2127"/>
+  <rect x="230" y="702" width="26" height="46" rx="4" fill="#1F2127"/>
+
+  <!-- 右栏：章节刻度 -->
+  <rect x="286" y="150" width="254" height="56" rx="8" fill="#12151B"/>
+  <rect x="298" y="178" width="74" height="6" rx="3" fill="#1F2127"/>
+  <rect x="298" y="178" width="74" height="6" rx="3" fill="#3FB950"/>
+  <rect x="378" y="178" width="74" height="6" rx="3" fill="#1F2127"/>
+  <rect x="378" y="178" width="27" height="6" rx="3" fill="#4C8DFF"/>
+  <rect x="458" y="178" width="70" height="6" rx="3" fill="#1F2127"/>
+
+  <!-- 右栏：开关组分隔线 -->
+  <rect x="286" y="334" width="254" height="1" fill="#23262B"/>
+  <rect x="286" y="362" width="254" height="1" fill="#23262B"/>
+
+  <!-- 右栏：开关 -->
+  <rect x="478" y="310" width="44" height="20" rx="10" fill="#4C8DFF"/>
+  <rect x="478" y="338" width="44" height="20" rx="10" fill="#4C8DFF"/>
+  <rect x="478" y="366" width="44" height="20" rx="10" fill="#2D3035"/>
+
+  <!-- 右栏：当前镜卡片 -->
+  <rect x="286" y="406" width="254" height="154" rx="8" fill="#12151B" stroke="#23262B" stroke-width="1"/>
+
+  <!-- 右栏：字幕预览 -->
+  <rect x="286" y="576" width="254" height="124" rx="8" fill="#171A20"/>
+
+  <rect x="548" y="126" width="3" height="180" rx="1.5" fill="#2D3035"/>
+
+  <!-- ============ FOOTER 830..900 ============ -->
+  <rect x="0" y="830" width="560" height="70" fill="#171A20"/>
+  <rect x="0" y="830" width="560" height="1" fill="#23262B"/>
+  <rect x="436" y="846" width="104" height="32" rx="8" fill="#4C8DFF"/>
+
+  <!-- ============ CIRCLES ============ -->
+  <circle cx="464" cy="30" r="3.5" fill="#4C8DFF"/>
+  <circle cx="24" cy="85" r="3.5" fill="#3FB950"/>
+  <circle cx="100" cy="85" r="3.5" fill="#3FB950"/>
+  <circle cx="176" cy="85" r="3.5" fill="#3FB950"/>
+  <circle cx="252" cy="85" r="3.5" fill="#3FB950"/>
+  <circle cx="328" cy="85" r="3.5" fill="#3FB950"/>
+  <circle cx="404" cy="85" r="3.5" fill="#4C8DFF"/>
+  <circle cx="140" cy="363" r="26" fill="#16203A"/>
+  <circle cx="316" cy="248" r="16" fill="#1F2127"/>
+  <circle cx="358" cy="248" r="16" fill="#4C8DFF"/>
+  <circle cx="400" cy="248" r="16" fill="#1F2127"/>
+  <circle cx="510" cy="320" r="7" fill="#FFFFFF"/>
+  <circle cx="510" cy="348" r="7" fill="#FFFFFF"/>
+  <circle cx="492" cy="376" r="7" fill="#8A93A5"/>
+
+  <!-- ============ POLYGONS ============ -->
+  <polygon points="30,22 30,38 40,30" fill="#FFFFFF"/>
+  <polygon points="130,349 130,377 154,363" fill="#FFFFFF"/>
+  <polygon points="318,241 310,248 318,255" fill="#8A93A5"/>
+  <polygon points="352,239 352,257 367,248" fill="#FFFFFF"/>
+  <polygon points="398,241 406,248 398,255" fill="#8A93A5"/>
+
+  <!-- ============ TEXTS ============ -->
+  <!-- header -->
+  <text x="60" y="31" font-family="Noto Sans SC" font-size="15" fill="#F2F5F9">成片</text>
+  <text x="60" y="49" font-family="Noto Sans SC" font-size="11" fill="#5B6472">第 2 章 灯塔 · 8 镜 · 40.0s</text>
+  <text x="474" y="34" font-family="Noto Sans SC" font-size="11" fill="#4C8DFF">云端渲染</text>
+
+  <!-- stagebar -->
+  <text x="33" y="89" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">需求</text>
+  <text x="109" y="89" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">运行</text>
+  <text x="185" y="89" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">方案</text>
+  <text x="261" y="89" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">生成</text>
+  <text x="337" y="89" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">分镜</text>
+  <text x="414" y="89" font-family="Noto Sans SC" font-size="11" fill="#F2F5F9">交付</text>
+  <text x="540" y="89" text-anchor="end" font-family="Inter" font-size="11" fill="#5B6472">6 / 6</text>
+
+  <!-- 左栏：当前镜信息 -->
+  <text x="20" y="602" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">第 2 章 · 第 3 / 8 镜</text>
+  <text x="20" y="622" font-family="Noto Sans SC" font-size="11" fill="#5B6472">S02-03 · 5.0s</text>
+  <text x="20" y="660" font-family="Inter" font-size="11" fill="#5B6472">00:11.0</text>
+  <text x="260" y="660" text-anchor="end" font-family="Inter" font-size="11" fill="#5B6472">40.0s</text>
+  <text x="20" y="692" font-family="Noto Sans SC" font-size="12" fill="#8A93A5">本章 8 镜</text>
+  <text x="33" y="730" text-anchor="middle" font-family="Inter" font-size="10" fill="#5B6472">01</text>
+  <text x="63" y="730" text-anchor="middle" font-family="Inter" font-size="10" fill="#5B6472">02</text>
+  <text x="93" y="730" text-anchor="middle" font-family="Inter" font-size="10" fill="#4C8DFF">03</text>
+  <text x="123" y="730" text-anchor="middle" font-family="Inter" font-size="10" fill="#5B6472">04</text>
+  <text x="153" y="730" text-anchor="middle" font-family="Inter" font-size="10" fill="#5B6472">05</text>
+  <text x="183" y="730" text-anchor="middle" font-family="Inter" font-size="10" fill="#5B6472">06</text>
+  <text x="213" y="730" text-anchor="middle" font-family="Inter" font-size="10" fill="#5B6472">07</text>
+  <text x="243" y="730" text-anchor="middle" font-family="Inter" font-size="10" fill="#5B6472">08</text>
+
+  <!-- 右栏：章节刻度 -->
+  <text x="298" y="170" font-family="Noto Sans SC" font-size="10" fill="#5B6472">章节</text>
+  <text x="298" y="198" font-family="Noto Sans SC" font-size="10" fill="#5B6472">第 1 章 40.0s · 第 2 章 40.0s · 第 3 章 40.0s</text>
+
+  <!-- 右栏：播放控制 -->
+  <text x="528" y="254" text-anchor="end" font-family="Inter" font-size="11" fill="#5B6472">全长 40.0s</text>
+  <text x="298" y="286" font-family="Noto Sans SC" font-size="10" fill="#8A93A5">倍速 1.0×</text>
+
+  <!-- 右栏：开关组 -->
+  <text x="298" y="325" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">字幕</text>
+  <text x="298" y="353" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">角色音轨</text>
+  <text x="298" y="381" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">背景音乐</text>
+
+  <!-- 右栏：当前镜卡片 -->
+  <text x="298" y="430" font-family="Inter" font-size="12" fill="#F2F5F9">S02-03</text>
+  <text x="298" y="452" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">台词：林岸 / 苏晚</text>
+  <text x="298" y="472" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">时长：5.0s</text>
+  <text x="298" y="492" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">模型：cloud_h3_r2v</text>
+  <text x="298" y="516" font-family="Noto Sans SC" font-size="10" fill="#5B6472">参考 3 图 + 1 语音</text>
+  <text x="298" y="540" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">状态：已出片 · 字幕已合成</text>
+
+  <!-- 右栏：字幕预览 -->
+  <text x="298" y="598" font-family="Noto Sans SC" font-size="10" fill="#5B6472">字幕</text>
+  <text x="413" y="646" text-anchor="middle" font-family="Noto Sans SC" font-size="11" fill="#F2F5F9">这条船，不会等第二个人。</text>
+  <text x="413" y="666" text-anchor="middle" font-family="Noto Sans SC" font-size="11" fill="#F2F5F9">你等的人，也不会回来。</text>
+  <text x="413" y="688" text-anchor="middle" font-family="Noto Sans SC" font-size="10" fill="#5B6472">字幕轨 · S02-03.srt · 随时间码加载</text>
+
+  <!-- 底注 -->
+  <text x="20" y="790" font-family="Noto Sans SC" font-size="11" fill="#5B6472">一章一集，可单独导出；成片落盘不只存链接</text>
+
+  <!-- footer -->
+  <text x="20" y="862" font-family="Noto Sans SC" font-size="11" fill="#5B6472">本集用时 6m12s</text>
+  <text x="20" y="884" font-family="Noto Sans SC" font-size="12" fill="#F2F5F9">成本 ¥4.60 · 云端渲染完成</text>
+  <text x="488" y="866" text-anchor="middle" font-family="Noto Sans SC" font-size="12" fill="#FFFFFF">交付物</text>
+</svg>

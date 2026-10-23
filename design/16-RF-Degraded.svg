@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="900" viewBox="0 0 560 900">
+  <rect x="0" y="0" width="560" height="900" fill="#0B0E14"/>
+
+  <!-- ============ RECTS ============ -->
+  <!-- HEADER 0..60 -->
+  <rect x="0" y="0" width="560" height="60" fill="#171A20"/>
+  <rect x="0" y="59" width="560" height="1" fill="#23262B"/>
+  <rect x="20" y="16" width="28" height="28" rx="8" fill="#4C8DFF"/>
+  <rect x="452" y="19" width="88" height="22" rx="6" fill="#16203A"/>
+  <!-- STAGEBAR 60..110 -->
+  <rect x="0" y="60" width="560" height="50" fill="#12151B"/>
+  <rect x="240" y="74" width="56" height="22" rx="6" fill="#16203A"/>
+  <rect x="0" y="109" width="560" height="1" fill="#23262B"/>
+  <!-- 降级矩阵表 126..500 -->
+  <rect x="20" y="126" width="520" height="374" rx="10" fill="#171A20" stroke="#23262B" stroke-width="1"/>
+  <rect x="21" y="127" width="518" height="27" fill="#12151B"/>
+  <rect x="32" y="198" width="496" height="1" fill="#23262B"/>
+  <rect x="32" y="242" width="496" height="1" fill="#23262B"/>
+  <rect x="32" y="286" width="496" height="1" fill="#23262B"/>
+  <rect x="32" y="330" width="496" height="1" fill="#23262B"/>
+  <rect x="32" y="374" width="496" height="1" fill="#23262B"/>
+  <rect x="32" y="418" width="496" height="1" fill="#23262B"/>
+  <rect x="32" y="462" width="496" height="1" fill="#23262B"/>
+  <!-- 一次真实降级的界面表达 516..640 -->
+  <rect x="20" y="516" width="520" height="124" rx="10" fill="#171A20" stroke="#2A2214" stroke-width="1"/>
+  <rect x="332" y="600" width="92" height="26" rx="6" fill="#4C8DFF"/>
+  <rect x="436" y="600" width="92" height="26" rx="6" fill="#1F2127" stroke="#2D3035" stroke-width="1"/>
+  <!-- 对话话术 656..760 -->
+  <rect x="20" y="656" width="520" height="104" rx="10" fill="#12151B"/>
+  <!-- 滚动条 -->
+  <rect x="548" y="126" width="3" height="180" rx="1.5" fill="#2D3035"/>
+  <!-- FOOTER 830..900 -->
+  <rect x="0" y="830" width="560" height="70" fill="#171A20"/>
+  <rect x="0" y="830" width="560" height="1" fill="#23262B"/>
+  <rect x="436" y="846" width="104" height="32" rx="8" fill="#4C8DFF"/>
+
+  <!-- ============ CIRCLES / POLYGONS ============ -->
+  <polygon points="30,22 30,38 40,30" fill="#FFFFFF"/>
+  <circle cx="464" cy="30" r="3.5" fill="#4C8DFF"/>
+  <circle cx="24" cy="85" r="3.5" fill="#3FB950"/>
+  <circle cx="100" cy="85" r="3.5" fill="#3FB950"/>
+  <circle cx="176" cy="85" r="3.5" fill="#3FB950"/>
+  <circle cx="252" cy="85" r="3.5" fill="#4C8DFF"/>
+  <circle cx="328" cy="85" r="3.5" fill="#2D3035"/>
+  <circle cx="404" cy="85" r="3.5" fill="#2D3035"/>
+
+  <!-- ============ TEXTS ============ -->
+  <!-- HEADER -->
+  <text x="60" y="31" font-family="Noto Sans SC" font-size="15" fill="#F2F5F9">降级与失败</text>
+  <text x="60" y="49" font-family="Noto Sans SC" font-size="11" fill="#5B6472">缺什么就说清楚，不假装成功</text>
+  <text x="474" y="34" font-family="Noto Sans SC" font-size="11" fill="#4C8DFF">7 种缺失</text>
+  <!-- STAGEBAR -->
+  <text x="33" y="89" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">需求</text>
+  <text x="109" y="89" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">运行</text>
+  <text x="185" y="89" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">方案</text>
+  <text x="262" y="89" font-family="Noto Sans SC" font-size="11" fill="#F2F5F9">生成</text>
+  <text x="337" y="89" font-family="Noto Sans SC" font-size="11" fill="#5B6472">分镜</text>
+  <text x="413" y="89" font-family="Noto Sans SC" font-size="11" fill="#5B6472">交付</text>
+  <text x="540" y="89" text-anchor="end" font-family="Inter" font-size="11" fill="#5B6472">4 / 6</text>
+  <!-- 表头 -->
+  <text x="32" y="146" font-family="Noto Sans SC" font-size="11" fill="#F2F5F9">缺失项</text>
+  <text x="180" y="146" font-family="Noto Sans SC" font-size="11" fill="#F2F5F9">成片</text>
+  <text x="300" y="146" font-family="Noto Sans SC" font-size="11" fill="#F2F5F9">分镜表</text>
+  <text x="420" y="146" font-family="Noto Sans SC" font-size="11" fill="#F2F5F9">参考图</text>
+  <!-- 行 1 无 LLM 通道 -->
+  <text x="32" y="181" font-family="Noto Sans SC" font-size="12" fill="#F2F5F9">无 LLM 通道</text>
+  <text x="180" y="181" font-family="Noto Sans SC" font-size="11" fill="#F85149">无</text>
+  <text x="300" y="181" font-family="Noto Sans SC" font-size="11" fill="#F85149">无</text>
+  <text x="420" y="181" font-family="Noto Sans SC" font-size="11" fill="#F85149">无</text>
+  <!-- 行 2 ComfyUI 不可达 -->
+  <text x="32" y="225" font-family="Noto Sans SC" font-size="12" fill="#F2F5F9">ComfyUI 不可达</text>
+  <text x="180" y="225" font-family="Noto Sans SC" font-size="11" fill="#F85149">无</text>
+  <text x="300" y="225" font-family="Noto Sans SC" font-size="11" fill="#3FB950">有</text>
+  <text x="420" y="225" font-family="Noto Sans SC" font-size="11" fill="#F85149">无</text>
+  <!-- 行 3 显存不足 -->
+  <text x="32" y="269" font-family="Noto Sans SC" font-size="12" fill="#F2F5F9">显存不足</text>
+  <text x="180" y="269" font-family="Noto Sans SC" font-size="11" fill="#D29922">静帧成片</text>
+  <text x="300" y="269" font-family="Noto Sans SC" font-size="11" fill="#3FB950">有</text>
+  <text x="420" y="269" font-family="Noto Sans SC" font-size="11" fill="#3FB950">有</text>
+  <!-- 行 4 缺 ffmpeg -->
+  <text x="32" y="313" font-family="Noto Sans SC" font-size="12" fill="#F2F5F9">缺 ffmpeg</text>
+  <text x="180" y="313" font-family="Noto Sans SC" font-size="11" fill="#F85149">无</text>
+  <text x="300" y="313" font-family="Noto Sans SC" font-size="11" fill="#3FB950">有</text>
+  <text x="420" y="313" font-family="Noto Sans SC" font-size="11" fill="#3FB950">有</text>
+  <!-- 行 5 参考图截断 -->
+  <text x="32" y="357" font-family="Noto Sans SC" font-size="12" fill="#F2F5F9">参考图截断</text>
+  <text x="180" y="357" font-family="Noto Sans SC" font-size="11" fill="#D29922">部分镜</text>
+  <text x="300" y="357" font-family="Noto Sans SC" font-size="11" fill="#3FB950">有</text>
+  <text x="420" y="357" font-family="Noto Sans SC" font-size="11" fill="#D29922">部分</text>
+  <!-- 行 6 音色缺失 -->
+  <text x="32" y="401" font-family="Noto Sans SC" font-size="12" fill="#F2F5F9">音色缺失</text>
+  <text x="180" y="401" font-family="Noto Sans SC" font-size="11" fill="#D29922">静音成片</text>
+  <text x="300" y="401" font-family="Noto Sans SC" font-size="11" fill="#3FB950">有</text>
+  <text x="420" y="401" font-family="Noto Sans SC" font-size="11" fill="#3FB950">有</text>
+  <!-- 行 7 BGM 失败 -->
+  <text x="32" y="445" font-family="Noto Sans SC" font-size="12" fill="#F2F5F9">BGM 失败</text>
+  <text x="180" y="445" font-family="Noto Sans SC" font-size="11" fill="#D29922">无声成片</text>
+  <text x="300" y="445" font-family="Noto Sans SC" font-size="11" fill="#3FB950">有</text>
+  <text x="420" y="445" font-family="Noto Sans SC" font-size="11" fill="#3FB950">有</text>
+  <!-- 表脚注 -->
+  <text x="32" y="478" font-family="Noto Sans SC" font-size="10" fill="#5B6472">软依赖缺失也要说出来：音色缺失只降质，不报错</text>
+  <!-- 一次真实降级 -->
+  <text x="32" y="542" font-family="Noto Sans SC" font-size="13" fill="#F2F5F9">第 2 章 · 视频已出，但音色未生成</text>
+  <text x="32" y="566" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">· 第 3 镜没有 voice_ref，按规则降为无声视频</text>
+  <text x="32" y="588" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">· 其余 7 镜音轨正常</text>
+  <text x="32" y="610" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">· 需要补音色：回到阶段三 tts 重跑，再重出第 3 镜</text>
+  <text x="378" y="617" text-anchor="middle" font-family="Noto Sans SC" font-size="11" fill="#FFFFFF">补跑 tts</text>
+  <text x="482" y="617" text-anchor="middle" font-family="Noto Sans SC" font-size="11" fill="#F2F5F9">接受现状</text>
+  <!-- 对话话术 -->
+  <text x="32" y="678" font-family="Noto Sans SC" font-size="10" fill="#5B6472">对话里怎么说</text>
+  <text x="32" y="700" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">· 「第 2 章第 3 镜缺音色，已降为无声，其余 7 镜正常。」</text>
+  <text x="32" y="720" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">· 「显存 6GB 低于 video 阶段门槛 8GB，本地档只能出到图。」</text>
+  <text x="32" y="740" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">· 「参考图超出 9 张上限，已按装配顺序截断。」</text>
+  <!-- FOOTER -->
+  <text x="20" y="862" font-family="Noto Sans SC" font-size="11" fill="#5B6472">降级原则</text>
+  <text x="20" y="884" font-family="Noto Sans SC" font-size="12" fill="#F2F5F9">宁可交付不完整但诚实的结果</text>
+  <text x="488" y="866" text-anchor="middle" font-family="Noto Sans SC" font-size="12" fill="#FFFFFF">查看降级说明</text>
+</svg>

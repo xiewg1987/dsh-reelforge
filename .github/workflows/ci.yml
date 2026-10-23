@@ -1,0 +1,119 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# ReelForge 持续集成（CI）
+#
+# 背景：这个仓库**零 npm 运行时依赖**（只用 node 内置模块），而且此前**没有任何 CI**
+# ——「单测跑过一次」不等于「会被再跑一次」。本工作流把验证链固化到每次 push / PR。
+#
+# 三条硬约束（写在这里，免得后人改坏）：
+#   1. **不用 `npm ci`**：仓库没有 lockfile，`npm ci` 会直接失败 → 改用 `npm install`。
+#   2. **setup-node 不配 cache**：`cache: npm` 要求仓库里有 lockfile，
+#      否则 setup-node 在装 node 之前就报错。
+#   3. **矩阵跑 ubuntu + windows**：这项目在 Windows 上开发，路径分隔符、换行、
+#      shell 默认值（bash vs pwsh）都不同，只跑 Linux 会漏掉一半问题。
+# ─────────────────────────────────────────────────────────────────────────────
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: verify (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      # 1 ─ 取源码
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 2 ─ 装 Node 22
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          # 故意**不写 cache**：本仓库零 npm 依赖、没有 lockfile，
+          # `cache: npm` 会因为找不到 lockfile 让这一步直接失败。
+
+      # 3 ─ 装依赖（本插件没有运行时依赖，这一步只是让 npm 归一化环境）
+      - name: Install (no runtime dependencies)
+        run: npm install --no-audit --no-fund
+
+      # 4 ─ R7：包名三处相等（package.json / cordis.patch.yml / 客户端产物）
+      - name: Check package identity (R7)
+        run: npm run check:identity
+
+      # 5 ─ 装载验证：清单 / 导入图 / 宿主半 / 客户端半 / patch 结构
+      - name: Verify bundle
+        run: npm run verify:bundle
+
+      # 6 ─ 重建客户端产物（产物是「片段拼装」出来的，不是打包器产物）
+      - name: Build client bundle
+        run: npm run build:client
+
+      # 7 ─ 全量单测
+      - name: Unit tests
+        run: npm test
+
+      # 8 ─ 打包清单预演：确认要发布的东西不多不少（清单作为产物上传，便于人工核对）
+      #    统一用 shell: bash，让两套 runner 的重定向字节行为完全一致。
+      - name: Pack dry run
+        shell: bash
+        run: |
+          npm pack --dry-run --json > pack-report.json
+          echo "--- npm pack --dry-run（可读清单）---"
+          npm pack --dry-run
+
+      # 9 ─ 覆盖率
+      #    scripts/verify-coverage.mjs 由另一位 worker 在写，可能还不存在 →
+      #    做**存在性判断**：有就跑带阈值校验的脚本，没有就退回带覆盖率的 node --test。
+      - name: Coverage
+        shell: bash
+        run: |
+          if [ -f scripts/verify-coverage.mjs ]; then
+            echo "scripts/verify-coverage.mjs 存在 → 跑带阈值校验的覆盖率脚本。"
+            node scripts/verify-coverage.mjs
+          else
+            echo "scripts/verify-coverage.mjs 不存在 → 退回跑带覆盖率的 node --test。"
+            node --test --experimental-test-coverage "src/**/__tests__/*.test.js"
+          fi
+
+      # 10 ─ 产物漂移检查：抓「改了客户端源码但忘了重建 client.js」
+      - name: Client bundle drift check (client.js vs client source)
+        shell: bash
+        run: |
+          # 第 6 步刚重写过 client.js，所以此时它与仓库里提交的那份有差异 ⇒ 产物漂移。
+          #
+          # ⚠️ 为什么要判 .git 在不在：
+          #   这一步靠版本控制做 diff，而写这份工作流时**仓库还没有 .git**
+          #   （仓库初始化由 owner 统一处理）。缺仓库不是「检查失败」，
+          #   而是「这项检查没法执行」—— 明确跳过并给提示，不把流水线染红。
+          if [ ! -d .git ]; then
+            echo "::notice::没有 .git 目录，跳过 client.js 漂移检查（仓库尚未初始化）。"
+            exit 0
+          fi
+          if git diff --exit-code -- client.js && [ -z "$(git status --porcelain -- client.js)" ]; then
+            echo "client.js 与客户端源码一致，无漂移。"
+          else
+            echo "::error::client.js 与客户端源码不一致 —— 请跑 npm run build:client 后把产物一起提交。"
+            git --no-pager diff -- client.js || true
+            exit 1
+          fi
+
+      # 附：把打包清单作为构建产物上传，方便人工核对包内容
+      - name: Upload pack manifest
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pack-report-${{ matrix.os }}
+          path: pack-report.json
+          if-no-files-found: warn

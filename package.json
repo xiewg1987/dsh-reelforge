@@ -1,0 +1,52 @@
+{
+  "name": "@local/reelforge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Novel-to-short-drama pipeline for DSH: context bible, 10 asset classes, reference assembly, five generation kinds across two execution positions, per-chapter delivery and three-level rollback.",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "src/**",
+    "skills/**",
+    "workflows/**",
+    "scripts/check-package-identity.mjs",
+    "scripts/verify-bundle.mjs",
+    "scripts/verify-acceptance.mjs",
+    "scripts/verify-coverage.mjs",
+    "scripts/run-task-dod.mjs"
+  ],
+  "scripts": {
+    "check:identity": "node scripts/check-package-identity.mjs",
+    "verify:bundle": "node scripts/verify-bundle.mjs",
+    "verify:acceptance": "node scripts/verify-acceptance.mjs",
+    "verify:coverage": "node scripts/verify-coverage.mjs",
+    "build:client": "node src/client/build-client.mjs",
+    "test": "node --test \"src/**/__tests__/*.test.js\"",
+    "test:coverage": "node --test --experimental-test-coverage \"src/**/__tests__/*.test.js\"",
+    "acceptance": "node scripts/run-task-dod.mjs",
+    "verify:all": "npm run check:identity && npm run verify:bundle && npm run build:client && npm test && npm run verify:coverage"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-sidebar-right",
+        "@deepseek-ai/dsh-client-ui-conversation"
+      ]
+    }
+  }
+}

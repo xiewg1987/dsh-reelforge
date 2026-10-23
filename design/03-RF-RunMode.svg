@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="900" viewBox="0 0 560 900">
+  <rect x="0" y="0" width="560" height="900" fill="#0B0E14"/>
+
+  <!-- ============ HEADER 0..60 ============ -->
+  <rect x="0" y="0" width="560" height="60" fill="#171A20"/>
+  <rect x="0" y="59" width="560" height="1" fill="#23262B"/>
+  <rect x="20" y="16" width="28" height="28" rx="8" fill="#4C8DFF"/>
+  <polygon points="30,22 30,38 40,30" fill="#FFFFFF"/>
+  <text x="60" y="31" font-family="Noto Sans SC" font-size="15" fill="#F2F5F9">运行位置</text>
+  <text x="60" y="49" font-family="Noto Sans SC" font-size="11" fill="#5B6472">同一批工作流，跑在这台机器还是云端</text>
+  <rect x="452" y="19" width="88" height="22" rx="6" fill="#16203A"/>
+  <circle cx="464" cy="30" r="3.5" fill="#4C8DFF"/>
+  <text x="474" y="34" font-family="Noto Sans SC" font-size="11" fill="#4C8DFF">2 种位置</text>
+
+  <!-- ============ STAGEBAR 60..110 ============ -->
+  <rect x="0" y="60" width="560" height="50" fill="#12151B"/>
+  <circle cx="24" cy="85" r="3.5" fill="#3FB950"/>
+  <text x="33" y="89" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">需求</text>
+  <rect x="88" y="74" width="56" height="22" rx="6" fill="#16203A"/>
+  <circle cx="100" cy="85" r="3.5" fill="#4C8DFF"/>
+  <text x="110" y="89" font-family="Noto Sans SC" font-size="11" fill="#F2F5F9">运行</text>
+  <circle cx="176" cy="85" r="3.5" fill="#2D3035"/>
+  <text x="185" y="89" font-family="Noto Sans SC" font-size="11" fill="#5B6472">方案</text>
+  <circle cx="252" cy="85" r="3.5" fill="#2D3035"/>
+  <text x="261" y="89" font-family="Noto Sans SC" font-size="11" fill="#5B6472">生成</text>
+  <circle cx="328" cy="85" r="3.5" fill="#2D3035"/>
+  <text x="337" y="89" font-family="Noto Sans SC" font-size="11" fill="#5B6472">分镜</text>
+  <circle cx="404" cy="85" r="3.5" fill="#2D3035"/>
+  <text x="413" y="89" font-family="Noto Sans SC" font-size="11" fill="#5B6472">交付</text>
+  <text x="540" y="89" text-anchor="end" font-family="Inter" font-size="11" fill="#5B6472">2 / 6</text>
+  <rect x="0" y="109" width="560" height="1" fill="#23262B"/>
+
+  <!-- ============ SCROLL 110..830 ============ -->
+  <text x="20" y="134" font-family="Noto Sans SC" font-size="12" fill="#8A93A5">两种执行位置</text>
+  <text x="20" y="156" font-family="Noto Sans SC" font-size="11" fill="#5B6472">本地与云端跑的是同一批 kind，差别只在跑在哪、算不算钱</text>
+
+  <!-- 本地运行 -->
+  <rect x="20" y="172" width="254" height="280" rx="10" fill="#171A20" stroke="#23262B" stroke-width="1"/>
+  <rect x="32" y="184" width="52" height="20" rx="4" fill="#1F2127"/>
+  <rect x="32" y="258" width="230" height="1" fill="#23262B"/>
+  <circle cx="36" cy="276" r="3.5" fill="#3FB950"/>
+  <circle cx="36" cy="294" r="3.5" fill="#3FB950"/>
+  <circle cx="36" cy="312" r="3.5" fill="#3FB950"/>
+  <circle cx="36" cy="338" r="3.5" fill="#D29922"/>
+  <circle cx="36" cy="356" r="3.5" fill="#D29922"/>
+  <circle cx="36" cy="374" r="3.5" fill="#D29922"/>
+  <rect x="32" y="398" width="120" height="28" rx="8" fill="#1F2127" stroke="#2D3035" stroke-width="1"/>
+  <text x="58" y="198" text-anchor="middle" font-family="Inter" font-size="10" fill="#8A93A5">LOCAL</text>
+  <text x="32" y="226" font-family="Noto Sans SC" font-size="13" fill="#F2F5F9">本地运行</text>
+  <text x="32" y="246" font-family="Noto Sans SC" font-size="11" fill="#5B6472">在你机器的 ComfyUI 上跑</text>
+  <text x="46" y="280" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">数据不出本机</text>
+  <text x="46" y="298" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">无按次计费</text>
+  <text x="46" y="316" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">可无限重试</text>
+  <text x="46" y="342" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">需独立显卡 8G 显存</text>
+  <text x="46" y="360" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">需 ComfyUI + CK ≥ 0.2.36</text>
+  <text x="46" y="378" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">速度受本机硬件限制</text>
+  <text x="92" y="416" text-anchor="middle" font-family="Noto Sans SC" font-size="11" fill="#F2F5F9">开始设备检查</text>
+
+  <!-- 云端运行（选中） -->
+  <rect x="286" y="172" width="254" height="280" rx="10" fill="#171A20" stroke="#4C8DFF" stroke-width="1"/>
+  <rect x="298" y="184" width="52" height="20" rx="4" fill="#16203A"/>
+  <rect x="298" y="258" width="230" height="1" fill="#23262B"/>
+  <circle cx="302" cy="276" r="3.5" fill="#3FB950"/>
+  <circle cx="302" cy="294" r="3.5" fill="#3FB950"/>
+  <circle cx="302" cy="312" r="3.5" fill="#3FB950"/>
+  <circle cx="302" cy="338" r="3.5" fill="#D29922"/>
+  <circle cx="302" cy="356" r="3.5" fill="#D29922"/>
+  <circle cx="302" cy="374" r="3.5" fill="#D29922"/>
+  <rect x="298" y="398" width="230" height="28" rx="8" fill="#16203A"/>
+  <text x="324" y="198" text-anchor="middle" font-family="Inter" font-size="10" fill="#4C8DFF">CLOUD</text>
+  <text x="298" y="226" font-family="Noto Sans SC" font-size="13" fill="#F2F5F9">云端运行</text>
+  <text x="298" y="246" font-family="Noto Sans SC" font-size="11" fill="#5B6472">跑托管工作流，按次计费</text>
+  <text x="312" y="280" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">开箱即用，无需 GPU</text>
+  <text x="312" y="298" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">与本地同一批 kind</text>
+  <text x="312" y="316" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">排队由云端管</text>
+  <text x="312" y="342" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">按次计费</text>
+  <text x="312" y="360" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">参考图需上传</text>
+  <text x="312" y="378" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">需要外网可达</text>
+  <text x="413" y="416" text-anchor="middle" font-family="Noto Sans SC" font-size="11" fill="#4C8DFF">3 个 provider 可用</text>
+
+  <!-- 云端 provider 三选一 -->
+  <rect x="20" y="464" width="520" height="118" rx="10" fill="#12151B"/>
+  <rect x="32" y="502" width="152" height="56" rx="8" fill="#171A20" stroke="#4C8DFF" stroke-width="1"/>
+  <rect x="196" y="502" width="152" height="56" rx="8" fill="#171A20" stroke="#23262B" stroke-width="1"/>
+  <rect x="360" y="502" width="152" height="56" rx="8" fill="#171A20" stroke="#23262B" stroke-width="1"/>
+  <text x="32" y="488" font-family="Noto Sans SC" font-size="12" fill="#8A93A5">云端 provider</text>
+  <text x="44" y="526" font-family="Inter" font-size="12" fill="#F2F5F9">RunningHub</text>
+  <text x="44" y="544" font-family="Noto Sans SC" font-size="10" fill="#5B6472">standard / plus 两档</text>
+  <text x="208" y="526" font-family="Noto Sans SC" font-size="12" fill="#F2F5F9">在线 API</text>
+  <text x="208" y="544" font-family="Noto Sans SC" font-size="10" fill="#5B6472">厂商直连</text>
+  <text x="372" y="526" font-family="Noto Sans SC" font-size="12" fill="#F2F5F9">DSH 通道</text>
+  <text x="372" y="544" font-family="Noto Sans SC" font-size="10" fill="#5B6472">宿主已验证模型</text>
+
+  <!-- 运行位置会影响什么 -->
+  <rect x="20" y="598" width="520" height="1" fill="#23262B"/>
+  <rect x="20" y="625" width="520" height="1" fill="#23262B"/>
+  <rect x="20" y="652" width="520" height="1" fill="#23262B"/>
+  <rect x="20" y="679" width="520" height="1" fill="#23262B"/>
+  <rect x="20" y="706" width="520" height="1" fill="#23262B"/>
+  <text x="20" y="617" font-family="Noto Sans SC" font-size="11" fill="#5B6472">可用 kind</text>
+  <text x="140" y="617" font-family="Noto Sans SC" font-size="11" fill="#F2F5F9">本地与云端同为 t2i / i2i / r2v / tts / music</text>
+  <text x="20" y="644" font-family="Noto Sans SC" font-size="11" fill="#5B6472">差异在哪</text>
+  <text x="140" y="644" font-family="Noto Sans SC" font-size="11" fill="#F2F5F9">同一 kind 的两套 sourceFile：本机工作流 vs 托管工作流</text>
+  <text x="20" y="671" font-family="Noto Sans SC" font-size="11" fill="#5B6472">成本</text>
+  <text x="140" y="671" font-family="Noto Sans SC" font-size="11" fill="#F2F5F9">本地无按次费用 · 云端按次计费</text>
+  <text x="20" y="698" font-family="Noto Sans SC" font-size="11" fill="#5B6472">限制</text>
+  <text x="140" y="698" font-family="Noto Sans SC" font-size="11" fill="#F2F5F9">本地受显存与 CK 版本约束 · 云端受排队与配额约束</text>
+
+  <!-- 提示条 -->
+  <rect x="20" y="712" width="520" height="56" rx="8" fill="#16203A"/>
+  <text x="32" y="736" font-family="Noto Sans SC" font-size="12" fill="#8A93A5">运行位置可以随时改：只影响尚未生成的镜头</text>
+  <text x="32" y="756" font-family="Noto Sans SC" font-size="11" fill="#5B6472">已产出的分镜表与参考图不重跑，也不重复计费</text>
+
+  <text x="20" y="790" font-family="Noto Sans SC" font-size="11" fill="#5B6472">不确定？云端随时能切；本地要先过设备检查</text>
+  <rect x="548" y="126" width="3" height="150" rx="1.5" fill="#2D3035"/>
+
+  <!-- ============ FOOTER 830..900 ============ -->
+  <rect x="0" y="830" width="560" height="70" fill="#171A20"/>
+  <rect x="0" y="830" width="560" height="1" fill="#23262B"/>
+  <text x="20" y="862" font-family="Noto Sans SC" font-size="11" fill="#5B6472">下一步</text>
+  <text x="20" y="884" font-family="Noto Sans SC" font-size="12" fill="#F2F5F9">探测本机能否本地生成</text>
+  <rect x="436" y="846" width="104" height="32" rx="8" fill="#4C8DFF"/>
+  <text x="488" y="866" text-anchor="middle" font-family="Noto Sans SC" font-size="11" fill="#FFFFFF">继续，出执行路径</text>
+</svg>

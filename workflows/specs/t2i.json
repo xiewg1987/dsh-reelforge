@@ -1,0 +1,62 @@
+{
+  "kind": "t2i",
+  "specs": {
+    "local-nvidia": {
+      "id": "krea2_hyperreal_t2i",
+      "kind": "t2i",
+      "name": "Krea2 超写实 · 文生图（本地 · N 卡）",
+      "description": "本地 ComfyUI 原版工作流。产出人物 / 场景 / 道具参考图。",
+      "sourceFile": "templates/krea2_hyperreal_t2i.json",
+      "roles": {
+        "positive_prompt": { "node": "2", "field": "text" },
+        "negative_prompt": { "node": "3", "field": "text" },
+        "width": { "node": "4", "field": "width" },
+        "height": { "node": "4", "field": "height" },
+        "aspect_ratio": { "node": "4", "field": "aspect_ratio" },
+        "resolution": { "node": "4", "field": "resolution" },
+        "seed": { "node": "5", "field": "seed" },
+        "filename_prefix": { "node": "7", "field": "filename_prefix" }
+      },
+      "media": null,
+      "outputs": ["SaveImage"]
+    },
+    "local-amd": {
+      "id": "qwen_image_2_1_t2i_gguf",
+      "kind": "t2i",
+      "name": "Qwen-Image 2.1 GGUF · 文生图（本地 · AMD）",
+      "description": "GGUF 量化工作流，低显存可跑。产出人物 / 场景 / 道具参考图。",
+      "sourceFile": "templates/qwen_image_2_1_t2i_gguf.json",
+      "roles": {
+        "positive_prompt": { "node": "2", "field": "text" },
+        "negative_prompt": { "node": "3", "field": "text" },
+        "width": { "node": "4", "field": "width" },
+        "height": { "node": "4", "field": "height" },
+        "aspect_ratio": { "node": "4", "field": "aspect_ratio" },
+        "resolution": { "node": "4", "field": "resolution" },
+        "seed": { "node": "5", "field": "seed" },
+        "filename_prefix": { "node": "7", "field": "filename_prefix" }
+      },
+      "media": null,
+      "outputs": ["SaveImage"]
+    },
+    "cloud-runninghub": {
+      "id": "runninghub_krea2_t2i",
+      "kind": "t2i",
+      "name": "Krea2 超写实 · 文生图（云端 RunningHub）",
+      "description": "云端跑**同一批 kind** 里的 t2i。按次计费，不占本机显存。",
+      "sourceFile": "templates/runninghub_krea2_t2i.json",
+      "roles": {
+        "positive_prompt": { "node": "2", "field": "text" },
+        "negative_prompt": { "node": "3", "field": "text" },
+        "width": { "node": "4", "field": "width" },
+        "height": { "node": "4", "field": "height" },
+        "aspect_ratio": { "node": "4", "field": "aspect_ratio" },
+        "resolution": { "node": "4", "field": "resolution" },
+        "seed": { "node": "5", "field": "seed" },
+        "filename_prefix": { "node": "7", "field": "filename_prefix" }
+      },
+      "media": null,
+      "outputs": ["SaveImage"]
+    }
+  }
+}

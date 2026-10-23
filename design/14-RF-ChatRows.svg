@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="900" viewBox="0 0 560 900">
+  <rect x="0" y="0" width="560" height="900" fill="#0B0E14"/>
+
+  <!-- ============ HEADER 0..60 ============ -->
+  <rect x="0" y="0" width="560" height="60" fill="#171A20"/>
+  <rect x="0" y="59" width="560" height="1" fill="#23262B"/>
+  <rect x="20" y="16" width="28" height="28" rx="8" fill="#4C8DFF"/>
+  <rect x="452" y="19" width="88" height="22" rx="6" fill="#16203A"/>
+
+  <!-- ============ STAGEBAR 60..110 ============ -->
+  <rect x="0" y="60" width="560" height="50" fill="#12151B"/>
+  <rect x="240" y="74" width="56" height="22" rx="6" fill="#16203A"/>
+  <rect x="0" y="109" width="560" height="1" fill="#23262B"/>
+
+  <!-- ============ SCROLL 110..830 · 7 张行卡 ============ -->
+  <rect x="20" y="126" width="520" height="88" rx="10" fill="#171A20" stroke="#23262B" stroke-width="1"/>
+  <rect x="32" y="136" width="124" height="18" rx="4" fill="#1F2127"/>
+  <rect x="20" y="222" width="520" height="88" rx="10" fill="#171A20" stroke="#23262B" stroke-width="1"/>
+  <rect x="32" y="232" width="124" height="18" rx="4" fill="#1F2127"/>
+  <rect x="20" y="318" width="520" height="88" rx="10" fill="#171A20" stroke="#23262B" stroke-width="1"/>
+  <rect x="32" y="328" width="124" height="18" rx="4" fill="#1F2127"/>
+  <rect x="20" y="414" width="520" height="88" rx="10" fill="#171A20" stroke="#23262B" stroke-width="1"/>
+  <rect x="32" y="424" width="124" height="18" rx="4" fill="#1F2127"/>
+  <rect x="20" y="510" width="520" height="88" rx="10" fill="#171A20" stroke="#23262B" stroke-width="1"/>
+  <rect x="32" y="520" width="124" height="18" rx="4" fill="#1F2127"/>
+  <rect x="20" y="606" width="520" height="88" rx="10" fill="#171A20" stroke="#23262B" stroke-width="1"/>
+  <rect x="32" y="616" width="124" height="18" rx="4" fill="#1F2127"/>
+  <rect x="20" y="702" width="520" height="88" rx="10" fill="#171A20" stroke="#23262B" stroke-width="1"/>
+  <rect x="32" y="712" width="124" height="18" rx="4" fill="#1F2127"/>
+
+  <!-- 滚动条 -->
+  <rect x="548" y="126" width="3" height="150" rx="1.5" fill="#2D3035"/>
+
+  <!-- ============ FOOTER 830..900 ============ -->
+  <rect x="0" y="830" width="560" height="70" fill="#171A20"/>
+  <rect x="0" y="830" width="560" height="1" fill="#23262B"/>
+  <rect x="436" y="846" width="104" height="32" rx="8" fill="#4C8DFF"/>
+
+  <!-- ============ 圆形与多边形 ============ -->
+  <polygon points="30,22 30,38 40,30" fill="#FFFFFF"/>
+  <circle cx="464" cy="30" r="3.5" fill="#4C8DFF"/>
+  <circle cx="24" cy="85" r="3.5" fill="#3FB950"/>
+  <circle cx="100" cy="85" r="3.5" fill="#3FB950"/>
+  <circle cx="176" cy="85" r="3.5" fill="#3FB950"/>
+  <circle cx="252" cy="85" r="3.5" fill="#4C8DFF"/>
+  <circle cx="328" cy="85" r="3.5" fill="#2D3035"/>
+  <circle cx="404" cy="85" r="3.5" fill="#2D3035"/>
+
+  <!-- ============ 文字 ============ -->
+  <text x="60" y="31" font-family="Noto Sans SC" font-size="15" fill="#F2F5F9">对话消息行</text>
+  <text x="60" y="49" font-family="Noto Sans SC" font-size="11" fill="#5B6472">对话是主战场，工作台是查看与干预位</text>
+  <text x="474" y="34" font-family="Noto Sans SC" font-size="11" fill="#4C8DFF">7 类</text>
+
+  <text x="33" y="89" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">需求</text>
+  <text x="109" y="89" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">运行</text>
+  <text x="185" y="89" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">方案</text>
+  <text x="262" y="89" font-family="Noto Sans SC" font-size="11" fill="#F2F5F9">生成</text>
+  <text x="337" y="89" font-family="Noto Sans SC" font-size="11" fill="#5B6472">分镜</text>
+  <text x="413" y="89" font-family="Noto Sans SC" font-size="11" fill="#5B6472">交付</text>
+  <text x="540" y="89" text-anchor="end" font-family="Inter" font-size="11" fill="#5B6472">4 / 6</text>
+
+  <!-- 行 1 · 阶段进度 -->
+  <text x="94" y="148" text-anchor="middle" font-family="Inter" font-size="10" fill="#8A93A5">reelforge-progress</text>
+  <text x="172" y="148" font-family="Noto Sans SC" font-size="11" fill="#F2F5F9">阶段进度</text>
+  <text x="32" y="176" font-family="Noto Sans SC" font-size="10" fill="#5B6472">轻量可折叠 · 当前章节 / 当前镜 / 耗时</text>
+  <text x="32" y="196" font-family="Noto Sans SC" font-size="10" fill="#5B6472">第 2 章 · S02-07 · 已跑 04:12</text>
+
+  <!-- 行 2 · 章节列表 -->
+  <text x="94" y="244" text-anchor="middle" font-family="Inter" font-size="10" fill="#8A93A5">reelforge-chapters</text>
+  <text x="172" y="244" font-family="Noto Sans SC" font-size="11" fill="#F2F5F9">章节列表</text>
+  <text x="32" y="272" font-family="Noto Sans SC" font-size="10" fill="#5B6472">可展开看单章状态 · 镜数 / 成片时长</text>
+  <text x="32" y="292" font-family="Noto Sans SC" font-size="10" fill="#5B6472">第 2 章 · 12 镜 · 成片 01:24</text>
+
+  <!-- 行 3 · 分镜卡片 -->
+  <text x="94" y="340" text-anchor="middle" font-family="Inter" font-size="10" fill="#8A93A5">reelforge-storyboard</text>
+  <text x="172" y="340" font-family="Noto Sans SC" font-size="11" fill="#F2F5F9">分镜卡片</text>
+  <text x="32" y="368" font-family="Noto Sans SC" font-size="10" fill="#5B6472">可展开看单镜 · 台词 / 时长 / 参考标签</text>
+  <text x="32" y="388" font-family="Noto Sans SC" font-size="10" fill="#5B6472">S02-03 · 6s · 参考 林岸 / 夜港</text>
+
+  <!-- 行 4 · 执行路径选择器 -->
+  <text x="94" y="436" text-anchor="middle" font-family="Inter" font-size="10" fill="#8A93A5">reelforge-plan</text>
+  <text x="172" y="436" font-family="Noto Sans SC" font-size="11" fill="#F2F5F9">执行路径选择器</text>
+  <text x="32" y="464" font-family="Noto Sans SC" font-size="10" fill="#5B6472">对话内直接改 kind × 位置</text>
+  <text x="32" y="484" font-family="Noto Sans SC" font-size="10" fill="#5B6472">t2i · 本地 ComfyUI · image → video</text>
+
+  <!-- 行 5 · 资产卡 -->
+  <text x="94" y="532" text-anchor="middle" font-family="Inter" font-size="10" fill="#8A93A5">reelforge-assets</text>
+  <text x="172" y="532" font-family="Noto Sans SC" font-size="11" fill="#F2F5F9">资产卡</text>
+  <text x="32" y="560" font-family="Noto Sans SC" font-size="10" fill="#5B6472">人物 / 场景 / 道具 · 带变体挂载关系</text>
+  <text x="32" y="580" font-family="Noto Sans SC" font-size="10" fill="#5B6472">林岸 · 雨衣变体 → S02-01 / S02-04</text>
+
+  <!-- 行 6 · 成片与交付物 -->
+  <text x="94" y="628" text-anchor="middle" font-family="Inter" font-size="10" fill="#8A93A5">reelforge-deliver</text>
+  <text x="172" y="628" font-family="Noto Sans SC" font-size="11" fill="#F2F5F9">成片与交付物</text>
+  <text x="32" y="656" font-family="Noto Sans SC" font-size="10" fill="#5B6472">播放器 + 交付物列表 · 可单章下载</text>
+  <text x="32" y="676" font-family="Noto Sans SC" font-size="10" fill="#5B6472">第 2 章 · 1080x1920 · mp4 / srt</text>
+
+  <!-- 行 7 · 变更日志 -->
+  <text x="94" y="724" text-anchor="middle" font-family="Inter" font-size="10" fill="#8A93A5">reelforge-changelog</text>
+  <text x="172" y="724" font-family="Noto Sans SC" font-size="11" fill="#F2F5F9">变更日志</text>
+  <text x="32" y="752" font-family="Noto Sans SC" font-size="10" fill="#5B6472">回滚入口 · 单条 / 整批 / 时间点</text>
+  <text x="32" y="772" font-family="Noto Sans SC" font-size="10" fill="#5B6472">10:42:18 · 台词改动 · 可回滚</text>
+
+  <!-- FOOTER -->
+  <text x="20" y="862" font-family="Noto Sans SC" font-size="11" fill="#5B6472">行规范</text>
+  <text x="20" y="884" font-family="Noto Sans SC" font-size="12" fill="#F2F5F9">不新增会话事件 type · 全部挂在已有事件类型上</text>
+  <text x="488" y="866" text-anchor="middle" font-family="Noto Sans SC" font-size="12" fill="#FFFFFF">复制规范</text>
+</svg>

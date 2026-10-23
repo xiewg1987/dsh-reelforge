@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="900" viewBox="0 0 560 900">
+  <rect x="0" y="0" width="560" height="900" fill="#0B0E14"/>
+
+  <!-- ============ HEADER 0..60 ============ -->
+  <rect x="0" y="0" width="560" height="60" fill="#171A20"/>
+  <rect x="0" y="59" width="560" height="1" fill="#23262B"/>
+  <rect x="20" y="16" width="28" height="28" rx="8" fill="#4C8DFF"/>
+  <rect x="452" y="19" width="88" height="22" rx="6" fill="#16203A"/>
+
+  <!-- ============ STAGEBAR 60..110 ============ -->
+  <rect x="0" y="60" width="560" height="50" fill="#12151B"/>
+  <rect x="240" y="74" width="56" height="22" rx="6" fill="#16203A"/>
+  <rect x="0" y="109" width="560" height="1" fill="#23262B"/>
+
+  <!-- ============ SCROLL 110..830 ============ -->
+  <!-- 来源筛选条 -->
+  <rect x="20" y="126" width="520" height="36" rx="8" fill="#12151B"/>
+  <rect x="32" y="132" width="96" height="24" rx="4" fill="#16203A"/>
+  <rect x="140" y="132" width="96" height="24" rx="4" fill="#1F2127"/>
+  <rect x="248" y="132" width="96" height="24" rx="4" fill="#1F2127"/>
+  <rect x="356" y="132" width="96" height="24" rx="4" fill="#1F2127"/>
+
+  <!-- 技能列表 5 行 -->
+  <rect x="20" y="174" width="520" height="68" rx="8" fill="#171A20" stroke="#23262B" stroke-width="1"/>
+  <rect x="32" y="204" width="64" height="18" rx="4" fill="#16203A"/>
+  <rect x="20" y="248" width="520" height="68" rx="8" fill="#171A20" stroke="#23262B" stroke-width="1"/>
+  <rect x="32" y="278" width="64" height="18" rx="4" fill="#16203A"/>
+  <rect x="20" y="322" width="520" height="68" rx="8" fill="#171A20" stroke="#23262B" stroke-width="1"/>
+  <rect x="32" y="352" width="64" height="18" rx="4" fill="#16203A"/>
+  <rect x="20" y="396" width="520" height="68" rx="8" fill="#171A20" stroke="#23262B" stroke-width="1"/>
+  <rect x="32" y="426" width="64" height="18" rx="4" fill="#1F2127"/>
+  <rect x="20" y="470" width="520" height="68" rx="8" fill="#171A20" stroke="#23262B" stroke-width="1"/>
+  <rect x="32" y="500" width="64" height="18" rx="4" fill="#2A2214"/>
+
+  <!-- 技能正文预览卡 -->
+  <rect x="20" y="578" width="520" height="138" rx="8" fill="#12151B"/>
+
+  <!-- 滚动条 -->
+  <rect x="548" y="126" width="3" height="150" rx="1.5" fill="#2D3035"/>
+
+  <!-- ============ FOOTER 830..900 ============ -->
+  <rect x="0" y="830" width="560" height="70" fill="#171A20"/>
+  <rect x="0" y="830" width="560" height="1" fill="#23262B"/>
+  <rect x="436" y="846" width="104" height="32" rx="8" fill="#4C8DFF"/>
+
+  <!-- ============ 圆形与多边形 ============ -->
+  <polygon points="30,22 30,38 40,30" fill="#FFFFFF"/>
+  <circle cx="464" cy="30" r="3.5" fill="#4C8DFF"/>
+  <circle cx="24" cy="85" r="3.5" fill="#3FB950"/>
+  <circle cx="100" cy="85" r="3.5" fill="#3FB950"/>
+  <circle cx="176" cy="85" r="3.5" fill="#3FB950"/>
+  <circle cx="252" cy="85" r="3.5" fill="#4C8DFF"/>
+  <circle cx="328" cy="85" r="3.5" fill="#2D3035"/>
+  <circle cx="404" cy="85" r="3.5" fill="#2D3035"/>
+
+  <!-- ============ 文字 ============ -->
+  <text x="60" y="31" font-family="Noto Sans SC" font-size="15" fill="#F2F5F9">技能</text>
+  <text x="60" y="49" font-family="Noto Sans SC" font-size="11" fill="#5B6472">写作规范以技能形式装载</text>
+  <text x="474" y="34" font-family="Noto Sans SC" font-size="11" fill="#4C8DFF">3 个来源</text>
+
+  <text x="33" y="89" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">需求</text>
+  <text x="109" y="89" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">运行</text>
+  <text x="185" y="89" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">方案</text>
+  <text x="262" y="89" font-family="Noto Sans SC" font-size="11" fill="#F2F5F9">生成</text>
+  <text x="337" y="89" font-family="Noto Sans SC" font-size="11" fill="#5B6472">分镜</text>
+  <text x="413" y="89" font-family="Noto Sans SC" font-size="11" fill="#5B6472">交付</text>
+  <text x="540" y="89" text-anchor="end" font-family="Inter" font-size="11" fill="#5B6472">4 / 6</text>
+
+  <!-- 来源筛选芯片 -->
+  <text x="80" y="148" text-anchor="middle" font-family="Noto Sans SC" font-size="11" fill="#4C8DFF">全部</text>
+  <text x="188" y="148" text-anchor="middle" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">内置 bundled</text>
+  <text x="296" y="148" text-anchor="middle" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">已装 installed</text>
+  <text x="404" y="148" text-anchor="middle" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">自建 generated</text>
+
+  <!-- 行 1 · novel-to-video -->
+  <text x="32" y="198" font-family="Inter" font-size="12" fill="#F2F5F9">novel-to-video</text>
+  <text x="508" y="198" text-anchor="end" font-family="Inter" font-size="10" fill="#5B6472">3.4 KB · 2026-10-22</text>
+  <text x="64" y="216" text-anchor="middle" font-family="Inter" font-size="10" fill="#4C8DFF">bundled</text>
+  <text x="108" y="216" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">总流水线兜底：小说直出漫剧</text>
+
+  <!-- 行 2 · story-pipeline-cn -->
+  <text x="32" y="272" font-family="Inter" font-size="12" fill="#F2F5F9">story-pipeline-cn</text>
+  <text x="508" y="272" text-anchor="end" font-family="Inter" font-size="10" fill="#5B6472">2.1 KB · 2026-10-21</text>
+  <text x="64" y="290" text-anchor="middle" font-family="Inter" font-size="10" fill="#4C8DFF">bundled</text>
+  <text x="108" y="290" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">中文故事流水线：拆镜到成片</text>
+
+  <!-- 行 3 · image-prompt-writing -->
+  <text x="32" y="346" font-family="Inter" font-size="12" fill="#F2F5F9">image-prompt-writing</text>
+  <text x="508" y="346" text-anchor="end" font-family="Inter" font-size="10" fill="#5B6472">1.6 KB · 2026-10-18</text>
+  <text x="64" y="364" text-anchor="middle" font-family="Inter" font-size="10" fill="#4C8DFF">bundled</text>
+  <text x="108" y="364" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">参考图提示词写作规范</text>
+
+  <!-- 行 4 · h3-prompt-writing -->
+  <text x="32" y="420" font-family="Inter" font-size="12" fill="#F2F5F9">h3-prompt-writing</text>
+  <text x="508" y="420" text-anchor="end" font-family="Inter" font-size="10" fill="#5B6472">1.2 KB · 2026-10-22</text>
+  <text x="64" y="438" text-anchor="middle" font-family="Inter" font-size="10" fill="#8A93A5">installed</text>
+  <text x="108" y="438" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">H3 视频提示词写法</text>
+
+  <!-- 行 5 · my-style-pack -->
+  <text x="32" y="494" font-family="Inter" font-size="12" fill="#F2F5F9">my-style-pack</text>
+  <text x="508" y="494" text-anchor="end" font-family="Inter" font-size="10" fill="#5B6472">0.9 KB · 2026-10-22</text>
+  <text x="64" y="512" text-anchor="middle" font-family="Inter" font-size="10" fill="#D29922">generated</text>
+  <text x="108" y="512" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">自建风格包：赛博雨夜</text>
+
+  <!-- 正文预览 -->
+  <text x="32" y="600" font-family="Noto Sans SC" font-size="10" fill="#5B6472">正文预览 · novel-to-video</text>
+  <text x="32" y="622" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">· 三种用法：启动本项目 / Agent 照规范复刻 / 接入自定义工作流</text>
+  <text x="32" y="642" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">· 四阶段：llm → image → tts → video</text>
+  <text x="32" y="662" font-family="Noto Sans SC" font-size="11" fill="#8A93A5">· 写作纪律：注入标题固定、单次提示词改写不超过 2 次</text>
+  <text x="32" y="690" font-family="Noto Sans SC" font-size="10" fill="#5B6472">参考文件按文件名精确匹配 · 仅 .md / .txt</text>
+  <text x="32" y="708" font-family="Noto Sans SC" font-size="10" fill="#5B6472">技能名不允许 / \ : 与 . .. ；SKILL.cn.md 优先于 SKILL.md</text>
+
+  <!-- 底部说明 -->
+  <text x="20" y="748" font-family="Noto Sans SC" font-size="11" fill="#5B6472">插件不分发第三方技能正文；用户自行安装上游技能包</text>
+  <text x="20" y="770" font-family="Noto Sans SC" font-size="11" fill="#5B6472">description 为空会让技能既不可路由也不出现在目录里</text>
+
+  <!-- FOOTER -->
+  <text x="20" y="862" font-family="Noto Sans SC" font-size="11" fill="#5B6472">技能来源</text>
+  <text x="20" y="884" font-family="Noto Sans SC" font-size="12" fill="#F2F5F9">内置 3 / 已装 1 / 自建 1</text>
+  <text x="488" y="866" text-anchor="middle" font-family="Noto Sans SC" font-size="12" fill="#FFFFFF">安装技能包</text>
+</svg>
