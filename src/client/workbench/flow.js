@@ -152,6 +152,8 @@
     const text = String(props.state.novelText ?? '');
 
     return h('div', null,
+      RF.renderDualEntry({ t }),
+      RF.renderChatSync({ t, project }),
       // ── 来源卡 ──
       h(RF.ui.Card, null,
         h(RF.ui.SectionLabel, null, t('flow.intake.sourceLabel')),
@@ -263,9 +265,10 @@
         ? h('div', { className: `${RF.CLS}-row` }, h(RF.ui.Button, {
           label: t('flow.runmode.deviceCheck'),
           variant: 'secondary',
-          onClick: event => {
+            onClick: event => {
             if (event?.stopPropagation) event.stopPropagation();
-            props.state.goFlow('device');
+            props.state.setDeviceExpanded(true);
+            props.state.reloadProbe();
           },
         }))
         : h('div', { className: `${RF.CLS}-row__sub` }, t('flow.runmode.providersAvailable', { count: clouds.length })));
@@ -688,5 +691,74 @@
             key: `notice-${index}`,
             className: `${RF.CLS}-row__sub`,
           }, `· ${String(notice)}`)))));
+  };
+
+  /** v6 · 00 引导总览。 */
+  var GUIDE_STEPS = [
+    { step: 'requirement', descKey: 'flow.guide.step.requirement', targetKey: 'flow.guide.target.intake', go: state => state.goFlow('intake') },
+    { step: 'run', descKey: 'flow.guide.step.run', targetKey: 'flow.guide.target.runstack', go: state => state.goFlow('runstack') },
+    { step: 'plan', descKey: 'flow.guide.step.plan', targetKey: 'flow.guide.target.plan', go: state => state.goFlow('plan') },
+    { step: 'generate', descKey: 'flow.guide.step.generate', targetKey: 'flow.guide.target.stages', go: state => state.goFlow('stages') },
+    { step: 'storyboard', descKey: 'flow.guide.step.storyboard', targetKey: 'flow.guide.target.shots', go: state => state.goTab('shots') },
+    { step: 'deliver', descKey: 'flow.guide.step.deliver', targetKey: 'flow.guide.target.output', go: state => state.goTab('output') },
+  ];
+
+  RF.flowGuide = function flowGuide(props) {
+    const t = props.t;
+    const currentStep = RF.FLOW_SCREEN_STEPS.guide ?? 'requirement';
+    const currentIndex = RF.STAGE_STEPS.indexOf(currentStep);
+    return h('div', null,
+      h(RF.ui.Card, null,
+        h('div', { className: `${RF.CLS}-row__title` }, t('flow.guide.heroTitle')),
+        h('div', { className: `${RF.CLS}-row__sub` }, t('flow.guide.heroSub'))),
+      RF.renderDualEntry({ t }),
+      h(RF.ui.SectionLabel, null, t('flow.guide.stepsLabel')),
+      GUIDE_STEPS.map((item, index) => h(RF.ui.Card, {
+        key: item.step,
+        state: index === currentIndex ? 'selected' : 'default',
+      },
+        h('div', { className: `${RF.CLS}-row` },
+          h('div', { className: `${RF.CLS}-row__main` },
+            h('div', { className: `${RF.CLS}-row__title` }, t(`stage.${item.step}`)),
+            h('div', { className: `${RF.CLS}-row__sub` }, t(item.descKey))),
+          h(RF.ui.Button, {
+            label: t('flow.guide.go'),
+            variant: 'secondary',
+            onClick: () => item.go(props.state),
+          })),
+        h('div', { className: `${RF.CLS}-note` }, t(item.targetKey)))));
+  };
+
+  RF.flowRunStack = function flowRunStack(props) {
+    const t = props.t;
+    const project = props.project ?? {};
+    const position = String(project.runPosition ?? props.state.pendingPosition ?? '');
+    const expanded = props.state.deviceExpanded === true;
+    const probe = props.state.probe ?? null;
+    const report = probe?.view?.report ?? {};
+    const items = Array.isArray(report.items) ? report.items : [];
+    const summary = items.length === 0
+      ? t('v6.runstack.devicePending')
+      : t('v6.runstack.deviceSummary', { count: items.length });
+
+    return h('div', null,
+      RF.renderDualEntry({ t }),
+      RF.flowRunMode(props),
+      h('div', { className: `${RF.CLS}-row` },
+        h('div', { className: `${RF.CLS}-row__main` },
+          h('div', { className: `${RF.CLS}-row__title` }, t('v6.runstack.deviceSection')),
+          h('div', { className: `${RF.CLS}-row__sub` }, position === 'cloud' ? t('v6.runstack.deviceCloudSkip') : summary)),
+        position !== 'cloud'
+          ? h(RF.ui.Button, {
+            label: expanded ? t('v6.runstack.collapse') : t('v6.runstack.expand'),
+            variant: 'secondary',
+            onClick: () => props.state.setDeviceExpanded(!expanded),
+          })
+          : null),
+      position !== 'cloud' && expanded ? RF.flowDevice(props) : null,
+      RF.renderAskStrip({
+        t,
+        messageKey: position === 'cloud' ? 'v6.runstack.askCloud' : 'v6.runstack.askLocal',
+      }));
   };
 })(RF);

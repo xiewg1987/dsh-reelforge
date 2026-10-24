@@ -35,7 +35,7 @@
 
   /** 7 个页签（Tab **内部**的二级分区，不是 7 个宿主 Tab）。 */
   RF.WORKBENCH_TABS = [
-    { id: 'chapters', labelKey: 'chapters' },
+    { id: 'hub', labelKey: 'hub' },
     { id: 'shots', labelKey: 'shots' },
     { id: 'assets', labelKey: 'assets' },
     { id: 'context', labelKey: 'context' },
@@ -54,11 +54,13 @@
    * 板 02–06 的骨架里**没有页签条**（只有 Header / StageBar / Scroll / Footer），
    * 它们是按流程串起来的独立屏。⇒ 两层，不是 13 个页签。
    */
-  RF.FLOW_SCREENS = ['intake', 'runmode', 'device', 'plan', 'stages', 'degraded'];
+  RF.FLOW_SCREENS = ['guide', 'intake', 'runstack', 'runmode', 'device', 'plan', 'stages', 'degraded'];
 
   /** 每块流程屏归在 6 步进度条的哪一步（与设计稿 §2.1 全表一致）。 */
   RF.FLOW_SCREEN_STEPS = {
+    guide: 'requirement',
     intake: 'requirement',
+    runstack: 'run',
     runmode: 'run',
     device: 'run',
     plan: 'plan',
@@ -68,8 +70,8 @@
 
   /** 6 步进度条每一步点下去落到哪一屏。 */
   RF.STAGE_STEP_TARGETS = {
-    requirement: { kind: 'flow', screen: 'intake' },
-    run: { kind: 'flow', screen: 'runmode' },
+    requirement: { kind: 'flow', screen: 'guide' },
+    run: { kind: 'flow', screen: 'runstack' },
     plan: { kind: 'flow', screen: 'plan' },
     generate: { kind: 'flow', screen: 'stages' },
     storyboard: { kind: 'tab', tab: 'shots' },

@@ -163,6 +163,33 @@
     /**
      * 01 工作台（基准板）：胶囊是全局运行状态，底栏第一行是「当前阶段」。
      */
+    hub: {
+      titleKey: 'title',
+      subtitle: (project, t) => {
+        const name = String(project?.name ?? '').trim() || t('project.unnamed');
+        const chapters = Array.isArray(project?.chapters) ? project.chapters : [];
+        return t('project.summary', {
+          name: `《${name}》`,
+          chapters: chapters.length,
+          shots: totalShots(project),
+        });
+      },
+      capsule: (project, t) => {
+        const position = positionLabel(project, t);
+        const provider = String(project?.provider ?? '');
+        if (position === t('status.idle') || provider === '') return position;
+        return `${position} · ${RF.labelOf('provider', provider, t)}`;
+      },
+      footerLabel: staticText('chrome.hub.footerLabel'),
+      footerValue: (project, t) => {
+        const stageLabel = t(`stage.${RF.stageStep(project)}`);
+        const position = RF.currentPosition(project);
+        const positionText = position === null ? t('footer.idle') : t('footer.position', position);
+        return `${stageLabel} · ${positionText}`;
+      },
+      footerAction: () => ({ key: 'action.viewOutput', kind: 'tab', tab: 'output' }),
+    },
+
     chapters: {
       titleKey: 'title',
       subtitle: (project, t) => {
@@ -338,6 +365,18 @@
     // ══════════════════════════════════════════════════════════════
 
     /**
+     * 00 引导总览（v6）。
+     */
+    guide: {
+      titleKey: 'flow.guide.title',
+      subtitle: staticText('flow.guide.subtitle'),
+      capsule: staticText('v6.chapterUnit'),
+      footerLabel: staticText('flow.guide.footerLabel'),
+      footerValue: staticText('flow.guide.footerValue'),
+      footerAction: () => ({ key: 'flow.guide.action', kind: 'flow', screen: 'intake' }),
+    },
+
+    /**
      * 02 导入小说：胶囊是「新项目」，底栏指向「选运行位置」。
      */
     intake: {
@@ -346,7 +385,19 @@
       capsule: staticText('flow.intake.capsule'),
       footerLabel: staticText('flow.intake.footerLabel'),
       footerValue: staticText('flow.intake.footerValue'),
-      footerAction: () => ({ key: 'flow.intake.action', kind: 'flow', screen: 'runmode' }),
+      footerAction: () => ({ key: 'flow.intake.action', kind: 'flow', screen: 'runstack' }),
+    },
+
+    /**
+     * 03 运行栈（v6）：运行位置 + 本机探测。
+     */
+    runstack: {
+      titleKey: 'flow.runstack.title',
+      subtitle: staticText('flow.runstack.subtitle'),
+      capsule: (project, t) => t('flow.runmode.capsule', { count: RF.RUN_POSITIONS.length }),
+      footerLabel: staticText('flow.runstack.footerLabel'),
+      footerValue: staticText('flow.runstack.footerValue'),
+      footerAction: () => ({ key: 'flow.runstack.action', kind: 'flow', screen: 'plan' }),
     },
 
     /**
@@ -420,7 +471,7 @@
       }),
       footerLabel: staticText('flow.degrade.footerLabel'),
       footerValue: staticText('flow.degrade.footerValue'),
-      footerAction: () => ({ key: 'flow.degrade.action', kind: 'tab', tab: 'chapters' }),
+      footerAction: () => ({ key: 'flow.degrade.action', kind: 'tab', tab: 'hub' }),
     },
   };
 
@@ -431,6 +482,6 @@
    * @returns {TabChrome} 外壳描述。
    */
   RF.tabChrome = function tabChrome(tabId) {
-    return RF.TAB_CHROME[tabId] ?? RF.TAB_CHROME.chapters;
+    return RF.TAB_CHROME[tabId] ?? RF.TAB_CHROME.hub;
   };
 })(RF);

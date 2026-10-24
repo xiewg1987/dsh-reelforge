@@ -34,6 +34,8 @@ const FRAGMENTS = [
   join('workbench', 'breakpoints.js'),
   join('workbench', 'chrome.js'),
   join('workbench', 'styles.js'),
+  join('workbench', 'v6widgets.js'),
+  join('workbench', 'hub.js'),
   join('workbench', 'tabs.js'),
   join('workbench', 'flow.js'),
   join('workbench', 'Workbench.js'),

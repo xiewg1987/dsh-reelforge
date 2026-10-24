@@ -70,7 +70,9 @@
   --rf-accent: var(--dsw-alias-brand-primary-new-colorprimary-new-color);
   /* 强调色的暗面 = 设计稿 ACCENT-DIM：选中态胶囊底（板 01 号板当前步 chip）。
      用 color-mix 而不是写死色值 —— 跟着宿主主题自动深浅。 */
-  --rf-accent-dim: color-mix(in srgb, var(--rf-accent) 14%, transparent);
+  --rf-accent-dim: color-mix(in srgb, var(--rf-accent) 18%, var(--dsw-alias-bg-layer-2));
+  --rf-stage-passed: var(--dsw-alias-state-success-primary);
+  --rf-stage-idle: var(--dsw-alias-border-l3);
   /* 强调色上的标记（主按钮文字 / 面板头 ▶ 三角）：**两套主题都是白**。
      取 --dsw-alias-toast-label（明暗两套都是 neutral-bluish-00 = 白）——
      label-primary-foreground 会随主题反转（暗色主题变近黑），蓝底近黑字读不清；
@@ -174,8 +176,10 @@
   background: var(--rf-accent-dim);
   color: var(--dsw-alias-label-primary);
 }
-.rf-stagebar__step--passed { color: var(--dsw-alias-label-secondary); }
+.rf-stagebar__step--passed { color: var(--dsw-alias-label-tertiary); }
 .rf-stagebar__step--upcoming { color: var(--dsw-alias-label-caption); }
+.rf-stagebar__step--passed:hover,
+.rf-stagebar__step--upcoming:hover { color: var(--dsw-alias-label-secondary); }
 .rf-stagebar__dot {
   width: 7px;
   height: 7px;
@@ -184,8 +188,8 @@
 }
 /* 当前步点 = 设计稿 ACCENT（板 01 号板）。 */
 .rf-stagebar__dot--current { background: var(--rf-accent); }
-.rf-stagebar__dot--passed { background: var(--dsw-alias-state-success-primary); }
-.rf-stagebar__dot--upcoming { background: var(--dsw-alias-state-idle-primary); }
+.rf-stagebar__dot--passed { background: var(--rf-stage-passed); }
+.rf-stagebar__dot--upcoming { background: var(--rf-stage-idle); }
 .rf-stagebar__count {
   margin-left: auto;
   font-size: 11px;
@@ -408,5 +412,25 @@
 .rf-switch { display: inline-flex; width: 44px; height: 20px; border-radius: 10px; background: var(--dsw-alias-state-idle-primary); border: 0; }
 /* 开关打开 = 设计稿 ACCENT 胶囊（板 10 号板）。 */
 .rf-switch--on { background: var(--rf-accent); }
+.rf-dual-entry { display: flex; gap: 0; border: 1px solid var(--dsw-alias-border-l2); border-radius: 8px; overflow: hidden; margin-bottom: 12px; }
+.rf-dual-entry__half { flex: 1 1 50%; padding: 10px 12px; font-size: 11px; color: var(--dsw-alias-label-secondary); background: var(--dsw-alias-bg-layer-1); text-align: center; }
+.rf-dual-entry__half + .rf-dual-entry__half { border-left: 1px solid var(--dsw-alias-border-l2); }
+.rf-chat-sync { font-size: 10px; color: var(--dsw-alias-label-caption); margin-bottom: 12px; }
+.rf-cost-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.rf-cost-track { flex: 1 1 auto; height: 6px; border-radius: 3px; background: var(--dsw-alias-bg-layer-3); overflow: hidden; }
+.rf-cost-fill { height: 100%; background: var(--rf-accent); }
+.rf-cost-fill--warn { background: var(--dsw-alias-state-warn-primary); }
+.rf-cost-label { flex: 0 0 auto; font-size: 10px; color: var(--dsw-alias-label-caption); }
+.rf-stage-dna { margin-bottom: 12px; }
+.rf-stage-dna__steps { display: flex; gap: 6px; margin-bottom: 6px; }
+.rf-stage-dna__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--dsw-alias-bg-layer-3); }
+.rf-stage-dna__dot--passed { background: var(--dsw-alias-state-success-primary); }
+.rf-stage-dna__dot--current { background: var(--rf-accent); }
+.rf-stage-dna__bars { display: flex; gap: 4px; height: 4px; }
+.rf-stage-dna__bar { flex: 1 1 25%; border-radius: 2px; background: var(--dsw-alias-bg-layer-3); }
+.rf-stage-dna__bar--active { background: var(--rf-accent); }
+.rf-ask-strip { border: 1px dashed var(--dsw-alias-border-l2); border-radius: 8px; padding: 10px 12px; font-size: 11px; color: var(--dsw-alias-label-secondary); margin-top: 12px; }
+.rf-next-hint { font-size: 11px; color: var(--dsw-alias-label-caption); margin-top: 12px; }
+.rf-badge { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 4px; background: var(--dsw-alias-bg-layer-3); color: var(--dsw-alias-label-secondary); }
 `;
 })(RF);

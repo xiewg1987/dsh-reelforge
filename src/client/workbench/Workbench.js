@@ -22,6 +22,7 @@
 
   /** 7 个页签 → 渲染函数。 */
   RF.TAB_RENDERERS = {
+    hub: RF.tabHub,
     chapters: RF.tabChapters,
     shots: RF.tabShots,
     assets: RF.tabAssets,
@@ -33,7 +34,9 @@
 
   /** 6 块流程屏 → 渲染函数（设计稿 02 / 03 / 04 / 05 / 06 / 16）。 */
   RF.FLOW_RENDERERS = {
+    guide: RF.flowGuide,
     intake: RF.flowIntake,
+    runstack: RF.flowRunStack,
     runmode: RF.flowRunMode,
     device: RF.flowDevice,
     plan: RF.flowPlan,
@@ -70,9 +73,10 @@
     const t = typeof props.t === 'function' ? props.t : (key, values) => RF.interpolate(key, values ?? {});
     const project = RF.useProjection(React);
 
-    const [activeTab, setActiveTab] = React.useState('chapters');
+    const [activeTab, setActiveTab] = React.useState('hub');
     const [mode, setMode] = React.useState('tabs');
-    const [flowScreen, setFlowScreen] = React.useState('intake');
+    const [flowScreen, setFlowScreen] = React.useState('guide');
+    const [deviceExpanded, setDeviceExpanded] = React.useState(false);
     const [selectedShotId, setSelectedShotId] = React.useState(null);
     const [assetCategory, setAssetCategory] = React.useState('all');
     const [skillSource, setSkillSource] = React.useState('all');
@@ -110,7 +114,7 @@
     const activeScreen = inFlow ? flowScreen : activeTab;
     const render = inFlow
       ? (RF.FLOW_RENDERERS[flowScreen] ?? RF.flowIntake)
-      : (RF.TAB_RENDERERS[activeTab] ?? RF.tabChapters);
+      : (RF.TAB_RENDERERS[activeTab] ?? RF.tabHub);
 
     // 流程屏里，StageBar 高亮的是**这一屏所属的那一步**（设计稿 §2.1 全表）。
     const flowStepIndex = RF.STAGE_STEPS.indexOf(RF.FLOW_SCREEN_STEPS[flowScreen] ?? '');
@@ -140,9 +144,29 @@
         });
     };
 
+    // 一进右栏就后台探测（不等用户跑到「运行栈」、更不等阶段跑完）。
+    const probeStartedRef = React.useRef(false);
     React.useEffect(() => {
-      if (activeScreen === 'device' || activeScreen === 'degraded') loadProbe(false);
+      if (probeStartedRef.current) return;
+      probeStartedRef.current = true;
+      loadProbe(false);
+    }, []);
+
+    React.useEffect(() => {
+      if (activeScreen === 'degraded') loadProbe(false);
     }, [activeScreen]);
+
+    const autoEntryRef = React.useRef(false);
+    React.useEffect(() => {
+      const chapters = Array.isArray(project.chapters) ? project.chapters : [];
+      if (autoEntryRef.current || chapters.length > 0) return;
+      autoEntryRef.current = true;
+      setMode('flow');
+      // 首次（尚无章节）：先落运行栈（设计 03：选位置 + 设备检查），StageBar 高亮「运行」。
+      setFlowScreen('runstack');
+      setDeviceExpanded(true);
+      setPendingPosition(prev => (prev === '' ? 'local' : prev));
+    }, [project.chapters]);
 
     // 快捷键带 `params.focus` 打开某个页签（`ctx.sidebarRight.openTab(kind, { params })`）。
     const tabInfo = typeof props.useTabInfo === 'function' ? props.useTabInfo() : undefined;
@@ -161,6 +185,10 @@
       if (typeof screen !== 'string' || RF.FLOW_RENDERERS[screen] === undefined) return;
       setMode('flow');
       setFlowScreen(screen);
+      if (screen === 'runstack') {
+        const pos = String(project.runPosition ?? pendingPosition ?? '');
+        if (pos !== 'cloud') setDeviceExpanded(true);
+      }
     };
     const goTab = (tab) => {
       if (typeof tab !== 'string' || RF.TAB_RENDERERS[tab] === undefined) return;
@@ -216,6 +244,8 @@
       planHint,
       probe: probe === null ? null : { ...probe, loading: probeLoading },
       reloadProbe: () => loadProbe(true),
+      deviceExpanded,
+      setDeviceExpanded,
       /**
        * 导入小说：走 `reelforge.import_novel`（`novel` 是必填）。
        */
@@ -240,6 +270,7 @@
         }
         setPendingPosition(position);
         setPlanHint('');
+        if (position === 'local') loadProbe(false);
       },
       /**
        * 选生成 kind（写进 `reelforge.update_plan`）。
@@ -260,12 +291,6 @@
         RF.actions?.callTool?.(RF.TOOL_IDS.runStage, { stage });
       },
     };
-
-    // 底栏第二行：当前跑到第几章的第几镜（成本行已按 owner 裁决移进滚动区底部）。
-    const current = RF.currentPosition(project);
-    const positionLabel = current === null
-      ? t('footer.idle')
-      : t('footer.position', current);
 
     // ── 按屏外壳（Header 三件套 + Footer 三件套）──
     // owner 裁决「按屏变化」（Q1 底栏 / Q3 胶囊）：设计稿 17 块板的胶囊与底栏文案
@@ -342,7 +367,7 @@
             className: `${RF.CLS}-header__logo ${RF.CLS}-header__logo--button`,
             title: t('flow.backToWorkbench'),
             'aria-label': t('flow.backToWorkbench'),
-            onClick: () => goTab('chapters'),
+            onClick: () => goTab('hub'),
           })
           : h('div', { className: `${RF.CLS}-header__logo`, 'aria-hidden': true }),
         h('div', { className: `${RF.CLS}-header__text` },
@@ -375,17 +400,7 @@
             onClick: () => goTab(tab.id),
           }, t(`tab.${tab.labelKey}`)))),
       h('div', { className: `${RF.CLS}-scroll` },
-        RF.renderCapturedInput({ t, project }),
         render({ t, project, state, width }),
-        // 成本与进度**移进滚动区底部**（owner 裁决 Q2：设计稿 01 号板把它放在滚动区内，
-        // y=816；底栏只留「本屏标签 + 本屏主文案 + 本屏主按钮」）。
-        activeTab === 'chapters' && !inFlow
-          ? h('div', { className: `${RF.CLS}-note` }, t('chrome.stat.row', {
-            position: positionLabel,
-            spent: RF.formatMoney(project.cost?.spent ?? 0),
-            cap: RF.formatMoney(project.cost?.cap ?? 0),
-          }))
-          : null,
         // 底栏主按钮暂不可用时，**说清缺什么、给什么替代**（不静默做成死按钮）。
         chromeDisabled && chromeHintKey !== undefined
           ? h('div', { className: `${RF.CLS}-note ${RF.CLS}-note--warn` }, t(chromeHintKey))

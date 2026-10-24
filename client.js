@@ -47,7 +47,7 @@ window.__ModuleLoader__.load({
 
   /** 7 个页签（Tab **内部**的二级分区，不是 7 个宿主 Tab）。 */
   RF.WORKBENCH_TABS = [
-    { id: 'chapters', labelKey: 'chapters' },
+    { id: 'hub', labelKey: 'hub' },
     { id: 'shots', labelKey: 'shots' },
     { id: 'assets', labelKey: 'assets' },
     { id: 'context', labelKey: 'context' },
@@ -66,11 +66,13 @@ window.__ModuleLoader__.load({
    * 板 02–06 的骨架里**没有页签条**（只有 Header / StageBar / Scroll / Footer），
    * 它们是按流程串起来的独立屏。⇒ 两层，不是 13 个页签。
    */
-  RF.FLOW_SCREENS = ['intake', 'runmode', 'device', 'plan', 'stages', 'degraded'];
+  RF.FLOW_SCREENS = ['guide', 'intake', 'runstack', 'runmode', 'device', 'plan', 'stages', 'degraded'];
 
   /** 每块流程屏归在 6 步进度条的哪一步（与设计稿 §2.1 全表一致）。 */
   RF.FLOW_SCREEN_STEPS = {
+    guide: 'requirement',
     intake: 'requirement',
+    runstack: 'run',
     runmode: 'run',
     device: 'run',
     plan: 'plan',
@@ -80,8 +82,8 @@ window.__ModuleLoader__.load({
 
   /** 6 步进度条每一步点下去落到哪一屏。 */
   RF.STAGE_STEP_TARGETS = {
-    requirement: { kind: 'flow', screen: 'intake' },
-    run: { kind: 'flow', screen: 'runmode' },
+    requirement: { kind: 'flow', screen: 'guide' },
+    run: { kind: 'flow', screen: 'runstack' },
     plan: { kind: 'flow', screen: 'plan' },
     generate: { kind: 'flow', screen: 'stages' },
     storyboard: { kind: 'tab', tab: 'shots' },
@@ -251,6 +253,7 @@ window.__ModuleLoader__.load({
       'stage.storyboard': '分镜',
       'stage.deliver': '交付',
       'stage.count': '{current} / 6',
+      'tab.hub': '首页',
       'tab.chapters': '章节',
       'tab.shots': '分镜',
       'tab.assets': '资产',
@@ -263,6 +266,7 @@ window.__ModuleLoader__.load({
       'action.viewOutput': '查看成片',
       // ── 按屏外壳（Header 胶囊 / Footer 三件套）──
       // 设计稿 17 块板每块都不同；owner 裁决「按屏变化」（Q1 / Q3）。
+      'chrome.hub.footerLabel': '当前阶段',
       'chrome.chapters.footerLabel': '当前阶段',
       'chrome.shots.title': '分镜表',
       'chrome.shots.subtitle': '第 {chapter} 章 · {name} · {shots} 镜',
@@ -338,7 +342,63 @@ window.__ModuleLoader__.load({
       'flow.intake.pendingEmpty': '暂时没有待确认项。有需要拿主意的地方，助手会列在这里。',
       'flow.intake.footerLabel': '下一步',
       'flow.intake.footerValue': '选运行位置：本地还是云端',
-      'flow.intake.action': '继续',
+      'flow.intake.action': '确认并继续',
+      'flow.guide.title': 'ReelForge',
+      'flow.guide.subtitle': '在 DSH 里把小说做成按章短剧',
+      'flow.guide.footerLabel': '建议',
+      'flow.guide.footerValue': '从导入正文开始',
+      'flow.guide.action': '打开导入页',
+      'flow.guide.heroTitle': '六步走完，对话和右栏都可以',
+      'flow.guide.heroSub': '在对话里说需求，或在右栏点按 —— 两边同步，不会各走各的。',
+      'flow.guide.stepsLabel': '六步总览',
+      'flow.guide.go': '前往',
+      'flow.guide.step.requirement': '导入小说并自动拆章',
+      'flow.guide.step.run': '选本地或云端，必要时做本机探测',
+      'flow.guide.step.plan': '按 kind 与位置出执行路径',
+      'flow.guide.step.generate': '勾选四阶段并开始跑',
+      'flow.guide.step.storyboard': '在分镜表里改镜头与时长',
+      'flow.guide.step.deliver': '合成按章成片并导出',
+      'flow.guide.target.intake': '→ 02 导入',
+      'flow.guide.target.runstack': '→ 03 运行栈',
+      'flow.guide.target.plan': '→ 05 执行路径',
+      'flow.guide.target.stages': '→ 06 执行阶段',
+      'flow.guide.target.shots': '→ 09 分镜表',
+      'flow.guide.target.output': '→ 10 成片',
+      'flow.runstack.title': '运行与环境',
+      'flow.runstack.subtitle': '选位置 · 选 provider · 本机探测',
+      'flow.runstack.footerLabel': '下一步',
+      'flow.runstack.footerValue': '出执行路径',
+      'flow.runstack.action': '继续',
+      'v6.chapterUnit': '一章一集',
+      'v6.dualEntry.chat': '在对话里说需求',
+      'v6.dualEntry.panel': '在右栏点按',
+      'v6.chatSync.empty': '对话与右栏尚未同步：写需求或导入正文即可开始。',
+      'v6.chatSync.captured': '对话已同步：已捕获需求，导入正文后会拆章。',
+      'v6.chatSync.imported': '对话已同步：导入 {count} 章 · {pending}',
+      'v6.chatSync.needRun': '待运行位置确认',
+      'v6.chatSync.ready': '可继续执行',
+      'v6.cost': '¥{spent} / ¥{cap}',
+      'v6.hub.chapterProgress': '章节进度',
+      'v6.hub.shotScript': '镜头脚本',
+      'v6.hub.noShots': '这一章还没有镜头脚本，跑完 llm 阶段后会出现在这里。',
+      'v6.hub.moreShots': '还有 {count} 镜',
+      'v6.hub.nextHint': '也可在对话里说：继续跑 image',
+      'v6.guide.openIntake': '打开引导',
+      'v6.runstack.deviceSection': '本机探测（仅 local）',
+      'v6.runstack.deviceCloudSkip': '云端模式无需设备检查',
+      'v6.runstack.devicePending': '正在读取本机探测结果…',
+      'v6.probe.title': '本机环境（第一步预检）',
+      'v6.probe.loading': '正在探测 ComfyUI / 显存 / ffmpeg …',
+      'v6.probe.ok': '预检完成：{count} 项已通过，可继续导入与选运行位置',
+      'v6.probe.blockers': '预检发现 {count} 项阻塞：{first}',
+      'v6.probe.warnings': '预检有 {count} 项未通过，建议先看运行栈',
+      'v6.probe.recheck': '重新探测',
+      'v6.probe.detail': '查看详情',
+      'v6.runstack.deviceSummary': '已探测 {count} 项，展开查看详情',
+      'v6.runstack.expand': '展开探测',
+      'v6.runstack.collapse': '收起',
+      'v6.runstack.askCloud': '云端模式下无需设备检查，可直接继续。',
+      'v6.runstack.askLocal': '本地模式建议展开并完成探测，再选执行路径。',
       'flow.runmode.title': '运行位置',
       'flow.runmode.subtitle': '同一批工作流，跑在这台机器还是云端',
       'flow.runmode.capsule': '{count} 种位置',
@@ -535,6 +595,9 @@ window.__ModuleLoader__.load({
       'common.on': '开启',
       'common.off': '关闭',
       'empty.generic': '这里还是空的。{hint}',
+      'empty.hub': '还没有章节。从引导页导入正文，或直接在对话里说需求。',
+      'empty.hubHint': '下一步：先做运行与环境检测，再导入正文。',
+      'v6.firstRun.openRunStack': '运行与环境检测',
       'empty.chapters': '还没有章节。把小说正文粘到对话框，这里会自动拆章。',
       'empty.shots': '还没有分镜。助手会按上面的需求生成分镜表。',
       'empty.assets': '还没有参考图。助手会按需生成人物、场景与道具图。',
@@ -697,6 +760,7 @@ window.__ModuleLoader__.load({
       'stage.storyboard': 'Storyboard',
       'stage.deliver': 'Deliver',
       'stage.count': '{current} / 6',
+      'tab.hub': 'Home',
       'tab.chapters': 'Chapters',
       'tab.shots': 'Shots',
       'tab.assets': 'Assets',
@@ -709,6 +773,7 @@ window.__ModuleLoader__.load({
       'action.viewOutput': 'View output',
     // ── Per-screen chrome (header capsule / footer trio) ──
       // Every board in the design has its own; owner ruled "per screen" (Q1 / Q3).
+      'chrome.hub.footerLabel': 'Current stage',
       'chrome.chapters.footerLabel': 'Current stage',
       'chrome.shots.title': 'Storyboard',
       'chrome.shots.subtitle': 'Chapter {chapter} · {name} · {shots} shots',
@@ -784,7 +849,63 @@ window.__ModuleLoader__.load({
       'flow.intake.pendingEmpty': 'Nothing to confirm right now. Open questions will be listed here.',
       'flow.intake.footerLabel': 'Next',
       'flow.intake.footerValue': 'Pick the run position: local or cloud',
-      'flow.intake.action': 'Continue',
+      'flow.intake.action': 'Confirm and continue',
+      'flow.guide.title': 'ReelForge',
+      'flow.guide.subtitle': 'Turn a novel into chapter-based short drama inside DSH',
+      'flow.guide.footerLabel': 'Tip',
+      'flow.guide.footerValue': 'Start by importing the text',
+      'flow.guide.action': 'Open import',
+      'flow.guide.heroTitle': 'Six steps — chat or panel both work',
+      'flow.guide.heroSub': 'Say what you want in chat, or tap through the panel — both stay in sync.',
+      'flow.guide.stepsLabel': 'Six steps',
+      'flow.guide.go': 'Go',
+      'flow.guide.step.requirement': 'Import the novel and split chapters',
+      'flow.guide.step.run': 'Pick local or cloud; probe the machine if needed',
+      'flow.guide.step.plan': 'Choose kind × position for the run plan',
+      'flow.guide.step.generate': 'Select stages and start the pipeline',
+      'flow.guide.step.storyboard': 'Edit shots and timing in the storyboard',
+      'flow.guide.step.deliver': 'Assemble per-chapter output and export',
+      'flow.guide.target.intake': '→ 02 Import',
+      'flow.guide.target.runstack': '→ 03 Run stack',
+      'flow.guide.target.plan': '→ 05 Plan',
+      'flow.guide.target.stages': '→ 06 Stages',
+      'flow.guide.target.shots': '→ 09 Storyboard',
+      'flow.guide.target.output': '→ 10 Output',
+      'flow.runstack.title': 'Run & environment',
+      'flow.runstack.subtitle': 'Position · provider · local probe',
+      'flow.runstack.footerLabel': 'Next',
+      'flow.runstack.footerValue': 'Execution plan',
+      'flow.runstack.action': 'Continue',
+      'v6.chapterUnit': 'One chapter, one episode',
+      'v6.dualEntry.chat': 'Say it in chat',
+      'v6.dualEntry.panel': 'Tap in the panel',
+      'v6.chatSync.empty': 'Chat and panel not synced yet — write a brief or import text.',
+      'v6.chatSync.captured': 'Synced: brief captured; import text to split chapters.',
+      'v6.chatSync.imported': 'Synced: {count} chapters · {pending}',
+      'v6.chatSync.needRun': 'Run position pending',
+      'v6.chatSync.ready': 'Ready to continue',
+      'v6.cost': '{spent} / {cap}',
+      'v6.hub.chapterProgress': 'Chapter progress',
+      'v6.hub.shotScript': 'Shot script',
+      'v6.hub.noShots': 'No shots for this chapter yet — they appear after the llm stage.',
+      'v6.hub.moreShots': '{count} more shots',
+      'v6.hub.nextHint': 'You can also say in chat: continue image',
+      'v6.guide.openIntake': 'Open guide',
+      'v6.runstack.deviceSection': 'Local probe (local only)',
+      'v6.runstack.deviceCloudSkip': 'No device check in cloud mode',
+      'v6.runstack.devicePending': 'Loading local probe results…',
+      'v6.probe.title': 'Local environment (step-1 preflight)',
+      'v6.probe.loading': 'Probing ComfyUI / VRAM / ffmpeg…',
+      'v6.probe.ok': 'Preflight done: {count} checks passed — continue import & run position',
+      'v6.probe.blockers': 'Preflight blocked ({count}): {first}',
+      'v6.probe.warnings': '{count} checks failed — open run stack for details',
+      'v6.probe.recheck': 'Re-probe',
+      'v6.probe.detail': 'Details',
+      'v6.runstack.deviceSummary': '{count} checks done — expand for details',
+      'v6.runstack.expand': 'Expand probe',
+      'v6.runstack.collapse': 'Collapse',
+      'v6.runstack.askCloud': 'Cloud mode skips device check — you can continue.',
+      'v6.runstack.askLocal': 'Local mode: expand and finish probe before choosing a plan.',
       'flow.runmode.title': 'Run position',
       'flow.runmode.subtitle': 'The same workflows, on this machine or in the cloud',
       'flow.runmode.capsule': '{count} positions',
@@ -981,6 +1102,9 @@ window.__ModuleLoader__.load({
       'common.on': 'On',
       'common.off': 'Off',
       'empty.generic': 'This is empty. {hint}',
+      'empty.hub': 'No chapters yet. Import from the guide, or say what you want in chat.',
+      'empty.hubHint': 'Next: run environment check, then import text.',
+      'v6.firstRun.openRunStack': 'Run & environment check',
       'empty.chapters': 'No chapters yet. Paste the novel in the chat box and it splits here.',
       'empty.shots': 'No shots yet. The assistant writes the storyboard from the brief above.',
       'empty.assets': 'No reference images yet. The assistant makes character, scene and prop images as needed.',
@@ -1939,6 +2063,33 @@ window.__ModuleLoader__.load({
     /**
      * 01 工作台（基准板）：胶囊是全局运行状态，底栏第一行是「当前阶段」。
      */
+    hub: {
+      titleKey: 'title',
+      subtitle: (project, t) => {
+        const name = String(project?.name ?? '').trim() || t('project.unnamed');
+        const chapters = Array.isArray(project?.chapters) ? project.chapters : [];
+        return t('project.summary', {
+          name: `《${name}》`,
+          chapters: chapters.length,
+          shots: totalShots(project),
+        });
+      },
+      capsule: (project, t) => {
+        const position = positionLabel(project, t);
+        const provider = String(project?.provider ?? '');
+        if (position === t('status.idle') || provider === '') return position;
+        return `${position} · ${RF.labelOf('provider', provider, t)}`;
+      },
+      footerLabel: staticText('chrome.hub.footerLabel'),
+      footerValue: (project, t) => {
+        const stageLabel = t(`stage.${RF.stageStep(project)}`);
+        const position = RF.currentPosition(project);
+        const positionText = position === null ? t('footer.idle') : t('footer.position', position);
+        return `${stageLabel} · ${positionText}`;
+      },
+      footerAction: () => ({ key: 'action.viewOutput', kind: 'tab', tab: 'output' }),
+    },
+
     chapters: {
       titleKey: 'title',
       subtitle: (project, t) => {
@@ -2114,6 +2265,18 @@ window.__ModuleLoader__.load({
     // ══════════════════════════════════════════════════════════════
 
     /**
+     * 00 引导总览（v6）。
+     */
+    guide: {
+      titleKey: 'flow.guide.title',
+      subtitle: staticText('flow.guide.subtitle'),
+      capsule: staticText('v6.chapterUnit'),
+      footerLabel: staticText('flow.guide.footerLabel'),
+      footerValue: staticText('flow.guide.footerValue'),
+      footerAction: () => ({ key: 'flow.guide.action', kind: 'flow', screen: 'intake' }),
+    },
+
+    /**
      * 02 导入小说：胶囊是「新项目」，底栏指向「选运行位置」。
      */
     intake: {
@@ -2122,7 +2285,19 @@ window.__ModuleLoader__.load({
       capsule: staticText('flow.intake.capsule'),
       footerLabel: staticText('flow.intake.footerLabel'),
       footerValue: staticText('flow.intake.footerValue'),
-      footerAction: () => ({ key: 'flow.intake.action', kind: 'flow', screen: 'runmode' }),
+      footerAction: () => ({ key: 'flow.intake.action', kind: 'flow', screen: 'runstack' }),
+    },
+
+    /**
+     * 03 运行栈（v6）：运行位置 + 本机探测。
+     */
+    runstack: {
+      titleKey: 'flow.runstack.title',
+      subtitle: staticText('flow.runstack.subtitle'),
+      capsule: (project, t) => t('flow.runmode.capsule', { count: RF.RUN_POSITIONS.length }),
+      footerLabel: staticText('flow.runstack.footerLabel'),
+      footerValue: staticText('flow.runstack.footerValue'),
+      footerAction: () => ({ key: 'flow.runstack.action', kind: 'flow', screen: 'plan' }),
     },
 
     /**
@@ -2196,7 +2371,7 @@ window.__ModuleLoader__.load({
       }),
       footerLabel: staticText('flow.degrade.footerLabel'),
       footerValue: staticText('flow.degrade.footerValue'),
-      footerAction: () => ({ key: 'flow.degrade.action', kind: 'tab', tab: 'chapters' }),
+      footerAction: () => ({ key: 'flow.degrade.action', kind: 'tab', tab: 'hub' }),
     },
   };
 
@@ -2207,7 +2382,7 @@ window.__ModuleLoader__.load({
    * @returns {TabChrome} 外壳描述。
    */
   RF.tabChrome = function tabChrome(tabId) {
-    return RF.TAB_CHROME[tabId] ?? RF.TAB_CHROME.chapters;
+    return RF.TAB_CHROME[tabId] ?? RF.TAB_CHROME.hub;
   };
 })(RF);
 
@@ -2284,7 +2459,9 @@ window.__ModuleLoader__.load({
   --rf-accent: var(--dsw-alias-brand-primary-new-colorprimary-new-color);
   /* 强调色的暗面 = 设计稿 ACCENT-DIM：选中态胶囊底（板 01 号板当前步 chip）。
      用 color-mix 而不是写死色值 —— 跟着宿主主题自动深浅。 */
-  --rf-accent-dim: color-mix(in srgb, var(--rf-accent) 14%, transparent);
+  --rf-accent-dim: color-mix(in srgb, var(--rf-accent) 18%, var(--dsw-alias-bg-layer-2));
+  --rf-stage-passed: var(--dsw-alias-state-success-primary);
+  --rf-stage-idle: var(--dsw-alias-border-l3);
   /* 强调色上的标记（主按钮文字 / 面板头 ▶ 三角）：**两套主题都是白**。
      取 --dsw-alias-toast-label（明暗两套都是 neutral-bluish-00 = 白）——
      label-primary-foreground 会随主题反转（暗色主题变近黑），蓝底近黑字读不清；
@@ -2388,8 +2565,10 @@ window.__ModuleLoader__.load({
   background: var(--rf-accent-dim);
   color: var(--dsw-alias-label-primary);
 }
-.rf-stagebar__step--passed { color: var(--dsw-alias-label-secondary); }
+.rf-stagebar__step--passed { color: var(--dsw-alias-label-tertiary); }
 .rf-stagebar__step--upcoming { color: var(--dsw-alias-label-caption); }
+.rf-stagebar__step--passed:hover,
+.rf-stagebar__step--upcoming:hover { color: var(--dsw-alias-label-secondary); }
 .rf-stagebar__dot {
   width: 7px;
   height: 7px;
@@ -2398,8 +2577,8 @@ window.__ModuleLoader__.load({
 }
 /* 当前步点 = 设计稿 ACCENT（板 01 号板）。 */
 .rf-stagebar__dot--current { background: var(--rf-accent); }
-.rf-stagebar__dot--passed { background: var(--dsw-alias-state-success-primary); }
-.rf-stagebar__dot--upcoming { background: var(--dsw-alias-state-idle-primary); }
+.rf-stagebar__dot--passed { background: var(--rf-stage-passed); }
+.rf-stagebar__dot--upcoming { background: var(--rf-stage-idle); }
 .rf-stagebar__count {
   margin-left: auto;
   font-size: 11px;
@@ -2622,7 +2801,179 @@ window.__ModuleLoader__.load({
 .rf-switch { display: inline-flex; width: 44px; height: 20px; border-radius: 10px; background: var(--dsw-alias-state-idle-primary); border: 0; }
 /* 开关打开 = 设计稿 ACCENT 胶囊（板 10 号板）。 */
 .rf-switch--on { background: var(--rf-accent); }
+.rf-dual-entry { display: flex; gap: 0; border: 1px solid var(--dsw-alias-border-l2); border-radius: 8px; overflow: hidden; margin-bottom: 12px; }
+.rf-dual-entry__half { flex: 1 1 50%; padding: 10px 12px; font-size: 11px; color: var(--dsw-alias-label-secondary); background: var(--dsw-alias-bg-layer-1); text-align: center; }
+.rf-dual-entry__half + .rf-dual-entry__half { border-left: 1px solid var(--dsw-alias-border-l2); }
+.rf-chat-sync { font-size: 10px; color: var(--dsw-alias-label-caption); margin-bottom: 12px; }
+.rf-cost-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.rf-cost-track { flex: 1 1 auto; height: 6px; border-radius: 3px; background: var(--dsw-alias-bg-layer-3); overflow: hidden; }
+.rf-cost-fill { height: 100%; background: var(--rf-accent); }
+.rf-cost-fill--warn { background: var(--dsw-alias-state-warn-primary); }
+.rf-cost-label { flex: 0 0 auto; font-size: 10px; color: var(--dsw-alias-label-caption); }
+.rf-stage-dna { margin-bottom: 12px; }
+.rf-stage-dna__steps { display: flex; gap: 6px; margin-bottom: 6px; }
+.rf-stage-dna__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--dsw-alias-bg-layer-3); }
+.rf-stage-dna__dot--passed { background: var(--dsw-alias-state-success-primary); }
+.rf-stage-dna__dot--current { background: var(--rf-accent); }
+.rf-stage-dna__bars { display: flex; gap: 4px; height: 4px; }
+.rf-stage-dna__bar { flex: 1 1 25%; border-radius: 2px; background: var(--dsw-alias-bg-layer-3); }
+.rf-stage-dna__bar--active { background: var(--rf-accent); }
+.rf-ask-strip { border: 1px dashed var(--dsw-alias-border-l2); border-radius: 8px; padding: 10px 12px; font-size: 11px; color: var(--dsw-alias-label-secondary); margin-top: 12px; }
+.rf-next-hint { font-size: 11px; color: var(--dsw-alias-label-caption); margin-top: 12px; }
+.rf-badge { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 4px; background: var(--dsw-alias-bg-layer-3); color: var(--dsw-alias-label-secondary); }
 `;
+})(RF);
+
+/* ── src/client/workbench/v6widgets.js ───────────────────────────── */
+/* ─────────────────────────────────────────────────────────────────────────────
+ * v6 自有 UI 模块（设计稿 §3）—— 只用 `--dsw-alias-*` / `--rf-*`。
+ * ─────────────────────────────────────────────────────────────────────────── */
+;(function (RF) {
+  'use strict';
+
+  RF.renderChapterUnitBadge = function renderChapterUnitBadge(props) {
+    return h('span', { className: `${RF.CLS}-badge` }, props.t('v6.chapterUnit'));
+  };
+
+  RF.renderDualEntry = function renderDualEntry(props) {
+    return h('div', { className: `${RF.CLS}-dual-entry` },
+      h('div', { className: `${RF.CLS}-dual-entry__half` }, props.t('v6.dualEntry.chat')),
+      h('div', { className: `${RF.CLS}-dual-entry__half` }, props.t('v6.dualEntry.panel')));
+  };
+
+  RF.renderChatSync = function renderChatSync(props) {
+    const project = props.project ?? {};
+    const chapters = Array.isArray(project.chapters) ? project.chapters : [];
+    const text = String(project.input?.text ?? '').trim();
+    const position = String(project.runPosition ?? '');
+    let message = props.t('v6.chatSync.empty');
+    if (chapters.length > 0) {
+      message = props.t('v6.chatSync.imported', {
+        count: chapters.length,
+        pending: position === '' ? props.t('v6.chatSync.needRun') : props.t('v6.chatSync.ready'),
+      });
+    } else if (text !== '') {
+      message = props.t('v6.chatSync.captured');
+    }
+    return h('div', { className: `${RF.CLS}-chat-sync` }, message);
+  };
+
+  RF.renderCostThermometer = function renderCostThermometer(props) {
+    const spent = Number(props.project?.cost?.spent) || 0;
+    const cap = Number(props.project?.cost?.cap) || 0;
+    const ratio = cap > 0 ? Math.min(1, spent / cap) : 0;
+    const warn = cap > 0 && spent / cap >= 0.8;
+    return h('div', { className: `${RF.CLS}-cost-row` },
+      h('div', { className: `${RF.CLS}-cost-track` },
+        h('div', {
+          className: `${RF.CLS}-cost-fill${warn ? ` ${RF.CLS}-cost-fill--warn` : ''}`,
+          style: { width: `${Math.round(ratio * 100)}%` },
+        })),
+      h('span', { className: `${RF.CLS}-cost-label` }, props.t('v6.cost', {
+        spent: RF.formatMoney(spent),
+        cap: RF.formatMoney(cap),
+      })));
+  };
+
+  RF.renderStageDNA = function renderStageDNA(props) {
+    const project = props.project ?? {};
+    const stage = RF.stageStepsState(project);
+    return h('div', { className: `${RF.CLS}-stage-dna` },
+      h('div', { className: `${RF.CLS}-stage-dna__steps` },
+        RF.STAGE_STEPS.map((step, index) => h('span', {
+          key: step,
+          className: `${RF.CLS}-stage-dna__dot${index === stage.current ? ` ${RF.CLS}-stage-dna__dot--current` : index < stage.current ? ` ${RF.CLS}-stage-dna__dot--passed` : ''}`,
+          title: props.t(`stage.${step}`),
+        }))),
+      h('div', { className: `${RF.CLS}-stage-dna__bars` },
+        RF.STAGES.map(stageId => h('span', {
+          key: stageId,
+          className: `${RF.CLS}-stage-dna__bar${stageId === 'tts' ? ` ${RF.CLS}-stage-dna__bar--active` : ''}`,
+          title: props.t(`stages.${stageId}`),
+        }))));
+  };
+
+  RF.renderAskStrip = function renderAskStrip(props) {
+    return h('div', { className: `${RF.CLS}-ask-strip` }, props.message ?? props.t(props.messageKey));
+  };
+
+  RF.renderNextHint = function renderNextHint(props) {
+    return h('div', { className: `${RF.CLS}-next-hint` }, props.t(props.hintKey));
+  };
+
+})(RF);
+
+/* ── src/client/workbench/hub.js ───────────────────────────── */
+/* ─────────────────────────────────────────────────────────────────────────────
+ * 01 · 枢纽首页（v6 Hub，设计稿 01-RF-Hub）。
+ * ─────────────────────────────────────────────────────────────────────────── */
+;(function (RF) {
+  'use strict';
+
+  function emptyOf(props) {
+    return h(RF.ui.EmptyState, {
+      title: props.t('empty.hub'),
+      hint: props.t('empty.hubHint'),
+      action: h(RF.ui.Button, {
+        label: props.t('v6.firstRun.openRunStack'),
+        variant: 'primary',
+        onClick: () => {
+          props.state.setDeviceExpanded(true);
+          props.state.goFlow('runstack');
+        },
+      }),
+    });
+  }
+
+  RF.tabHub = function tabHub(props) {
+    const t = props.t;
+    const project = props.project ?? {};
+    const chapters = Array.isArray(project.chapters) ? project.chapters : [];
+    const shots = Array.isArray(project.shots) ? project.shots : [];
+    if (chapters.length === 0) return emptyOf(props);
+
+    const position = RF.currentPosition(project);
+    const chapterSeq = position === null ? Number(chapters[0]?.id) || 1 : Number(position.chapter);
+    const chapterShots = shots.filter(shot => Number(shot.seq) === chapterSeq);
+    const visibleShots = chapterShots.slice(0, 4);
+    const rest = chapterShots.length - visibleShots.length;
+
+    return h('div', null,
+      RF.renderCostThermometer({ t, project }),
+      RF.renderStageDNA({ t, project }),
+      RF.renderChatSync({ t, project }),
+      h(RF.ui.SectionLabel, null, t('v6.hub.chapterProgress')),
+      h(RF.ui.Card, null,
+        chapters.map(chapter => h('div', { key: chapter.id ?? chapter.title, className: `${RF.CLS}-row` },
+          h('div', { className: `${RF.CLS}-row__main` },
+            h('div', { className: `${RF.CLS}-row__title` }, chapter.title ?? ''),
+            h('div', { className: `${RF.CLS}-row__sub` },
+              `${chapter.shotCount ?? 0} ${t('unit.shot')} · ${RF.formatDuration(chapter.durationSec ?? 0)}`)),
+          h(RF.ui.Pill, {
+            label: RF.labelOf('chapter.status', chapter.status, t),
+            tone: chapter.status ?? 'queued',
+          })))),
+      h('div', { className: `${RF.CLS}-note` }, t('chapter.unit')),
+      h(RF.ui.SectionLabel, null, t('v6.hub.shotScript')),
+      visibleShots.length === 0
+        ? h('div', { className: `${RF.CLS}-note` }, t('v6.hub.noShots'))
+        : visibleShots.map(shot => h(RF.ui.Card, {
+          key: shot.id ?? `${shot.seq}-${shot.idx}`,
+          state: 'default',
+        },
+          h('div', { className: `${RF.CLS}-row__title` }, shot.label ?? shot.id),
+          h('div', { className: `${RF.CLS}-row__sub` },
+            `${shot.shotSize ?? ''} · ${RF.formatDuration(shot.duration ?? 0)} · ${shot.aspectRatio ?? ''}`))),
+      rest > 0
+        ? h('div', { className: `${RF.CLS}-row` },
+          h(RF.ui.Button, {
+            label: t('v6.hub.moreShots', { count: rest }),
+            variant: 'secondary',
+            onClick: () => props.state.goTab('shots'),
+          }))
+        : null,
+      RF.renderNextHint({ t, hintKey: 'v6.hub.nextHint' }));
+  };
 })(RF);
 
 /* ── src/client/workbench/tabs.js ───────────────────────────── */
@@ -3176,6 +3527,8 @@ window.__ModuleLoader__.load({
     const text = String(props.state.novelText ?? '');
 
     return h('div', null,
+      RF.renderDualEntry({ t }),
+      RF.renderChatSync({ t, project }),
       // ── 来源卡 ──
       h(RF.ui.Card, null,
         h(RF.ui.SectionLabel, null, t('flow.intake.sourceLabel')),
@@ -3287,9 +3640,10 @@ window.__ModuleLoader__.load({
         ? h('div', { className: `${RF.CLS}-row` }, h(RF.ui.Button, {
           label: t('flow.runmode.deviceCheck'),
           variant: 'secondary',
-          onClick: event => {
+            onClick: event => {
             if (event?.stopPropagation) event.stopPropagation();
-            props.state.goFlow('device');
+            props.state.setDeviceExpanded(true);
+            props.state.reloadProbe();
           },
         }))
         : h('div', { className: `${RF.CLS}-row__sub` }, t('flow.runmode.providersAvailable', { count: clouds.length })));
@@ -3713,6 +4067,75 @@ window.__ModuleLoader__.load({
             className: `${RF.CLS}-row__sub`,
           }, `· ${String(notice)}`)))));
   };
+
+  /** v6 · 00 引导总览。 */
+  var GUIDE_STEPS = [
+    { step: 'requirement', descKey: 'flow.guide.step.requirement', targetKey: 'flow.guide.target.intake', go: state => state.goFlow('intake') },
+    { step: 'run', descKey: 'flow.guide.step.run', targetKey: 'flow.guide.target.runstack', go: state => state.goFlow('runstack') },
+    { step: 'plan', descKey: 'flow.guide.step.plan', targetKey: 'flow.guide.target.plan', go: state => state.goFlow('plan') },
+    { step: 'generate', descKey: 'flow.guide.step.generate', targetKey: 'flow.guide.target.stages', go: state => state.goFlow('stages') },
+    { step: 'storyboard', descKey: 'flow.guide.step.storyboard', targetKey: 'flow.guide.target.shots', go: state => state.goTab('shots') },
+    { step: 'deliver', descKey: 'flow.guide.step.deliver', targetKey: 'flow.guide.target.output', go: state => state.goTab('output') },
+  ];
+
+  RF.flowGuide = function flowGuide(props) {
+    const t = props.t;
+    const currentStep = RF.FLOW_SCREEN_STEPS.guide ?? 'requirement';
+    const currentIndex = RF.STAGE_STEPS.indexOf(currentStep);
+    return h('div', null,
+      h(RF.ui.Card, null,
+        h('div', { className: `${RF.CLS}-row__title` }, t('flow.guide.heroTitle')),
+        h('div', { className: `${RF.CLS}-row__sub` }, t('flow.guide.heroSub'))),
+      RF.renderDualEntry({ t }),
+      h(RF.ui.SectionLabel, null, t('flow.guide.stepsLabel')),
+      GUIDE_STEPS.map((item, index) => h(RF.ui.Card, {
+        key: item.step,
+        state: index === currentIndex ? 'selected' : 'default',
+      },
+        h('div', { className: `${RF.CLS}-row` },
+          h('div', { className: `${RF.CLS}-row__main` },
+            h('div', { className: `${RF.CLS}-row__title` }, t(`stage.${item.step}`)),
+            h('div', { className: `${RF.CLS}-row__sub` }, t(item.descKey))),
+          h(RF.ui.Button, {
+            label: t('flow.guide.go'),
+            variant: 'secondary',
+            onClick: () => item.go(props.state),
+          })),
+        h('div', { className: `${RF.CLS}-note` }, t(item.targetKey)))));
+  };
+
+  RF.flowRunStack = function flowRunStack(props) {
+    const t = props.t;
+    const project = props.project ?? {};
+    const position = String(project.runPosition ?? props.state.pendingPosition ?? '');
+    const expanded = props.state.deviceExpanded === true;
+    const probe = props.state.probe ?? null;
+    const report = probe?.view?.report ?? {};
+    const items = Array.isArray(report.items) ? report.items : [];
+    const summary = items.length === 0
+      ? t('v6.runstack.devicePending')
+      : t('v6.runstack.deviceSummary', { count: items.length });
+
+    return h('div', null,
+      RF.renderDualEntry({ t }),
+      RF.flowRunMode(props),
+      h('div', { className: `${RF.CLS}-row` },
+        h('div', { className: `${RF.CLS}-row__main` },
+          h('div', { className: `${RF.CLS}-row__title` }, t('v6.runstack.deviceSection')),
+          h('div', { className: `${RF.CLS}-row__sub` }, position === 'cloud' ? t('v6.runstack.deviceCloudSkip') : summary)),
+        position !== 'cloud'
+          ? h(RF.ui.Button, {
+            label: expanded ? t('v6.runstack.collapse') : t('v6.runstack.expand'),
+            variant: 'secondary',
+            onClick: () => props.state.setDeviceExpanded(!expanded),
+          })
+          : null),
+      position !== 'cloud' && expanded ? RF.flowDevice(props) : null,
+      RF.renderAskStrip({
+        t,
+        messageKey: position === 'cloud' ? 'v6.runstack.askCloud' : 'v6.runstack.askLocal',
+      }));
+  };
 })(RF);
 
 /* ── src/client/workbench/Workbench.js ───────────────────────────── */
@@ -3740,6 +4163,7 @@ window.__ModuleLoader__.load({
 
   /** 7 个页签 → 渲染函数。 */
   RF.TAB_RENDERERS = {
+    hub: RF.tabHub,
     chapters: RF.tabChapters,
     shots: RF.tabShots,
     assets: RF.tabAssets,
@@ -3751,7 +4175,9 @@ window.__ModuleLoader__.load({
 
   /** 6 块流程屏 → 渲染函数（设计稿 02 / 03 / 04 / 05 / 06 / 16）。 */
   RF.FLOW_RENDERERS = {
+    guide: RF.flowGuide,
     intake: RF.flowIntake,
+    runstack: RF.flowRunStack,
     runmode: RF.flowRunMode,
     device: RF.flowDevice,
     plan: RF.flowPlan,
@@ -3788,9 +4214,10 @@ window.__ModuleLoader__.load({
     const t = typeof props.t === 'function' ? props.t : (key, values) => RF.interpolate(key, values ?? {});
     const project = RF.useProjection(React);
 
-    const [activeTab, setActiveTab] = React.useState('chapters');
+    const [activeTab, setActiveTab] = React.useState('hub');
     const [mode, setMode] = React.useState('tabs');
-    const [flowScreen, setFlowScreen] = React.useState('intake');
+    const [flowScreen, setFlowScreen] = React.useState('guide');
+    const [deviceExpanded, setDeviceExpanded] = React.useState(false);
     const [selectedShotId, setSelectedShotId] = React.useState(null);
     const [assetCategory, setAssetCategory] = React.useState('all');
     const [skillSource, setSkillSource] = React.useState('all');
@@ -3828,7 +4255,7 @@ window.__ModuleLoader__.load({
     const activeScreen = inFlow ? flowScreen : activeTab;
     const render = inFlow
       ? (RF.FLOW_RENDERERS[flowScreen] ?? RF.flowIntake)
-      : (RF.TAB_RENDERERS[activeTab] ?? RF.tabChapters);
+      : (RF.TAB_RENDERERS[activeTab] ?? RF.tabHub);
 
     // 流程屏里，StageBar 高亮的是**这一屏所属的那一步**（设计稿 §2.1 全表）。
     const flowStepIndex = RF.STAGE_STEPS.indexOf(RF.FLOW_SCREEN_STEPS[flowScreen] ?? '');
@@ -3858,9 +4285,29 @@ window.__ModuleLoader__.load({
         });
     };
 
+    // 一进右栏就后台探测（不等用户跑到「运行栈」、更不等阶段跑完）。
+    const probeStartedRef = React.useRef(false);
     React.useEffect(() => {
-      if (activeScreen === 'device' || activeScreen === 'degraded') loadProbe(false);
+      if (probeStartedRef.current) return;
+      probeStartedRef.current = true;
+      loadProbe(false);
+    }, []);
+
+    React.useEffect(() => {
+      if (activeScreen === 'degraded') loadProbe(false);
     }, [activeScreen]);
+
+    const autoEntryRef = React.useRef(false);
+    React.useEffect(() => {
+      const chapters = Array.isArray(project.chapters) ? project.chapters : [];
+      if (autoEntryRef.current || chapters.length > 0) return;
+      autoEntryRef.current = true;
+      setMode('flow');
+      // 首次（尚无章节）：先落运行栈（设计 03：选位置 + 设备检查），StageBar 高亮「运行」。
+      setFlowScreen('runstack');
+      setDeviceExpanded(true);
+      setPendingPosition(prev => (prev === '' ? 'local' : prev));
+    }, [project.chapters]);
 
     // 快捷键带 `params.focus` 打开某个页签（`ctx.sidebarRight.openTab(kind, { params })`）。
     const tabInfo = typeof props.useTabInfo === 'function' ? props.useTabInfo() : undefined;
@@ -3879,6 +4326,10 @@ window.__ModuleLoader__.load({
       if (typeof screen !== 'string' || RF.FLOW_RENDERERS[screen] === undefined) return;
       setMode('flow');
       setFlowScreen(screen);
+      if (screen === 'runstack') {
+        const pos = String(project.runPosition ?? pendingPosition ?? '');
+        if (pos !== 'cloud') setDeviceExpanded(true);
+      }
     };
     const goTab = (tab) => {
       if (typeof tab !== 'string' || RF.TAB_RENDERERS[tab] === undefined) return;
@@ -3934,6 +4385,8 @@ window.__ModuleLoader__.load({
       planHint,
       probe: probe === null ? null : { ...probe, loading: probeLoading },
       reloadProbe: () => loadProbe(true),
+      deviceExpanded,
+      setDeviceExpanded,
       /**
        * 导入小说：走 `reelforge.import_novel`（`novel` 是必填）。
        */
@@ -3958,6 +4411,7 @@ window.__ModuleLoader__.load({
         }
         setPendingPosition(position);
         setPlanHint('');
+        if (position === 'local') loadProbe(false);
       },
       /**
        * 选生成 kind（写进 `reelforge.update_plan`）。
@@ -3978,12 +4432,6 @@ window.__ModuleLoader__.load({
         RF.actions?.callTool?.(RF.TOOL_IDS.runStage, { stage });
       },
     };
-
-    // 底栏第二行：当前跑到第几章的第几镜（成本行已按 owner 裁决移进滚动区底部）。
-    const current = RF.currentPosition(project);
-    const positionLabel = current === null
-      ? t('footer.idle')
-      : t('footer.position', current);
 
     // ── 按屏外壳（Header 三件套 + Footer 三件套）──
     // owner 裁决「按屏变化」（Q1 底栏 / Q3 胶囊）：设计稿 17 块板的胶囊与底栏文案
@@ -4060,7 +4508,7 @@ window.__ModuleLoader__.load({
             className: `${RF.CLS}-header__logo ${RF.CLS}-header__logo--button`,
             title: t('flow.backToWorkbench'),
             'aria-label': t('flow.backToWorkbench'),
-            onClick: () => goTab('chapters'),
+            onClick: () => goTab('hub'),
           })
           : h('div', { className: `${RF.CLS}-header__logo`, 'aria-hidden': true }),
         h('div', { className: `${RF.CLS}-header__text` },
@@ -4093,17 +4541,7 @@ window.__ModuleLoader__.load({
             onClick: () => goTab(tab.id),
           }, t(`tab.${tab.labelKey}`)))),
       h('div', { className: `${RF.CLS}-scroll` },
-        RF.renderCapturedInput({ t, project }),
         render({ t, project, state, width }),
-        // 成本与进度**移进滚动区底部**（owner 裁决 Q2：设计稿 01 号板把它放在滚动区内，
-        // y=816；底栏只留「本屏标签 + 本屏主文案 + 本屏主按钮」）。
-        activeTab === 'chapters' && !inFlow
-          ? h('div', { className: `${RF.CLS}-note` }, t('chrome.stat.row', {
-            position: positionLabel,
-            spent: RF.formatMoney(project.cost?.spent ?? 0),
-            cap: RF.formatMoney(project.cost?.cap ?? 0),
-          }))
-          : null,
         // 底栏主按钮暂不可用时，**说清缺什么、给什么替代**（不静默做成死按钮）。
         chromeDisabled && chromeHintKey !== undefined
           ? h('div', { className: `${RF.CLS}-note ${RF.CLS}-note--warn` }, t(chromeHintKey))

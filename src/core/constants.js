@@ -263,9 +263,11 @@ export const STAGE_TO_STEP = Object.freeze({
  * ⇒ 13 个页签在 326–547px 的右栏放不下；而设计稿本来就是两层。两层并存才是按画板做。
  */
 export const FLOW_SCREENS = Object.freeze([
+  'guide',     // 00 引导总览（v6）
   'intake',    // 02 小说导入与自动拆章
-  'runmode',   // 03 运行位置选择
-  'device',    // 04 本地档设备检查
+  'runstack',  // 03 运行栈（v6：运行位置 + 本机探测）
+  'runmode',   // 03 运行位置（兼容旧链）
+  'device',    // 04 本地档设备检查（兼容旧链）
   'plan',      // 05 执行路径（kind × 位置矩阵）
   'stages',    // 06 四阶段勾选
   'degraded',  // 16 降级矩阵
@@ -278,7 +280,9 @@ export const FLOW_SCREENS = Object.freeze([
  * 06 / 16 都落在「生成」步。
  */
 export const FLOW_SCREEN_STEPS = Object.freeze({
+  guide: 'requirement',
   intake: 'requirement',
+  runstack: 'run',
   runmode: 'run',
   device: 'run',
   plan: 'plan',
@@ -298,8 +302,8 @@ export const FLOW_SCREEN_STEPS = Object.freeze({
  * 否则 02 / 03 / 04 / 05 / 06 这几块屏在右栏里**无处可去**。
  */
 export const STAGE_STEP_TARGETS = Object.freeze({
-  requirement: Object.freeze({ kind: 'flow', screen: 'intake' }),
-  run: Object.freeze({ kind: 'flow', screen: 'runmode' }),
+  requirement: Object.freeze({ kind: 'flow', screen: 'guide' }),
+  run: Object.freeze({ kind: 'flow', screen: 'runstack' }),
   plan: Object.freeze({ kind: 'flow', screen: 'plan' }),
   generate: Object.freeze({ kind: 'flow', screen: 'stages' }),
   storyboard: Object.freeze({ kind: 'tab', tab: 'shots' }),

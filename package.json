@@ -62,6 +62,8 @@
     "verify:acceptance": "node scripts/verify-acceptance.mjs",
     "verify:coverage": "node scripts/verify-coverage.mjs",
     "build:client": "node src/client/build-client.mjs",
+    "sync:dsh": "node scripts/sync-dsh-profile.mjs",
+    "build:client:dsh": "npm run build:client && npm run sync:dsh",
     "sync:locale": "node scripts/sync-locale.mjs",
     "typecheck": "node scripts/verify-typecheck.mjs",
     "test": "node --test \"src/**/__tests__/*.test.js\"",
