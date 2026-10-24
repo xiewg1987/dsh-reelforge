@@ -968,8 +968,15 @@ window.__ModuleLoader__.load({
       'rf7.runGate.footerValue.failed': '{count} 项没通过，先修好再开跑',
       'rf7.runGate.footerValue.ready': '全部通过即可开跑',
       'rf7.runGate.summaryTitle': '环境检查',
-      'rf7.runGate.summaryMeta': '{total} 项检查 · {passed} 通过 · {warned} 警告 · {unconfigured} 未配置',
+      'rf7.runGate.summaryMeta': '{total} 项检查 · {passed} 通过 · {failed} 未通过 · {warned} 警告 · {unconfigured} 未配置',
+      'rf7.runGate.pendingMeta': '还没探测',
+      'rf7.runGate.probingMeta': '正在检测…',
       'rf7.runGate.actRerun': '重跑检查',
+      'rf7.runGate.actStart': '开始检测',
+      'rf7.runGate.pendingTitle': '还没检测',
+      'rf7.runGate.pendingHint': '先选执行位置，再点「开始检测」；不符合本机要求时可直接选云端运行',
+      'rf7.runGate.staleTitle': '这份结果不是当前执行位置的',
+      'rf7.runGate.staleHint': '已按新位置重新检测，或点「重跑检查」',
       'rf7.runGate.sectionPosition': '执行位置',
       'rf7.runGate.sectionPositionSub': '同一批生成方式，差别只在跑在哪、算不算钱',
       'rf7.runGate.localTitle': '本地运行',
@@ -997,11 +1004,16 @@ window.__ModuleLoader__.load({
       'rf7.runGate.check.ckVersion': 'ComfyUI-Kernel 版本',
       'rf7.runGate.check.encoders': '视频编码器',
       'rf7.runGate.check.videoBackend': '视频后端',
+      // CK 版本不单列（与「ComfyUI 服务」同一份数据）⇒ 结论拼进那一行的值里。
+      'rf7.runGate.kernelOk': 'CK {version} 达标',
+      'rf7.runGate.kernelFail': 'CK {version} 低于门槛 {min}',
+      'rf7.runGate.kernelMissing': 'CK 版本号缺失',
       'rf7.runGate.agentValue': '随宿主（DSH 内置）',
       'rf7.runGate.pass': '通过',
       'rf7.runGate.warn': '警告',
       'rf7.runGate.fail': '未通过',
       'rf7.runGate.unconfigured': '未配置',
+      'rf7.runGate.builtin': '宿主内置',
       'rf7.runGate.noticeMain': '探测只在本机跑 · 不上传任何文件',
       'rf7.runGate.noticeSub': '不符合本机要求时，可跳过探测直接走云端',
       'rf7.runGate.action': '开始生产',
@@ -1974,8 +1986,15 @@ window.__ModuleLoader__.load({
       'rf7.runGate.footerValue.failed': '{count} check(s) failed — fix them before starting',
       'rf7.runGate.footerValue.ready': 'All green — ready to produce',
       'rf7.runGate.summaryTitle': 'Environment check',
-      'rf7.runGate.summaryMeta': '{total} checks · {passed} pass · {warned} warn · {unconfigured} unset',
+      'rf7.runGate.summaryMeta': '{total} checks · {passed} pass · {failed} fail · {warned} warn · {unconfigured} unset',
+      'rf7.runGate.pendingMeta': 'Not probed yet',
+      'rf7.runGate.probingMeta': 'Checking…',
       'rf7.runGate.actRerun': 'Re-run checks',
+      'rf7.runGate.actStart': 'Run check',
+      'rf7.runGate.pendingTitle': 'Not checked yet',
+      'rf7.runGate.pendingHint': 'Pick a run position, then run the check — or go straight to the cloud',
+      'rf7.runGate.staleTitle': 'These results are not from the current run position',
+      'rf7.runGate.staleHint': 'Re-probing for the new position, or hit “Re-run checks”',
       'rf7.runGate.sectionPosition': 'Where it runs',
       'rf7.runGate.sectionPositionSub': 'Same kinds either way; only the machine and the bill differ',
       'rf7.runGate.localTitle': 'Run locally',
@@ -2003,11 +2022,16 @@ window.__ModuleLoader__.load({
       'rf7.runGate.check.ckVersion': 'ComfyUI-Kernel version',
       'rf7.runGate.check.encoders': 'Video encoders',
       'rf7.runGate.check.videoBackend': 'Video backend',
+      // CK version is not a separate row (same data as "ComfyUI service") ⇒ folded into that row's value.
+      'rf7.runGate.kernelOk': 'CK {version} OK',
+      'rf7.runGate.kernelFail': 'CK {version} below required {min}',
+      'rf7.runGate.kernelMissing': 'CK version missing',
       'rf7.runGate.agentValue': 'Provided by the host (DSH built-in)',
       'rf7.runGate.pass': 'Pass',
       'rf7.runGate.warn': 'Warning',
       'rf7.runGate.fail': 'Failed',
       'rf7.runGate.unconfigured': 'Not configured',
+      'rf7.runGate.builtin': 'Built in',
       'rf7.runGate.noticeMain': 'Probing runs on this machine only · nothing is uploaded',
       'rf7.runGate.noticeSub': 'If this machine does not qualify, skip the probe and use the cloud',
       'rf7.runGate.action': 'Start producing',
@@ -2367,6 +2391,171 @@ window.__ModuleLoader__.load({
    */
   RF.capabilitiesUrl = function capabilitiesUrl() {
     return '/api/reelforge.capabilities';
+  };
+
+  /* ───────────────────────────────────────────────────────────────────────────
+   * 启动检查的「检查行模型」（RF7 板 01）
+   *
+   * ## 为什么要一份模型，而不是两个文件各算一遍
+   *
+   * 启动检查的行同时出现在三处：屏内清单、顶部胶囊、底栏。
+   * 三处各算一次 ⇒ 迟早对不上（胶囊写「6 / 9 通过」，屏里写「6 项检查」），
+   * 用户一眼就看出面板在编数字。所以行模型与汇总**只有这一份**。
+   *
+   * ## 三条硬规矩
+   *
+   * 1. **「ComfyUI-Kernel 版本」不单列**：它和「ComfyUI 服务」是**同一份数据**
+   *    （一次 `systemStats` 调用读出的 `comfy_kitchen_version`），拆成两行 =
+   *    同一个故障报两遍。结论并进 ComfyUI 那行，状态取更差的那个。
+   * 2. **「Agent 运行时」不是检查项**：它没有探测项，是宿主自带的事实 ⇒
+   *    屏内单独一行说明，**不计入**「N 项检查」。
+   * 3. **范围随运行位置变**：云端档只列云端相关的行（本地专属行在云端是
+   *    「不适用」，不是「没配置」）。
+   * ─────────────────────────────────────────────────────────────────────────── */
+
+  /**
+   * 检查行清单：固定行（行首 id + 并入同一行的探测项 + 文案词条键）。
+   *
+   * `merge` = 与本行**同一份数据**的探测项，结论并进本行，不单列。
+   *
+   * @type {ReadonlyArray<{ probeId: string, labelKey: string, merge: ReadonlyArray<string> }>}
+   */
+  RF.PROBE_GATE_ROWS = Object.freeze([
+    Object.freeze({ probeId: 'comfy', labelKey: 'rf7.runGate.checkComfy', merge: Object.freeze(['ckVersion']) }),
+    Object.freeze({ probeId: 'llm', labelKey: 'rf7.runGate.checkLlm', merge: Object.freeze([]) }),
+    Object.freeze({ probeId: 'ffmpeg', labelKey: 'rf7.runGate.checkFfmpeg', merge: Object.freeze([]) }),
+    Object.freeze({ probeId: 'disk', labelKey: 'rf7.runGate.checkDisk', merge: Object.freeze([]) }),
+    Object.freeze({ probeId: 'vram', labelKey: 'rf7.runGate.checkVram', merge: Object.freeze([]) }),
+    Object.freeze({ probeId: 'provider', labelKey: 'rf7.runGate.checkCloud', merge: Object.freeze([]) }),
+  ]);
+
+  /**
+   * 状态桶 → 展示词条键 + 色调。
+   *
+   * @type {Readonly<Record<string, { key: string, tone: string }>>}
+   */
+  RF.PROBE_GATE_BUCKETS = Object.freeze({
+    ok: Object.freeze({ key: 'rf7.runGate.pass', tone: 'ok' }),
+    warn: Object.freeze({ key: 'rf7.runGate.warn', tone: 'warn' }),
+    failed: Object.freeze({ key: 'rf7.runGate.fail', tone: 'error' }),
+    unset: Object.freeze({ key: 'rf7.runGate.unconfigured', tone: 'muted' }),
+  });
+
+  /**
+   * 机器状态 → 状态桶。
+   * @param {unknown} status - 机器状态。
+   * @returns {string} 状态桶（ok / warn / failed / unset）。
+   */
+  RF.probeGateBucket = function probeGateBucket(status) {
+    const raw = String(status ?? '');
+    if (raw === 'ok' || raw === 'warn' || raw === 'failed') return raw;
+    return 'unset';
+  };
+
+  /**
+   * 取更差的桶（unset < ok < warn < failed）。
+   * @param {string} a - 桶 A。
+   * @param {string} b - 桶 B。
+   * @returns {string} 更差的桶。
+   */
+  RF.probeGateWorse = function probeGateWorse(a, b) {
+    const order = ['unset', 'ok', 'warn', 'failed'];
+    const left = order.indexOf(a);
+    const right = order.indexOf(b);
+    return left >= right ? a : b;
+  };
+
+  /**
+   * CK（ComfyUI-Kernel）版本的结论 → 词条键 + 参数。
+   *
+   * 成功时探测项的 `message` 只是 `'ok'`（没有信息量），所以成功路径用
+   * `value`（版本号）自己拼；失败路径用词条把「低于门槛」说清楚。
+   *
+   * @param {object} part - ckVersion 探测项。
+   * @returns {{ key: string, params: object } | { raw: string }} 描述。
+   */
+  RF.probeGateKernelDetail = function probeGateKernelDetail(part) {
+    const version = String(part?.value ?? '').trim();
+    const min = String(part?.min ?? '').trim();
+    if (RF.probeGateBucket(part?.status) === 'ok') {
+      return { key: 'rf7.runGate.kernelOk', params: { version } };
+    }
+    if (version === '') return { key: 'rf7.runGate.kernelMissing', params: {} };
+    if (min !== '') return { key: 'rf7.runGate.kernelFail', params: { version, min } };
+    // 门槛值没随报告带回来（老宿主）⇒ 用探测项自己的话，不自己编门槛。
+    return { raw: String(part?.message ?? '') };
+  };
+
+  /**
+   * 探测报告 → 检查行。
+   *
+   * @param {object} report - 探测报告（`report.items`）。
+   * @returns {Array<{ id: string, labelKey: string, bucket: string, message: string, detail: object|null }>} 行。
+   */
+  RF.probeGateRows = function probeGateRows(report) {
+    const items = Array.isArray(report?.items) ? report.items : [];
+    const index = new Map(items.map(item => [String(item?.id ?? ''), item]));
+    const inScope = new Set(index.keys());
+    const rows = [];
+    const covered = new Set();
+
+    for (const spec of RF.PROBE_GATE_ROWS) {
+      const ids = [spec.probeId, ...spec.merge];
+      // 整个行都不在本次探测范围内 ⇒ 不显示（云端档不列本地专属行）。
+      if (!ids.some(id => inScope.has(id))) continue;
+      for (const id of ids) covered.add(id);
+      const parts = ids.map(id => index.get(id)).filter(part => part !== undefined);
+      const bucket = parts.reduce(
+        (worst, part) => RF.probeGateWorse(worst, RF.probeGateBucket(part?.status)),
+        'unset',
+      );
+      const primary = index.get(spec.probeId);
+      // 并入项（CK 版本）的结论挂到 detail ⇒ 屏内渲染时拼进同一行的值里。
+      const merged = ids.length > 1 ? index.get(spec.merge[0]) : undefined;
+      rows.push({
+        id: spec.probeId,
+        labelKey: spec.labelKey,
+        bucket,
+        message: String(primary?.message ?? ''),
+        detail: merged === undefined ? null : RF.probeGateKernelDetail(merged),
+      });
+    }
+
+    // 探测到但固定行没覆盖的项 ⇒ **追加显示**，不许藏起来。
+    for (const item of items) {
+      const id = String(item?.id ?? '');
+      if (covered.has(id)) continue;
+      rows.push({
+        id,
+        labelKey: `rf7.runGate.check.${id}`,
+        bucket: RF.probeGateBucket(item?.status),
+        message: String(item?.message ?? ''),
+        detail: null,
+      });
+    }
+    return rows;
+  };
+
+  /**
+   * 探测报告 → 汇总（口径 = **显示出来的检查行**）。
+   *
+   * ⚠️ total = 行数，所以「N 项检查 · X 通过 · Y 未通过 · Z 警告 · W 未配置」
+   *    永远加得起来（每行恰好一个桶）。
+   *
+   * @param {object} report - 探测报告。
+   * @returns {{ rows: Array<object>, total: number, passed: number, failed: number, warned: number, unset: number }} 汇总。
+   */
+  RF.probeGateSummary = function probeGateSummary(report) {
+    const rows = RF.probeGateRows(report);
+    const count = bucket => rows.filter(row => row.bucket === bucket).length;
+    return {
+      rows,
+      total: rows.length,
+      passed: count('ok'),
+      failed: count('failed'),
+      warned: count('warn'),
+      unset: count('unset'),
+    };
   };
 
   /**
@@ -3221,22 +3410,24 @@ window.__ModuleLoader__.load({
   }
 
   /**
-   * 探测结果里的检查项（RF7 RunGate 的 7 行清单的数据源）。
+   * 探测结果的汇总（RF7 RunGate 的检查行模型）。
+   *
+   * ⚠️ 口径必须和屏内清单**完全一致**（同一个 `RF.probeGateSummary()`）——
+   *    两边各算一次 ⇒ 胶囊写「6 / 9 通过」、屏里写「6 项检查」，用户一眼看出在编数字。
    *
    * @param {object} context - 屏外数据上下文。
-   * @returns {{ items: Array<object>, passed: number, warned: number, failed: number, total: number }} 汇总。
+   * @returns {{ rows: Array<object>, passed: number, warned: number, failed: number, unset: number, total: number }} 汇总。
    */
   function probeSummary(context) {
-    const items = Array.isArray(context?.probe?.view?.report?.items)
-      ? context.probe.view.report.items
-      : [];
-    const count = status => items.filter(item => String(item?.status ?? '') === status).length;
+    const report = context?.probe?.view?.report ?? null;
+    const summary = RF.probeGateSummary(report);
     return {
-      items,
-      passed: count('ok'),
-      warned: count('warn'),
-      failed: count('failed'),
-      total: items.length,
+      rows: summary.rows,
+      passed: summary.passed,
+      warned: summary.warned,
+      failed: summary.failed,
+      unset: summary.unset,
+      total: summary.total,
     };
   }
 
@@ -5514,49 +5705,15 @@ body[data-ds-dark-theme] .rf-root {
   'use strict';
 
   /**
-   * 启动检查的 7 行清单（RF7 板 01）。
+   * 启动检查的检查行清单与状态桶**不在这里定义** —— 胶囊/底栏（`chrome.js`）
+   * 要用同一份口径，否则两边的数字会对不上。
+   * 统一放在共享层：`RF.PROBE_GATE_ROWS` / `RF.probeGateRows()` / `RF.probeGateSummary()`。
    *
-   * `probeId` = 对应宿主探测项 id（`src/core/probe.js` 的 `PROBE_IDS`）；
-   * `null` = 这一行**没有对应的探测项**（Agent 运行时是宿主自己，不是被探测的对象）。
-   *
-   * @type {Array<{ probeId: string | null, label: string }>}
+   * 三条规矩（详见 `src/client/shared.js`）：
+   * 1. 「ComfyUI-Kernel 版本」并进「ComfyUI 服务」行（同一份 `systemStats` 数据）；
+   * 2. 「Agent 运行时」不是检查项 ⇒ 屏内单独一行说明，不计入「N 项检查」；
+   * 3. 行清单随探测范围变（云端档不列本地专属行）。
    */
-  const RUN_GATE_ROWS = [
-    { probeId: 'comfy', label: 'rf7.runGate.checkComfy' },
-    { probeId: 'llm', label: 'rf7.runGate.checkLlm' },
-    { probeId: null, label: 'rf7.runGate.checkAgent' },
-    { probeId: 'ffmpeg', label: 'rf7.runGate.checkFfmpeg' },
-    { probeId: 'disk', label: 'rf7.runGate.checkDisk' },
-    { probeId: 'vram', label: 'rf7.runGate.checkVram' },
-    { probeId: 'provider', label: 'rf7.runGate.checkCloud' },
-  ];
-
-  /**
-   * 探测项状态 → 展示词条键 + 色调。
-   *
-   * @param {string} status - 机器状态（ok / warn / failed）。
-   * @returns {{ key: string, tone: string }} 展示信息。
-   */
-  function probeState(status) {
-    const raw = String(status ?? '');
-    if (raw === 'ok') return { key: 'rf7.runGate.pass', tone: 'ok' };
-    if (raw === 'warn') return { key: 'rf7.runGate.warn', tone: 'warn' };
-    if (raw === 'failed') return { key: 'rf7.runGate.fail', tone: 'error' };
-    return { key: 'rf7.runGate.unconfigured', tone: 'muted' };
-  }
-
-  /**
-   * 探测项 → 按 id 索引。
-   *
-   * @param {object} state - 屏状态。
-   * @returns {Map<string, object>} id → 探测项。
-   */
-  function probeIndex(state) {
-    const items = Array.isArray(state?.probe?.view?.report?.items)
-      ? state.probe.view.report.items
-      : [];
-    return new Map(items.map(item => [String(item?.id ?? ''), item]));
-  }
 
   // ══════════════════════════════════════════════════════════════
   // 01 启动检查（RunGate）—— 环境门，冷启动首屏
@@ -5565,39 +5722,29 @@ body[data-ds-dark-theme] .rf-root {
   RF.flowRunGate = function flowRunGate(props) {
     const t = props.t;
     const state = props.state;
-    const index = probeIndex(state);
-    const items = Array.isArray(state.probe?.view?.report?.items)
-      ? state.probe.view.report.items
-      : [];
-    const position = String(props.project?.runPosition ?? state.pendingPosition ?? '');
+    const view = state.probe?.view ?? null;
+    const report = view?.report ?? null;
+    const items = Array.isArray(report?.items) ? report.items : [];
+    // ⚠️ 用 `||` 不用 `??`：投影里 `runPosition` 是**空字符串**而不是 undefined，
+    // `??` 不会往下走 ⇒ 界面刚选的位置永远不亮（已提交的位置优先，没提交才用界面选择）。
+    const position = String(props.project?.runPosition || state.pendingPosition || '');
+    const probed = items.length > 0;
+    const probeError = String(state.probe?.error ?? '');
+    const loading = state.probe?.loading === true;
+    // 这一份结果是**哪个位置**探出来的（宿主回传）。
+    const probedPosition = String(view?.position ?? '');
 
-    const count = status => items.filter(item => String(item?.status ?? '') === status).length;
-    const passed = count('ok');
-    const warned = count('warn');
-    const failed = count('failed');
-    const unconfigured = items.length - passed - warned - failed;
-
-    // 7 行清单（设计稿固定 7 行）+ 探测到但没被这 7 行覆盖的项（不许藏起来）。
-    const rows = RUN_GATE_ROWS.map(row => {
-      const item = row.probeId === null ? undefined : index.get(row.probeId);
-      const state_ = item === undefined ? probeState('') : probeState(item.status);
-      return RF.r7KvRow(
-        t(row.label),
-        item === undefined ? t('rf7.runGate.agentValue') : String(item.message ?? ''),
-        t(state_.key),
-        state_.tone);
+    // 汇总口径 = **显示出来的检查行**（total = 行数）⇒ 「N 项检查 · X 通过 · …」
+    // 永远加得起来；胶囊/底栏用的是同一个 `RF.probeGateSummary()`。
+    const summary = RF.probeGateSummary(report);
+    const rows = summary.rows.map(row => {
+      const conf = RF.PROBE_GATE_BUCKETS[row.bucket] ?? RF.PROBE_GATE_BUCKETS.unset;
+      const detail = row.detail === null
+        ? ''
+        : (row.detail.raw !== undefined ? row.detail.raw : t(row.detail.key, row.detail.params));
+      const value = detail === '' ? row.message : `${row.message} · ${detail}`;
+      return RF.r7KvRow(t(row.labelKey), value, t(conf.key), conf.tone);
     });
-    const covered = new Set(RUN_GATE_ROWS.map(row => row.probeId).filter(Boolean));
-    for (const item of items) {
-      const id = String(item?.id ?? '');
-      if (covered.has(id)) continue;
-      const state_ = probeState(item.status);
-      rows.push(RF.r7KvRow(
-        t(`rf7.runGate.check.${id}`),
-        String(item.message ?? ''),
-        t(state_.key),
-        state_.tone));
-    }
 
     const positionCard = (key, titleKey, subKey, facts, value) => h(RF.ui.Card, {
       state: position === value ? 'selected' : 'default',
@@ -5614,18 +5761,24 @@ body[data-ds-dark-theme] .rf-root {
         h('div', { className: `${RF.CLS}-row` },
           h('div', { className: `${RF.CLS}-row__main` },
             h('div', { className: `${RF.CLS}-row__title` }, t('rf7.runGate.summaryTitle')),
-            h('div', { className: `${RF.CLS}-row__sub` }, t('rf7.runGate.summaryMeta', {
-              total: items.length,
-              passed,
-              warned,
-              unconfigured,
-            }))),
+            h('div', { className: `${RF.CLS}-row__sub` }, !probed
+              ? t(loading ? 'rf7.runGate.probingMeta' : 'rf7.runGate.pendingMeta')
+              : t('rf7.runGate.summaryMeta', {
+                total: summary.total,
+                passed: summary.passed,
+                failed: summary.failed,
+                warned: summary.warned,
+                unconfigured: summary.unset,
+              }))),
           h(RF.ui.Button, {
-            label: t('rf7.runGate.actRerun'),
+            label: probed ? t('rf7.runGate.actRerun') : t('rf7.runGate.actStart'),
             variant: 'secondary',
-            onClick: () => state.reloadProbe(),
+            // ⚠️ 没选执行位置就没有探测范围 ⇒ 按钮禁用并说清缺什么（不做死按钮）。
+            disabled: !probed && position === '',
+            title: !probed && position === '' ? t('rf7.runGate.pendingHint') : undefined,
+            onClick: () => (probed ? state.reloadProbe() : state.startProbe()),
           })),
-        RF.r7Track(items.length === 0 ? 0 : passed / items.length)),
+        RF.r7Track(probed && summary.total > 0 ? summary.passed / summary.total : 0)),
       RF.r7SectionHead(t('rf7.runGate.sectionPosition'), t('rf7.runGate.sectionPositionSub')),
       h('div', { className: `${RF.CLS}-grid ${RF.CLS}-grid--two` },
         positionCard('local', 'rf7.runGate.localTitle', 'rf7.runGate.localSub', [
@@ -5636,8 +5789,24 @@ body[data-ds-dark-theme] .rf-root {
           { key: 'rf7.runGate.cloudFact1' },
           { key: 'rf7.runGate.cloudFact2' },
         ], 'cloud')),
-      RF.r7SectionHead(t('rf7.runGate.sectionChecks')),
-      h(RF.ui.Card, null, ...rows),
+      // 结果属于另一个执行位置 ⇒ 说清楚，别让用户以为这就是当前这份环境的结论。
+      probed && probedPosition !== '' && position !== '' && probedPosition !== position
+        ? RF.r7Notice(t('rf7.runGate.staleTitle'), t('rf7.runGate.staleHint'))
+        : null,
+      RF.r7SectionHead(t('rf7.runGate.sectionChecks'), probed ? undefined : t('rf7.runGate.pendingHint')),
+      // ⚠️ **没探测过就不铺清单**：一行行「未配置」是编出来的内容（数据纪律 §3）。
+      probed
+        ? h(RF.ui.Card, null, ...rows)
+        : h(RF.ui.Card, null, RF.r7Notice(
+          probeError !== '' ? probeError : t('rf7.runGate.pendingTitle'),
+          t('rf7.runGate.pendingHint'))),
+      // 「Agent 运行时」是**宿主自带的事实**，不是检查项（没有探测项）⇒
+      // 放在检查清单**外面**单独一行，不计入「N 项检查」。
+      h(RF.ui.Card, null, RF.r7KvRow(
+        t('rf7.runGate.checkAgent'),
+        t('rf7.runGate.agentValue'),
+        t('rf7.runGate.builtin'),
+        'muted')),
       RF.r7Notice(t('rf7.runGate.noticeMain'), t('rf7.runGate.noticeSub')),
       // ── 屏间入口 ──
       // 「服务配置」与 RunGate 同源（IC SettingsPage.jsx）；「查看失败清单」是规范板
@@ -6271,13 +6440,22 @@ body[data-ds-dark-theme] .rf-root {
 
     // ── 探测数据（启动检查 / 降级两屏用）──
     // ⚠️ 这里**不用** `useCallback`：客户端测试用的最小 hook 运行时没有它。
-    const loadProbe = (refresh) => {
+    //
+    // ⚠️ **探测不自动跑**（IA「首次进入」：用户选 local/cloud + 完成/跳过探测）：
+    // 探测范围是运行位置的函数（设计 §7.1）—— 没选位置就没有确定的范围。
+    // 进右栏就发探测请求 = 替用户选了一个范围（宿主默认 local），
+    // 界面还显示成「已经检过」⇒ 用户看到的不是他选的环境。
+    // 所以：**只有用户点了「开始检测」才探**。
+    const loadProbe = (refresh, position) => {
       if (typeof fetch !== 'function') {
         setProbe({ view: null, error: '当前环境没有 fetch，读不到探测结果' });
         return;
       }
       setProbeLoading(true);
-      fetch(RF.probeUrl({ refresh: refresh === true }))
+      fetch(RF.probeUrl({
+        refresh: refresh === true,
+        position: typeof position === 'string' && position !== '' ? position : undefined,
+      }))
         .then(response => response.json())
         .then(view => {
           setProbe({ view, error: null });
@@ -6288,14 +6466,6 @@ body[data-ds-dark-theme] .rf-root {
           setProbeLoading(false);
         });
     };
-
-    // 一进右栏就后台探测（不等用户跑到「启动检查」、更不等阶段跑完）。
-    const probeStartedRef = React.useRef(false);
-    React.useEffect(() => {
-      if (probeStartedRef.current) return;
-      probeStartedRef.current = true;
-      loadProbe(false);
-    }, []);
 
     // 服务配置（只读路由）：给 RF7 的「服务配置」屏提供读数。
     const capabilitiesStartedRef = React.useRef(false);
@@ -6373,7 +6543,26 @@ body[data-ds-dark-theme] .rf-root {
       goFlow,
       goTab,
       probe: probe === null ? null : { ...probe, loading: probeLoading },
-      reloadProbe: () => loadProbe(true),
+      /**
+       * 当前生效的运行位置（已写进项目的优先，没写就用界面上的选择）。
+       * @returns {string} `local` / `cloud` / `''`（还没选）。
+       */
+      probePosition: String(project.plan?.position || pendingPosition || ''),
+      /**
+       * 开始检测（走宿主缓存）。
+       * ⚠️ 没有位置就不发请求 —— 没有范围就没有事实。
+       */
+      startProbe: () => {
+        const position = String(project.plan?.position || pendingPosition || '');
+        if (position === '') return;
+        loadProbe(false, position);
+      },
+      /** 重跑检查（绕过宿主缓存强制重跑）。 */
+      reloadProbe: () => {
+        const position = String(project.plan?.position || pendingPosition || '');
+        if (position === '') return;
+        loadProbe(true, position);
+      },
       capabilities,
       /**
        * 导入小说：走 `reelforge.import_novel`（`novel` 是必填）。
@@ -6393,12 +6582,18 @@ body[data-ds-dark-theme] .rf-root {
        */
       choosePosition: (position) => {
         const kind = project.plan?.kind;
+        // 已经探过、而这次结果属于**另一个位置**（本地 9 项 / 云端 3 项）⇒
+        // 旧结果留着就是在骗人 ⇒ 立刻按新位置重探一次。
+        // 没探过（probe === null）⇒ 不探，等用户点「开始检测」。
+        const probedPosition = String(probe?.view?.position ?? '');
+        const stale = probe !== null && probedPosition !== '' && probedPosition !== position;
         if (typeof kind === 'string' && kind !== '') {
           RF.actions?.callTool?.(RF.TOOL_IDS.updatePlan, { kind, position });
+          if (stale) loadProbe(false, position);
           return;
         }
         setPendingPosition(position);
-        if (position === 'local') loadProbe(false);
+        if (stale) loadProbe(false, position);
       },
       /**
        * 选生成 kind（写进 `reelforge.update_plan`）。
@@ -6479,7 +6674,10 @@ body[data-ds-dark-theme] .rf-root {
       ? chrome.capsuleTone(project, t, chromeContext)
       : 'neutral';
     const chromeLabel = chrome.footerLabel(project, t);
-    const chromeValue = chrome.footerValue(project, t);
+    // ⚠️ **必须传 chromeContext**：RunGate 底栏要读探测结果（有几项没通过）、
+    // Picker 底栏要读已选张数 —— 漏传的话这两个底栏永远停在初值
+    //（RunGate 一直说「正在探测本机环境…」，Picker 一直说「已选 0 个」）。
+    const chromeValue = chrome.footerValue(project, t, chromeContext);
     const chromeDisabled = chromeAction.disabled === true || chromeAction.kind === 'none';
     const chromeHintKey = chromeAction.hintKey ?? chrome.disabledHintKey;
 

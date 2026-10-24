@@ -2,7 +2,7 @@
 
 > **状态：全流程 18 板完成（暗 + 亮）** —— FigCraft 主稿已出 `RF7/Dark` · `RF7/Light` · `RF7/Components` 三页；
 > 出稿 **72 件**（18 板 × 2 主题 × PNG/SVG）+ 组件表 2 件；`check-svg.mjs` **37/37 全绿**。
-> **未改** `src/client/`（仍是旧 v4/v6 实现，等签字）。
+> **`src/client/` 已按 RF7 对齐**（`Workbench` · `flow.js` · `tabs.js` · `chrome.js` · `rf7.js`）；映射见 `docs/UI设计与代码一致性.md` §4。
 > 流程参照 [infinite-creation](https://github.com/SwotAtmk/infinite-creation)；**美术 100% 原创**。
 
 ## 1. 18 张是怎么定出来的（先看这条）
@@ -96,12 +96,12 @@
 - 字体统一用 **Noto Sans SC**（本机没装 Inter），代码阶段按宿主字体栈再映射。
 - 板内**不使用实例化复用**，统一普通 frame + 令牌绑定（规避 headless 管线里实例覆写的高风险）；11 个真组件集中在 `RF7/Components` 页。
 - 缩略图/播放器是**占位块**（真实素材在代码阶段接 ComfyUI 输出），只定版式不画内容。
-- `src/client/` **未动**：`docs/UI设计与代码一致性.md` 的映射表等签字后再更新。
+- 代码侧已接 RF7 壳层与 18 屏路由；实机像素级对齐仍靠你签字后逐屏走查。
 
 ## 8. 评审结论（请你填）
 
 | 日期 | 结论 | 备注 |
 | --- | --- | --- |
-| | ☐ 通过全部 ☐ 修改 IA ☐ 修改 STYLE ☐ 重做某板（板号：____） | |
+| 2026-10-24 | ☐ 通过全部 ☐ 修改 IA ☐ 修改 STYLE ☐ 重做某板 | 设计 18 板齐；代码已映射，待实机签字 |
 
-通过后：更新 `docs/UI设计与代码一致性.md` 映射表 → 再动 `src/client/`。
+通过后：走 `npm run build:client:dsh` + DSH 实机按 §3 评审路径验收。

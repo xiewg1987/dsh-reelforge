@@ -81,6 +81,171 @@
     return '/api/reelforge.capabilities';
   };
 
+  /* ───────────────────────────────────────────────────────────────────────────
+   * 启动检查的「检查行模型」（RF7 板 01）
+   *
+   * ## 为什么要一份模型，而不是两个文件各算一遍
+   *
+   * 启动检查的行同时出现在三处：屏内清单、顶部胶囊、底栏。
+   * 三处各算一次 ⇒ 迟早对不上（胶囊写「6 / 9 通过」，屏里写「6 项检查」），
+   * 用户一眼就看出面板在编数字。所以行模型与汇总**只有这一份**。
+   *
+   * ## 三条硬规矩
+   *
+   * 1. **「ComfyUI-Kernel 版本」不单列**：它和「ComfyUI 服务」是**同一份数据**
+   *    （一次 `systemStats` 调用读出的 `comfy_kitchen_version`），拆成两行 =
+   *    同一个故障报两遍。结论并进 ComfyUI 那行，状态取更差的那个。
+   * 2. **「Agent 运行时」不是检查项**：它没有探测项，是宿主自带的事实 ⇒
+   *    屏内单独一行说明，**不计入**「N 项检查」。
+   * 3. **范围随运行位置变**：云端档只列云端相关的行（本地专属行在云端是
+   *    「不适用」，不是「没配置」）。
+   * ─────────────────────────────────────────────────────────────────────────── */
+
+  /**
+   * 检查行清单：固定行（行首 id + 并入同一行的探测项 + 文案词条键）。
+   *
+   * `merge` = 与本行**同一份数据**的探测项，结论并进本行，不单列。
+   *
+   * @type {ReadonlyArray<{ probeId: string, labelKey: string, merge: ReadonlyArray<string> }>}
+   */
+  RF.PROBE_GATE_ROWS = Object.freeze([
+    Object.freeze({ probeId: 'comfy', labelKey: 'rf7.runGate.checkComfy', merge: Object.freeze(['ckVersion']) }),
+    Object.freeze({ probeId: 'llm', labelKey: 'rf7.runGate.checkLlm', merge: Object.freeze([]) }),
+    Object.freeze({ probeId: 'ffmpeg', labelKey: 'rf7.runGate.checkFfmpeg', merge: Object.freeze([]) }),
+    Object.freeze({ probeId: 'disk', labelKey: 'rf7.runGate.checkDisk', merge: Object.freeze([]) }),
+    Object.freeze({ probeId: 'vram', labelKey: 'rf7.runGate.checkVram', merge: Object.freeze([]) }),
+    Object.freeze({ probeId: 'provider', labelKey: 'rf7.runGate.checkCloud', merge: Object.freeze([]) }),
+  ]);
+
+  /**
+   * 状态桶 → 展示词条键 + 色调。
+   *
+   * @type {Readonly<Record<string, { key: string, tone: string }>>}
+   */
+  RF.PROBE_GATE_BUCKETS = Object.freeze({
+    ok: Object.freeze({ key: 'rf7.runGate.pass', tone: 'ok' }),
+    warn: Object.freeze({ key: 'rf7.runGate.warn', tone: 'warn' }),
+    failed: Object.freeze({ key: 'rf7.runGate.fail', tone: 'error' }),
+    unset: Object.freeze({ key: 'rf7.runGate.unconfigured', tone: 'muted' }),
+  });
+
+  /**
+   * 机器状态 → 状态桶。
+   * @param {unknown} status - 机器状态。
+   * @returns {string} 状态桶（ok / warn / failed / unset）。
+   */
+  RF.probeGateBucket = function probeGateBucket(status) {
+    const raw = String(status ?? '');
+    if (raw === 'ok' || raw === 'warn' || raw === 'failed') return raw;
+    return 'unset';
+  };
+
+  /**
+   * 取更差的桶（unset < ok < warn < failed）。
+   * @param {string} a - 桶 A。
+   * @param {string} b - 桶 B。
+   * @returns {string} 更差的桶。
+   */
+  RF.probeGateWorse = function probeGateWorse(a, b) {
+    const order = ['unset', 'ok', 'warn', 'failed'];
+    const left = order.indexOf(a);
+    const right = order.indexOf(b);
+    return left >= right ? a : b;
+  };
+
+  /**
+   * CK（ComfyUI-Kernel）版本的结论 → 词条键 + 参数。
+   *
+   * 成功时探测项的 `message` 只是 `'ok'`（没有信息量），所以成功路径用
+   * `value`（版本号）自己拼；失败路径用词条把「低于门槛」说清楚。
+   *
+   * @param {object} part - ckVersion 探测项。
+   * @returns {{ key: string, params: object } | { raw: string }} 描述。
+   */
+  RF.probeGateKernelDetail = function probeGateKernelDetail(part) {
+    const version = String(part?.value ?? '').trim();
+    const min = String(part?.min ?? '').trim();
+    if (RF.probeGateBucket(part?.status) === 'ok') {
+      return { key: 'rf7.runGate.kernelOk', params: { version } };
+    }
+    if (version === '') return { key: 'rf7.runGate.kernelMissing', params: {} };
+    if (min !== '') return { key: 'rf7.runGate.kernelFail', params: { version, min } };
+    // 门槛值没随报告带回来（老宿主）⇒ 用探测项自己的话，不自己编门槛。
+    return { raw: String(part?.message ?? '') };
+  };
+
+  /**
+   * 探测报告 → 检查行。
+   *
+   * @param {object} report - 探测报告（`report.items`）。
+   * @returns {Array<{ id: string, labelKey: string, bucket: string, message: string, detail: object|null }>} 行。
+   */
+  RF.probeGateRows = function probeGateRows(report) {
+    const items = Array.isArray(report?.items) ? report.items : [];
+    const index = new Map(items.map(item => [String(item?.id ?? ''), item]));
+    const inScope = new Set(index.keys());
+    const rows = [];
+    const covered = new Set();
+
+    for (const spec of RF.PROBE_GATE_ROWS) {
+      const ids = [spec.probeId, ...spec.merge];
+      // 整个行都不在本次探测范围内 ⇒ 不显示（云端档不列本地专属行）。
+      if (!ids.some(id => inScope.has(id))) continue;
+      for (const id of ids) covered.add(id);
+      const parts = ids.map(id => index.get(id)).filter(part => part !== undefined);
+      const bucket = parts.reduce(
+        (worst, part) => RF.probeGateWorse(worst, RF.probeGateBucket(part?.status)),
+        'unset',
+      );
+      const primary = index.get(spec.probeId);
+      // 并入项（CK 版本）的结论挂到 detail ⇒ 屏内渲染时拼进同一行的值里。
+      const merged = ids.length > 1 ? index.get(spec.merge[0]) : undefined;
+      rows.push({
+        id: spec.probeId,
+        labelKey: spec.labelKey,
+        bucket,
+        message: String(primary?.message ?? ''),
+        detail: merged === undefined ? null : RF.probeGateKernelDetail(merged),
+      });
+    }
+
+    // 探测到但固定行没覆盖的项 ⇒ **追加显示**，不许藏起来。
+    for (const item of items) {
+      const id = String(item?.id ?? '');
+      if (covered.has(id)) continue;
+      rows.push({
+        id,
+        labelKey: `rf7.runGate.check.${id}`,
+        bucket: RF.probeGateBucket(item?.status),
+        message: String(item?.message ?? ''),
+        detail: null,
+      });
+    }
+    return rows;
+  };
+
+  /**
+   * 探测报告 → 汇总（口径 = **显示出来的检查行**）。
+   *
+   * ⚠️ total = 行数，所以「N 项检查 · X 通过 · Y 未通过 · Z 警告 · W 未配置」
+   *    永远加得起来（每行恰好一个桶）。
+   *
+   * @param {object} report - 探测报告。
+   * @returns {{ rows: Array<object>, total: number, passed: number, failed: number, warned: number, unset: number }} 汇总。
+   */
+  RF.probeGateSummary = function probeGateSummary(report) {
+    const rows = RF.probeGateRows(report);
+    const count = bucket => rows.filter(row => row.bucket === bucket).length;
+    return {
+      rows,
+      total: rows.length,
+      passed: count('ok'),
+      failed: count('failed'),
+      warned: count('warn'),
+      unset: count('unset'),
+    };
+  };
+
   /**
    * 会话指令的请求 id。
    *

@@ -17,49 +17,15 @@
   'use strict';
 
   /**
-   * 启动检查的 7 行清单（RF7 板 01）。
+   * 启动检查的检查行清单与状态桶**不在这里定义** —— 胶囊/底栏（`chrome.js`）
+   * 要用同一份口径，否则两边的数字会对不上。
+   * 统一放在共享层：`RF.PROBE_GATE_ROWS` / `RF.probeGateRows()` / `RF.probeGateSummary()`。
    *
-   * `probeId` = 对应宿主探测项 id（`src/core/probe.js` 的 `PROBE_IDS`）；
-   * `null` = 这一行**没有对应的探测项**（Agent 运行时是宿主自己，不是被探测的对象）。
-   *
-   * @type {Array<{ probeId: string | null, label: string }>}
+   * 三条规矩（详见 `src/client/shared.js`）：
+   * 1. 「ComfyUI-Kernel 版本」并进「ComfyUI 服务」行（同一份 `systemStats` 数据）；
+   * 2. 「Agent 运行时」不是检查项 ⇒ 屏内单独一行说明，不计入「N 项检查」；
+   * 3. 行清单随探测范围变（云端档不列本地专属行）。
    */
-  const RUN_GATE_ROWS = [
-    { probeId: 'comfy', label: 'rf7.runGate.checkComfy' },
-    { probeId: 'llm', label: 'rf7.runGate.checkLlm' },
-    { probeId: null, label: 'rf7.runGate.checkAgent' },
-    { probeId: 'ffmpeg', label: 'rf7.runGate.checkFfmpeg' },
-    { probeId: 'disk', label: 'rf7.runGate.checkDisk' },
-    { probeId: 'vram', label: 'rf7.runGate.checkVram' },
-    { probeId: 'provider', label: 'rf7.runGate.checkCloud' },
-  ];
-
-  /**
-   * 探测项状态 → 展示词条键 + 色调。
-   *
-   * @param {string} status - 机器状态（ok / warn / failed）。
-   * @returns {{ key: string, tone: string }} 展示信息。
-   */
-  function probeState(status) {
-    const raw = String(status ?? '');
-    if (raw === 'ok') return { key: 'rf7.runGate.pass', tone: 'ok' };
-    if (raw === 'warn') return { key: 'rf7.runGate.warn', tone: 'warn' };
-    if (raw === 'failed') return { key: 'rf7.runGate.fail', tone: 'error' };
-    return { key: 'rf7.runGate.unconfigured', tone: 'muted' };
-  }
-
-  /**
-   * 探测项 → 按 id 索引。
-   *
-   * @param {object} state - 屏状态。
-   * @returns {Map<string, object>} id → 探测项。
-   */
-  function probeIndex(state) {
-    const items = Array.isArray(state?.probe?.view?.report?.items)
-      ? state.probe.view.report.items
-      : [];
-    return new Map(items.map(item => [String(item?.id ?? ''), item]));
-  }
 
   // ══════════════════════════════════════════════════════════════
   // 01 启动检查（RunGate）—— 环境门，冷启动首屏
@@ -68,39 +34,29 @@
   RF.flowRunGate = function flowRunGate(props) {
     const t = props.t;
     const state = props.state;
-    const index = probeIndex(state);
-    const items = Array.isArray(state.probe?.view?.report?.items)
-      ? state.probe.view.report.items
-      : [];
-    const position = String(props.project?.runPosition ?? state.pendingPosition ?? '');
+    const view = state.probe?.view ?? null;
+    const report = view?.report ?? null;
+    const items = Array.isArray(report?.items) ? report.items : [];
+    // ⚠️ 用 `||` 不用 `??`：投影里 `runPosition` 是**空字符串**而不是 undefined，
+    // `??` 不会往下走 ⇒ 界面刚选的位置永远不亮（已提交的位置优先，没提交才用界面选择）。
+    const position = String(props.project?.runPosition || state.pendingPosition || '');
+    const probed = items.length > 0;
+    const probeError = String(state.probe?.error ?? '');
+    const loading = state.probe?.loading === true;
+    // 这一份结果是**哪个位置**探出来的（宿主回传）。
+    const probedPosition = String(view?.position ?? '');
 
-    const count = status => items.filter(item => String(item?.status ?? '') === status).length;
-    const passed = count('ok');
-    const warned = count('warn');
-    const failed = count('failed');
-    const unconfigured = items.length - passed - warned - failed;
-
-    // 7 行清单（设计稿固定 7 行）+ 探测到但没被这 7 行覆盖的项（不许藏起来）。
-    const rows = RUN_GATE_ROWS.map(row => {
-      const item = row.probeId === null ? undefined : index.get(row.probeId);
-      const state_ = item === undefined ? probeState('') : probeState(item.status);
-      return RF.r7KvRow(
-        t(row.label),
-        item === undefined ? t('rf7.runGate.agentValue') : String(item.message ?? ''),
-        t(state_.key),
-        state_.tone);
+    // 汇总口径 = **显示出来的检查行**（total = 行数）⇒ 「N 项检查 · X 通过 · …」
+    // 永远加得起来；胶囊/底栏用的是同一个 `RF.probeGateSummary()`。
+    const summary = RF.probeGateSummary(report);
+    const rows = summary.rows.map(row => {
+      const conf = RF.PROBE_GATE_BUCKETS[row.bucket] ?? RF.PROBE_GATE_BUCKETS.unset;
+      const detail = row.detail === null
+        ? ''
+        : (row.detail.raw !== undefined ? row.detail.raw : t(row.detail.key, row.detail.params));
+      const value = detail === '' ? row.message : `${row.message} · ${detail}`;
+      return RF.r7KvRow(t(row.labelKey), value, t(conf.key), conf.tone);
     });
-    const covered = new Set(RUN_GATE_ROWS.map(row => row.probeId).filter(Boolean));
-    for (const item of items) {
-      const id = String(item?.id ?? '');
-      if (covered.has(id)) continue;
-      const state_ = probeState(item.status);
-      rows.push(RF.r7KvRow(
-        t(`rf7.runGate.check.${id}`),
-        String(item.message ?? ''),
-        t(state_.key),
-        state_.tone));
-    }
 
     const positionCard = (key, titleKey, subKey, facts, value) => h(RF.ui.Card, {
       state: position === value ? 'selected' : 'default',
@@ -117,18 +73,24 @@
         h('div', { className: `${RF.CLS}-row` },
           h('div', { className: `${RF.CLS}-row__main` },
             h('div', { className: `${RF.CLS}-row__title` }, t('rf7.runGate.summaryTitle')),
-            h('div', { className: `${RF.CLS}-row__sub` }, t('rf7.runGate.summaryMeta', {
-              total: items.length,
-              passed,
-              warned,
-              unconfigured,
-            }))),
+            h('div', { className: `${RF.CLS}-row__sub` }, !probed
+              ? t(loading ? 'rf7.runGate.probingMeta' : 'rf7.runGate.pendingMeta')
+              : t('rf7.runGate.summaryMeta', {
+                total: summary.total,
+                passed: summary.passed,
+                failed: summary.failed,
+                warned: summary.warned,
+                unconfigured: summary.unset,
+              }))),
           h(RF.ui.Button, {
-            label: t('rf7.runGate.actRerun'),
+            label: probed ? t('rf7.runGate.actRerun') : t('rf7.runGate.actStart'),
             variant: 'secondary',
-            onClick: () => state.reloadProbe(),
+            // ⚠️ 没选执行位置就没有探测范围 ⇒ 按钮禁用并说清缺什么（不做死按钮）。
+            disabled: !probed && position === '',
+            title: !probed && position === '' ? t('rf7.runGate.pendingHint') : undefined,
+            onClick: () => (probed ? state.reloadProbe() : state.startProbe()),
           })),
-        RF.r7Track(items.length === 0 ? 0 : passed / items.length)),
+        RF.r7Track(probed && summary.total > 0 ? summary.passed / summary.total : 0)),
       RF.r7SectionHead(t('rf7.runGate.sectionPosition'), t('rf7.runGate.sectionPositionSub')),
       h('div', { className: `${RF.CLS}-grid ${RF.CLS}-grid--two` },
         positionCard('local', 'rf7.runGate.localTitle', 'rf7.runGate.localSub', [
@@ -139,8 +101,24 @@
           { key: 'rf7.runGate.cloudFact1' },
           { key: 'rf7.runGate.cloudFact2' },
         ], 'cloud')),
-      RF.r7SectionHead(t('rf7.runGate.sectionChecks')),
-      h(RF.ui.Card, null, ...rows),
+      // 结果属于另一个执行位置 ⇒ 说清楚，别让用户以为这就是当前这份环境的结论。
+      probed && probedPosition !== '' && position !== '' && probedPosition !== position
+        ? RF.r7Notice(t('rf7.runGate.staleTitle'), t('rf7.runGate.staleHint'))
+        : null,
+      RF.r7SectionHead(t('rf7.runGate.sectionChecks'), probed ? undefined : t('rf7.runGate.pendingHint')),
+      // ⚠️ **没探测过就不铺清单**：一行行「未配置」是编出来的内容（数据纪律 §3）。
+      probed
+        ? h(RF.ui.Card, null, ...rows)
+        : h(RF.ui.Card, null, RF.r7Notice(
+          probeError !== '' ? probeError : t('rf7.runGate.pendingTitle'),
+          t('rf7.runGate.pendingHint'))),
+      // 「Agent 运行时」是**宿主自带的事实**，不是检查项（没有探测项）⇒
+      // 放在检查清单**外面**单独一行，不计入「N 项检查」。
+      h(RF.ui.Card, null, RF.r7KvRow(
+        t('rf7.runGate.checkAgent'),
+        t('rf7.runGate.agentValue'),
+        t('rf7.runGate.builtin'),
+        'muted')),
       RF.r7Notice(t('rf7.runGate.noticeMain'), t('rf7.runGate.noticeSub')),
       // ── 屏间入口 ──
       // 「服务配置」与 RunGate 同源（IC SettingsPage.jsx）；「查看失败清单」是规范板

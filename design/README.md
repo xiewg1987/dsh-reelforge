@@ -43,4 +43,4 @@
 
 ## 与代码的关系
 
-当前 `src/client/` 仍是旧 v4/v6 实现，**在 RF7 评审通过前视为过期 UI**，不以实机为准。
+`src/client/workbench/**` 已按 RF7 实现；**FigCraft 仍为视觉真源**，实机对照 `design/dark/*.png` 走查。

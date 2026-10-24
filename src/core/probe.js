@@ -291,7 +291,9 @@ export async function probeCapabilities({ position, provider, deps = {}, now = (
       comfyStats?.system?.kitchen_version ??
       null;
     const result = compareCkVersion(version);
-    add('ckVersion', result.ok ? 'ok' : 'failed', result.reason, { value: version ?? null });
+    // ⚠️ `min`（门槛值）随项带出来：客户端要把 CK 版本并进「ComfyUI 服务」那一行，
+    //    门槛值得跟着报告走 —— 客户端拿不到 `CK_MIN_VERSION`（客户端片段不引核心模块）。
+    add('ckVersion', result.ok ? 'ok' : 'failed', result.reason, { value: version ?? null, min: result.min });
   }
 
   if (scope.includes('vram')) {

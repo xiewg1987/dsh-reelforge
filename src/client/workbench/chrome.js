@@ -144,22 +144,24 @@
   }
 
   /**
-   * 探测结果里的检查项（RF7 RunGate 的 7 行清单的数据源）。
+   * 探测结果的汇总（RF7 RunGate 的检查行模型）。
+   *
+   * ⚠️ 口径必须和屏内清单**完全一致**（同一个 `RF.probeGateSummary()`）——
+   *    两边各算一次 ⇒ 胶囊写「6 / 9 通过」、屏里写「6 项检查」，用户一眼看出在编数字。
    *
    * @param {object} context - 屏外数据上下文。
-   * @returns {{ items: Array<object>, passed: number, warned: number, failed: number, total: number }} 汇总。
+   * @returns {{ rows: Array<object>, passed: number, warned: number, failed: number, unset: number, total: number }} 汇总。
    */
   function probeSummary(context) {
-    const items = Array.isArray(context?.probe?.view?.report?.items)
-      ? context.probe.view.report.items
-      : [];
-    const count = status => items.filter(item => String(item?.status ?? '') === status).length;
+    const report = context?.probe?.view?.report ?? null;
+    const summary = RF.probeGateSummary(report);
     return {
-      items,
-      passed: count('ok'),
-      warned: count('warn'),
-      failed: count('failed'),
-      total: items.length,
+      rows: summary.rows,
+      passed: summary.passed,
+      warned: summary.warned,
+      failed: summary.failed,
+      unset: summary.unset,
+      total: summary.total,
     };
   }
 

@@ -109,13 +109,22 @@
 
     // ── 探测数据（启动检查 / 降级两屏用）──
     // ⚠️ 这里**不用** `useCallback`：客户端测试用的最小 hook 运行时没有它。
-    const loadProbe = (refresh) => {
+    //
+    // ⚠️ **探测不自动跑**（IA「首次进入」：用户选 local/cloud + 完成/跳过探测）：
+    // 探测范围是运行位置的函数（设计 §7.1）—— 没选位置就没有确定的范围。
+    // 进右栏就发探测请求 = 替用户选了一个范围（宿主默认 local），
+    // 界面还显示成「已经检过」⇒ 用户看到的不是他选的环境。
+    // 所以：**只有用户点了「开始检测」才探**。
+    const loadProbe = (refresh, position) => {
       if (typeof fetch !== 'function') {
         setProbe({ view: null, error: '当前环境没有 fetch，读不到探测结果' });
         return;
       }
       setProbeLoading(true);
-      fetch(RF.probeUrl({ refresh: refresh === true }))
+      fetch(RF.probeUrl({
+        refresh: refresh === true,
+        position: typeof position === 'string' && position !== '' ? position : undefined,
+      }))
         .then(response => response.json())
         .then(view => {
           setProbe({ view, error: null });
@@ -126,14 +135,6 @@
           setProbeLoading(false);
         });
     };
-
-    // 一进右栏就后台探测（不等用户跑到「启动检查」、更不等阶段跑完）。
-    const probeStartedRef = React.useRef(false);
-    React.useEffect(() => {
-      if (probeStartedRef.current) return;
-      probeStartedRef.current = true;
-      loadProbe(false);
-    }, []);
 
     // 服务配置（只读路由）：给 RF7 的「服务配置」屏提供读数。
     const capabilitiesStartedRef = React.useRef(false);
@@ -211,7 +212,26 @@
       goFlow,
       goTab,
       probe: probe === null ? null : { ...probe, loading: probeLoading },
-      reloadProbe: () => loadProbe(true),
+      /**
+       * 当前生效的运行位置（已写进项目的优先，没写就用界面上的选择）。
+       * @returns {string} `local` / `cloud` / `''`（还没选）。
+       */
+      probePosition: String(project.plan?.position || pendingPosition || ''),
+      /**
+       * 开始检测（走宿主缓存）。
+       * ⚠️ 没有位置就不发请求 —— 没有范围就没有事实。
+       */
+      startProbe: () => {
+        const position = String(project.plan?.position || pendingPosition || '');
+        if (position === '') return;
+        loadProbe(false, position);
+      },
+      /** 重跑检查（绕过宿主缓存强制重跑）。 */
+      reloadProbe: () => {
+        const position = String(project.plan?.position || pendingPosition || '');
+        if (position === '') return;
+        loadProbe(true, position);
+      },
       capabilities,
       /**
        * 导入小说：走 `reelforge.import_novel`（`novel` 是必填）。
@@ -231,12 +251,18 @@
        */
       choosePosition: (position) => {
         const kind = project.plan?.kind;
+        // 已经探过、而这次结果属于**另一个位置**（本地 9 项 / 云端 3 项）⇒
+        // 旧结果留着就是在骗人 ⇒ 立刻按新位置重探一次。
+        // 没探过（probe === null）⇒ 不探，等用户点「开始检测」。
+        const probedPosition = String(probe?.view?.position ?? '');
+        const stale = probe !== null && probedPosition !== '' && probedPosition !== position;
         if (typeof kind === 'string' && kind !== '') {
           RF.actions?.callTool?.(RF.TOOL_IDS.updatePlan, { kind, position });
+          if (stale) loadProbe(false, position);
           return;
         }
         setPendingPosition(position);
-        if (position === 'local') loadProbe(false);
+        if (stale) loadProbe(false, position);
       },
       /**
        * 选生成 kind（写进 `reelforge.update_plan`）。
@@ -317,7 +343,10 @@
       ? chrome.capsuleTone(project, t, chromeContext)
       : 'neutral';
     const chromeLabel = chrome.footerLabel(project, t);
-    const chromeValue = chrome.footerValue(project, t);
+    // ⚠️ **必须传 chromeContext**：RunGate 底栏要读探测结果（有几项没通过）、
+    // Picker 底栏要读已选张数 —— 漏传的话这两个底栏永远停在初值
+    //（RunGate 一直说「正在探测本机环境…」，Picker 一直说「已选 0 个」）。
+    const chromeValue = chrome.footerValue(project, t, chromeContext);
     const chromeDisabled = chromeAction.disabled === true || chromeAction.kind === 'none';
     const chromeHintKey = chromeAction.hintKey ?? chrome.disabledHintKey;
 
