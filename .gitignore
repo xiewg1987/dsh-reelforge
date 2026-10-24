@@ -11,9 +11,19 @@ pnpm-lock.yaml
 # `npm pack` 产出的包（local-reelforge-<version>.tgz）
 *.tgz
 
-# ── 本地设计 / 参考图（不进 GitHub）─────────────────────────────
-design/
+# ── 本地参考图（不进 GitHub）───────────────────────────────────
 references/
+
+# ── 设计稿（2026-10-24 起进 Git）──────────────────────────────
+#   design/ 是 RF7 设计的真源，拆四层：
+#     · _tools/              —— 可版本化的建稿脚本（真源，改它就重出全套）
+#     · *.md                 —— 流程对照 / 信息架构 / 风格规范 / 评审稿
+#     · ReelForge-RF7.figcraft —— FigCraft 主稿（脚本产物，可在 FigCraft 里继续手改）
+#     · dark|light|components/ —— 18 板逐帧出稿（评审 + 实现对照用）
+#   只有 _archive/（本地快照堆）和 _tmp/（渲染临时物）留在本地，不进仓库。
+design/_archive/
+design/_tmp/
+design/_tools/.build-ok
 
 # docs/ 下**只跟踪「开发任务/」**——
 #   验收门禁（scripts/verify-acceptance.mjs）硬依赖它，缺了就必红：
@@ -29,9 +39,6 @@ references/
 docs/*
 !docs/开发任务/
 docs/开发任务/reports/
-
-# design/_tmp 是渲染工具的临时输出（已在 design/ 忽略范围内）
-design/_tmp/
 
 # exports/ 是端到端测试把「工作区」指向仓库根时产出的交付物
 # （ch01.mp4 / ch01.srt / ch01_分镜表.html / ch01_分镜表.jpg / 参考图包.zip …）。

@@ -9,9 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **仓库瘦身**：`design/`、`docs/`、`references/` 改为 `.gitignore`，仅本地保留；GitHub 远程不再跟踪设计稿、任务书与第三方参考图。`npm pack` 不再包含 `docs/**`。
+- **仓库瘦身（2026-10-24 修订）**：`docs/`、`references/` 仍走 `.gitignore`，仅本地保留；**`design/` 改为纳入 Git** ——
+  RF7 设计真源（`_tools/` 建稿脚本 + FigCraft 主稿 + 流程/架构/风格/评审文档）与 **18 板暗/亮出稿**（74 件 PNG/SVG）同仓，
+  评审意见可直接对着图提、改动可 diff。`npm pack` 不再包含 `docs/**`，`design/` 同样不在 `files` 里，不进 npm 包。
 
 ### Added
+
+- **RF7 全流程设计稿（18 板 × 暗/亮）**：参照 [infinite-creation](https://github.com/SwotAtmk/infinite-creation) 的
+  **流程与能力契约**（12 个 IC 真实页面 → 18 张板，逐条来源见 `design/REF-flow-infinite-creation.md`），
+  **美术 100% 原创**，在 ArtCraft 的 FigCraft 里**确定性排版**产出，不用扩散模型画 UI ——
+  - 建稿脚本是真源（`design/_tools/build-rf7.mjs`），14 个令牌变量 + Dark/Light 双模式派生亮稿，11 个真组件，主稿 3984 节点；
+  - 全流程覆盖：启动检查 → 新建项目 → 章节 → 素材 → 上下文 → 生成执行 → 分镜 → 分镜详情 → 背景音乐 → 成片 →
+    枢纽 → 日志 → 技能与工作流 → 服务配置 → 项目设置 + 对话行 / 降级与失败 / 素材选择器三块规范板；
+  - 暗/亮各 18 板 PNG + SVG（560×900），`check-svg.mjs` 对 37 件出稿校验（尺寸 / 禁 opacity / 颜色白名单）全绿；
+  - **`src/client/` 未改**，等评审签字后才动实现。
 
 - **T5 收尾（A4 / A19 / A27）**：四档宽度渲染断言；`/api/reelforge.file` 交付物播放与下载；`update_plan` 写入 `workflowAnalysis` 并在上下文页展示 diagnostics。
 - **对话输入截获（§10.5）**：用户在 DSH 输入框里敲的原文，由宿主在 Agent 收到 prompt 前触发的

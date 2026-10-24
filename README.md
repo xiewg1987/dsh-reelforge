@@ -36,9 +36,9 @@ T1–T5 共 **116** 条验收项（`npm run verify:acceptance`）：
 
 ## 界面预览
 
-GitHub **不包含** `design/`、`references/`（仅本地保留，见 `.gitignore`）；`docs/开发任务/` **已纳入 Git**（验收门禁硬依赖它：不跟踪 ⇒ 干净 clone 上 `npm run verify:all` 直接退出码 2）。
+GitHub **包含** `design/`（RF7 设计真源 + 18 板暗/亮出稿）与 `docs/开发任务/`（验收门禁硬依赖它：不跟踪 ⇒ 干净 clone 上 `npm run verify:all` 直接退出码 2）；`references/`（第三方 UI 参考图）仅本地保留，见 `.gitignore`。
 
-- **设计稿**（非运行截图）：本地打开 `design/01-RF-Workbench.svg`（17 张界面 + 2 张架构图；FigCraft 源文件同目录）。
+- **设计稿**（非运行截图）：`design/dark/` 与 `design/light/` 各 **18 张**（560×900，PNG + SVG）+ `design/components/RF-Components.png`（组件表）。FigCraft 主稿 `design/ReelForge-RF7.figcraft`，建稿脚本 `design/_tools/build-rf7.mjs`（脚本是真源，改它重出全套）。
 - **实机观察记录**：`docs/开发任务/实机/dsh-0.2.1-alpha.1.md`（在 Git 里 —— 门禁按每条验收项声明的「必须出现的事实」逐条核对它）。
 
 ---
@@ -128,7 +128,7 @@ pnpm dsh web
 | `repository` / `homepage` / `bugs` | 无 | 指向本仓库的真实地址 |
 | `scripts.prepublishOnly` | 无 | `npm run verify:all`（发布前强制跑完整验证链） |
 
-> 设计稿在**本地** `design/`（不在 Git 远程里）；`docs/开发任务/`（任务书 + 实机证据）**已纳入 Git**，`docs/` 根下的设计方案等仍在本地。npm 页若要用图，需另配 `repository` + 可访问的静态资源，或把预览图放进仓库根目录（如 `icon.svg` 一类已跟踪文件）。
+> 设计稿 `design/`（建稿脚本 + FigCraft 主稿 + 18 板暗/亮出稿）与 `docs/开发任务/`（任务书 + 实机证据）**均已纳入 Git**，`docs/` 根下的设计方案等仍在本地。两者都**不在 npm 包 `files` 里**，所以 npm 页若要用图仍需另配 `repository` + 可访问的静态资源，或把预览图放进仓库根目录（如 `icon.svg` 一类已跟踪文件）。
 
 `dsh.client.inject` 声明的是**客户端模块包名**（模块图预取边，宿主据此保证这些模块先加载）；
 **cordis 服务注入**来自客户端产物导出的 `inject`（`src/client/manifest.js` 的 `RF.CLIENT_INJECT`，是**服务名**清单）。
@@ -211,7 +211,7 @@ workflows/         随包工作流模板（specs/ 5 种 kind + templates/）
 locale/            zh.json / en.json
 docs/开发任务/    （**已纳入 Git**）T1–T5 任务书 + 实机原始记录 —— 验收门禁硬依赖
 docs/              （本地）设计方案等其余文档 —— 未纳入 Git
-design/            （本地）FigCraft 画板 SVG/PNG —— **未纳入 Git**
+design/            （**已纳入 Git**）RF7 设计真源：_tools/ 建稿脚本 + FigCraft 主稿 + 18 板暗/亮 SVG/PNG
 references/        （本地）第三方 UI 参考图 —— **未纳入 Git**
 ```
 
@@ -225,7 +225,7 @@ references/        （本地）第三方 UI 参考图 —— **未纳入 Git**
 | **运行时** npm 依赖 | **0**（`dependencies` / `peerDependencies` 都是空的） |
 
 `files` 排除了 `src/**/__tests__/**`（测试占 `src/` 体积的一半，不进包）。
-`design/`、`references/` 整目录忽略，**不进 Git 也不进 npm 包**；`docs/开发任务/` 进了 Git 但**不在 `files` 里**，所以也不进 npm 包。
+`design/` 进了 Git（设计真源与出稿要能评审、能 diff），但**不在 `files` 里**，所以不进 npm 包；`references/` 整目录忽略，不进 Git 也不进 npm 包；`docs/开发任务/` 进了 Git 但同样**不在 `files` 里**。
 
 ### scripts
 
