@@ -14,12 +14,19 @@
   RF.CLS = 'rf';
 
   /**
-   * 按钮：主要 / 次要 / 禁用 / 危险。
+   * 按钮：主要 / 次要 / 幽灵 / 危险。
+   *
+   * RF7 的零件里有三种按钮：`Button/Primary`（40 高 · accent 底）、
+   * `Button/Ghost`（28 高 · surface-3 底）、`Button/Danger`（透明底 · 错误色描边）。
+   * `secondary` 是旧版的次要按钮名，保留为 `ghost` 的别名（老词条还在用）。
+   *
    * @param {{ label: string, variant?: string, onClick?: function, disabled?: boolean, title?: string }} props - 属性。
    * @returns {object} React 元素。
    */
   RF.Button = function Button(props) {
-    const variant = props.variant === 'secondary' || props.variant === 'danger' ? props.variant : 'primary';
+    const variant = ['secondary', 'ghost', 'danger'].includes(props.variant)
+      ? (props.variant === 'secondary' ? 'ghost' : props.variant)
+      : 'primary';
     const disabled = props.disabled === true;
     return h('button', {
       type: 'button',
@@ -48,18 +55,22 @@
   };
 
   /**
-   * 胶囊 / 标签：进行中 / 已完成 / 失败 / 排队 / **降级**。
+   * 胶囊 / 标签（RF7 的 `RF/StatusPill`）。
    *
-   * ⚠️ 画板 15 的胶囊只列了 4 态；第 5 种 `warn`（降级但仍交付）是
-   * **画板 16 降级矩阵**要的语义 —— 那一板明写「每格用 10-11px 文字，
-   * 绿 #3FB950 / 黄 #D29922 / 红 #F85149」：绿=有、红=无、黄=降级但仍交付。
-   * 少了它，「静帧成片 / 部分镜 / 静音成片」会渲染成灰色 = 看不出是降级。
+   * RF7 的胶囊只有四种底：surface-3 + 文字色（中性 / 绿 / 黄 / 红），
+   * 外加 accent-dim 底 + accent 字（当前态）。
+   *
+   * ⚠️ 词条名有两套：RF7 的语义名（`accent` / `ok` / `error` / `neutral` / `warn`）
+   * 与旧版的机械名（`running` / `done` / `failed` / `queued`）。
+   * 两者都认，class 名照原样吐出去 —— 旧测试按 `rf-pill--running` 找，
+   * 样式表把两套映射到同一套配色。
    *
    * @param {{ label: string, tone?: string }} props - 属性。
    * @returns {object} React 元素。
    */
   RF.Pill = function Pill(props) {
-    const tone = ['running', 'done', 'failed', 'queued', 'warn'].includes(props.tone) ? props.tone : 'queued';
+    const tones = ['neutral', 'accent', 'ok', 'warn', 'error', 'running', 'done', 'failed', 'queued'];
+    const tone = tones.includes(props.tone) ? props.tone : 'queued';
     return h('span', { className: `${RF.CLS}-pill ${RF.CLS}-pill--${tone}` }, props.label);
   };
 
@@ -78,6 +89,11 @@
 
   /**
    * 空态：无数据 / 出错了。
+   *
+   * ⚠️ `action` 是**可选的行动按钮**（RF7 的「去新建项目」这类入口）。
+   * 以前这个槽位不存在 ⇒ 空态里的按钮被静默丢掉，
+   * 用户看到一句「还没有章节」却没有任何可点的东西。
+   *
    * @param {{ title: string, hint?: string, tone?: string, action?: object }} props - 属性。
    * @returns {object} React 元素。
    */
@@ -85,7 +101,10 @@
     const tone = props.tone === 'error' ? 'error' : 'empty';
     return h('div', { className: `${RF.CLS}-empty ${RF.CLS}-empty--${tone}` },
       h('div', { className: `${RF.CLS}-empty__title` }, props.title),
-      props.hint === undefined ? null : h('div', { className: `${RF.CLS}-empty__hint` }, props.hint));
+      props.hint === undefined ? null : h('div', { className: `${RF.CLS}-empty__hint` }, props.hint),
+      props.action === undefined || props.action === null
+        ? null
+        : h('div', { className: `${RF.CLS}-empty__action` }, props.action));
   };
 
   /**
@@ -106,29 +125,29 @@
    * 卡片：默认 / 选中 / 禁用。
    *
    * ⚠️ 带 `onClick` 的卡片**必须键盘可达**：只挂 `onClick` 的 `div`
-   * 鼠标能用、键盘用不了（实机验证时抓到的：运行位置屏的两张大卡
-   * 与分镜/技能的选择卡都只能靠鼠标）。
+   * 鼠标能用、键盘用不了（实机验证时抓到的）。
    *
    * ⇒ 可点时补 `role="button"` + `tabIndex` + Enter/Space 键。
-   * 事件来自卡片**内部**的按钮时**不重复触发**卡片自己的动作
-   * （否则在子按钮上按 Enter 会同时选中卡片）。
+   * 事件来自卡片**内部**的按钮时**不重复触发**卡片自己的动作。
    *
-   * @param {{ children: any, state?: string, onClick?: function, accent?: boolean, tone?: string }} props - 属性。
+   * `className` 用来挂 RF7 的零件变体（如 `rf-hubstrip` 的横向排版）。
+   *
+   * @param {{ children: any, state?: string, onClick?: function, accent?: boolean, tone?: string, className?: string }} props - 属性。
    * @returns {object} React 元素。
    */
   RF.Card = function Card(props) {
     const state = props.state === 'selected' || props.state === 'disabled' ? props.state : 'default';
     const clickable = state !== 'disabled' && typeof props.onClick === 'function';
-    // `accent` = 左侧 4px 强调色竖条（画板 06 号板：阶段卡选中态
-    // 「描边 #4C8DFF + 左侧 4px #4C8DFF 条」）。别的板只要描边，不要竖条。
+    // `accent` = 左侧 4px 强调色竖条（RF7 阶段卡的选中态）。
     const accent = props.accent === true ? ` ${RF.CLS}-card--accent` : '';
-    // `tone` = 状态面（画板 17 号板的 WARN-SURF / ERROR-SURF 两个令牌）：
-    //   `warn`        黄面 + 黄描边（画板 06 号板「显存门槛提示条」）
-    //   `error`       红面 + 红描边（画板 04 号板「结论卡」）
-    //   `warn-border` 普通面 + 黄描边（画板 16 号板「一次真实降级」卡）
+    // `tone` = 状态面：
+    //   `warn`        黄面 + 黄描边
+    //   `error`       红面 + 红描边
+    //   `warn-border` 普通面 + 黄描边
     const tone = ['warn', 'error', 'warn-border'].includes(props.tone) ? ` ${RF.CLS}-card--${props.tone}` : '';
+    const extra = typeof props.className === 'string' && props.className !== '' ? ` ${props.className}` : '';
     return h('div', {
-      className: `${RF.CLS}-card ${RF.CLS}-card--${state}${accent}${tone}`,
+      className: `${RF.CLS}-card ${RF.CLS}-card--${state}${accent}${tone}${extra}`,
       onClick: clickable ? props.onClick : undefined,
       role: clickable ? 'button' : undefined,
       tabIndex: clickable ? 0 : undefined,

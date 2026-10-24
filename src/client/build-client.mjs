@@ -24,8 +24,8 @@ import { fileURLToPath } from 'node:url';
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, '..', '..');
 
-/** 片段顺序：常量 → 文案 → 共享 → 组件 → 纯函数 → 按屏外壳 → 页签 → 流程屏 → 主壳 → 消息行 → 快捷键 → 入口。 */
-const FRAGMENTS = [
+/** 片段顺序：常量 → 文案 → 共享 → 组件 → 纯函数 → 按屏外壳 → 样式 → RF7 零件 → 页签 → 流程屏 → 主壳 → 消息行 → 快捷键 → 入口。 */
+export const FRAGMENTS = [
   'manifest.js',
   'locale.js',
   'shared.js',
@@ -34,8 +34,7 @@ const FRAGMENTS = [
   join('workbench', 'breakpoints.js'),
   join('workbench', 'chrome.js'),
   join('workbench', 'styles.js'),
-  join('workbench', 'v6widgets.js'),
-  join('workbench', 'hub.js'),
+  join('workbench', 'rf7.js'),
   join('workbench', 'tabs.js'),
   join('workbench', 'flow.js'),
   join('workbench', 'Workbench.js'),

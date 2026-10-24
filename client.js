@@ -45,13 +45,21 @@ window.__ModuleLoader__.load({
     'reelforge-storyboard',
   ];
 
-  /** 7 个页签（Tab **内部**的二级分区，不是 7 个宿主 Tab）。 */
+  /**
+   * 项目视图的 7 个页签（RF7 §6.4「Tab 条固定 7 项」）。
+   *
+   * ⚠️ 这是 `src/core/constants.js` 里 `WORKBENCH_TABS` 的**字面镜像**
+   * （F8 门禁逐项比对）—— 改一处必须改两处。
+   *
+   * 顺序 = 枢纽 · 章节 · 素材 · 分镜 · 上下文 · 成片 · 日志。
+   * 「技能」不在页签里（RF7 把它改成流程屏 `skills`）。
+   */
   RF.WORKBENCH_TABS = [
     { id: 'hub', labelKey: 'hub' },
-    { id: 'shots', labelKey: 'shots' },
+    { id: 'chapters', labelKey: 'chapters' },
     { id: 'assets', labelKey: 'assets' },
+    { id: 'shots', labelKey: 'shots' },
     { id: 'context', labelKey: 'context' },
-    { id: 'skills', labelKey: 'skills' },
     { id: 'output', labelKey: 'output' },
     { id: 'log', labelKey: 'log' },
   ];
@@ -60,31 +68,40 @@ window.__ModuleLoader__.load({
   RF.STAGE_STEPS = ['requirement', 'run', 'plan', 'generate', 'storyboard', 'deliver'];
 
   /**
-   * 流程屏（设计稿 02 / 03 / 04 / 05 / 06 / 16）—— **项目视图之外**的独立屏。
+   * 流程屏（RF7 的 8 块流程屏形态画板）—— **项目视图之外**的独立屏。
    *
-   * 设计稿 17 号板自己写明右栏工作台是 **7 个页签**（项目视图）；
-   * 板 02–06 的骨架里**没有页签条**（只有 Header / StageBar / Scroll / Footer），
-   * 它们是按流程串起来的独立屏。⇒ 两层，不是 13 个页签。
+   * RF7 画板索引 §八：流程屏 = RunGate · Settings · Intake · ProjectSettings ·
+   * Stages · ShotDetail · Music · Skills；规范板 = Degraded · Picker。
    */
-  RF.FLOW_SCREENS = ['guide', 'intake', 'runstack', 'runmode', 'device', 'plan', 'stages', 'degraded'];
+  RF.FLOW_SCREENS = ['runGate', 'settings', 'intake', 'projectSettings', 'stages', 'shotDetail', 'music', 'skills'];
 
-  /** 每块流程屏归在 6 步进度条的哪一步（与设计稿 §2.1 全表一致）。 */
+  /** 规范板（规则层，不是主流程的一环）。 */
+  RF.SPEC_SCREENS = ['degraded', 'picker'];
+
+  /** 每块流程屏 / 规范板归在 6 步进度条的哪一步（与 RF7 画板索引逐块一致）。 */
   RF.FLOW_SCREEN_STEPS = {
-    guide: 'requirement',
+    runGate: 'run',
+    settings: 'run',
     intake: 'requirement',
-    runstack: 'run',
-    runmode: 'run',
-    device: 'run',
-    plan: 'plan',
+    projectSettings: 'requirement',
     stages: 'generate',
-    degraded: 'generate',
+    shotDetail: 'storyboard',
+    music: 'deliver',
+    skills: 'generate',
+    degraded: 'run',
+    picker: 'generate',
   };
 
-  /** 6 步进度条每一步点下去落到哪一屏。 */
+  /**
+   * 6 步进度条每一步点下去落到哪一屏。
+   *
+   * ⚠️ 「方案」这一步 RF7 没有对应画板（旧 Plan 板被撤了），
+   * 落**页签「章节」**（那块的副标题就是「先骨架 · 再逐章生成」）—— 待 owner 确认项。
+   */
   RF.STAGE_STEP_TARGETS = {
-    requirement: { kind: 'flow', screen: 'guide' },
-    run: { kind: 'flow', screen: 'runstack' },
-    plan: { kind: 'flow', screen: 'plan' },
+    requirement: { kind: 'flow', screen: 'intake' },
+    run: { kind: 'flow', screen: 'runGate' },
+    plan: { kind: 'tab', tab: 'chapters' },
     generate: { kind: 'flow', screen: 'stages' },
     storyboard: { kind: 'tab', tab: 'shots' },
     deliver: { kind: 'tab', tab: 'output' },
@@ -123,6 +140,25 @@ window.__ModuleLoader__.load({
 
   /** 上下文三键；注入顺序即数组顺序。 */
   RF.CONTEXT_KEYS = ['bible', 'style', 'continuity'];
+
+  /**
+   * 注入标题固定三个，生成时拼进提示词，标题不能自创
+   * （`src/core/constants.js` 的 `CONTEXT_INJECTION_TITLES` 镜像，F8 门禁比对）。
+   */
+  RF.CONTEXT_INJECTION_TITLES = {
+    bible: '【人物圣经（一致性锚点，后续所有生成必须遵守）】',
+    style: '【风格指南（统一画风/光线/色调）】',
+    continuity: '【连续性记录】',
+  };
+
+  /**
+   * 上下文注入顺序（`src/core/constants.js` 的 `CONTEXT_INJECTION_ORDER` 镜像）。
+   *
+   * ⚠️ 注入的**顺序**是契约的一部分（bible → style → continuity），
+   * 界面上的「注入预览」必须按这个顺序显示 —— 所以顺序本身也要有客户端镜像，
+   * 不能在前端另写一份（F8 门禁比对）。
+   */
+  RF.CONTEXT_INJECTION_ORDER = ['bible', 'style', 'continuity'];
 
   /** 技能来源三档。 */
   RF.SKILL_SOURCES = ['bundled', 'installed', 'generated'];
@@ -253,10 +289,11 @@ window.__ModuleLoader__.load({
       'stage.storyboard': '分镜',
       'stage.deliver': '交付',
       'stage.count': '{current} / 6',
-      'tab.hub': '首页',
+      // RF7 §6.4 的 7 个页签：枢纽 · 章节 · 素材 · 分镜 · 上下文 · 成片 · 日志
+      'tab.hub': '枢纽',
       'tab.chapters': '章节',
       'tab.shots': '分镜',
-      'tab.assets': '资产',
+      'tab.assets': '素材',
       'tab.context': '上下文',
       'tab.skills': '技能',
       'tab.output': '成片',
@@ -741,6 +778,506 @@ window.__ModuleLoader__.load({
       'notice.sayFallback': '直接说出你要做的操作',
       'notice.replayed': '已重放 {count} 条待办请求。',
       'notice.stillPending': '仍有 {count} 条请求投递不出去：工作台还没接上工具通道。',
+
+      // ── RF7（design/DESIGN-评审稿-RF7.md · 18 块板）────────────────────
+      'rf7.status.done': '完成',
+      'rf7.status.generating': '生成中',
+      'rf7.status.failed': '失败',
+      'rf7.status.pending': '待生成',
+
+      'rf7.chatSync.empty': '还没有同步内容：在对话框里说的话会出现在这里。',
+      'rf7.chatSync.imported': '对话已同步：{count} 章已写入项目（{pending}）',
+      'rf7.chatSync.needRun': '还没跑阶段',
+      'rf7.chatSync.ready': '已进入运行',
+      'rf7.chatSync.captured': '对话已同步：正文已写入项目',
+
+      'rf7.hub.title': '枢纽',
+      'rf7.hub.subtitle': '章节 · 镜头摘要 · 成本',
+      'rf7.hub.capsule.empty': '还没有章节',
+      'rf7.hub.capsule.planned': '待生成',
+      'rf7.hub.capsule.running': '进行中',
+      'rf7.hub.costLabel': '成本',
+      'rf7.hub.stageLabel': '当前阶段',
+      'rf7.hub.stageUnset': '未选方案',
+      'rf7.hub.kindUnset': '未选生成方式',
+      'rf7.hub.stageSub': '第 {chapter} 章 · {done} / {total} 步',
+      'rf7.hub.chapterTitle': '第 {chapter} 章 · {title}',
+      'rf7.hub.chapterMeta': '{shots} 镜 · {duration}',
+      'rf7.hub.sectionChapters': '章节进度',
+      'rf7.hub.sectionShots': '镜头脚本',
+      'rf7.hub.sectionShotsSub': '按章 idx',
+      'rf7.hub.shotId': 'C{seq}-S{idx}',
+      'rf7.hub.shotSizeUnknown': '未标注景别',
+      'rf7.hub.moreShots': '还有 {count} 镜待生成',
+      'rf7.hub.viewAll': '查看全部 {count} 镜',
+      'rf7.hub.footerLabel': '当前阶段',
+      'rf7.hub.footerValue.empty': '还没有章节',
+      'rf7.hub.footerValue.generating': '第 {chapter} 章生成中 · 成片未就绪',
+      'rf7.hub.footerValue.ready': '第 {chapter} 章已出片 · {count} 个交付物',
+      'rf7.hub.empty.title': '这个项目还没有章节',
+      'rf7.hub.empty.hint': '先粘贴小说原文，自动拆章后再回到这里看全局。',
+      'rf7.hub.empty.action': '去新建项目',
+      'rf7.hub.action': '查看成片',
+      'rf7.hub.actionDisabled': '成片还没生成：先把 video 阶段跑完，交付物会出现在「成片」页签。',
+      // ── 屏间入口：项目设置 / 技能与工作流（RF7 把「技能」从页签挪成了流程屏，
+      //    所以枢纽是它唯一的落点；项目设置对应 EditProject.jsx）──
+      'rf7.hub.actProjectSettings': '项目设置',
+      'rf7.hub.actSkills': '技能与工作流',
+
+      'rf7.chapters.title': '章节',
+      'rf7.chapters.subtitle': '先骨架 · 再逐章生成',
+      'rf7.chapters.capsule': '{count} 章',
+      'rf7.chapters.footerLabel': '章节',
+      'rf7.chapters.footerValue': '{chapters} 章 · {shots} 镜',
+      'rf7.chapters.chapterTitle': '第 {chapter} 章',
+      'rf7.chapters.shotsMeta': '{shots} 镜 · {duration}',
+      'rf7.chapters.noShots': '暂无分镜',
+      'rf7.chapters.actAdd': '新增章节',
+      'rf7.chapters.actGenerateAll': '生成全部章节',
+      'rf7.chapters.actGenerate': '生成',
+      'rf7.chapters.actEdit': '编辑',
+      'rf7.chapters.actMore': '操作',
+      'rf7.chapters.actEditDisabled': '插件还没有改章节的工具：改标题 / 删章要让助手在对话里做。',
+      'rf7.chapters.actMoreDisabled': '插件还没有章节操作菜单：章节的复制 / 排序先在对话里做。',
+      'rf7.chapters.notice': '章节是独立的成片单元：可以只跑一章，也可以续跑上次没跑完的。',
+      'rf7.chapters.noticeSub': '素材库全项目共用，不必每章重做。',
+      'rf7.chapters.action': '生成全部章节',
+      'rf7.chapters.actionDisabled': '还没有正文：先在「新建项目」里粘贴原文或上传 .txt。',
+
+      'rf7.assets.title': '素材库',
+      'rf7.assets.subtitle': '人物 · 场景 · 道具 · 变体',
+      'rf7.assets.capsule': '{count} 项',
+      'rf7.assets.chipAll': '全部 {count}',
+      'rf7.assets.footerLabel': '素材',
+      'rf7.assets.footerValue': '{count} 项',
+      'rf7.assets.actCreate': '新建资产',
+      'rf7.assets.actGenerate': '生成图',
+      'rf7.assets.actReplace': '上传替换',
+      'rf7.assets.stateReady': '已就绪',
+      'rf7.assets.noDescription': '没有描述',
+      'rf7.assets.more': '还有 {count} 项 · 音效 / 视频 / 参考',
+      'rf7.assets.viewAll': '查看全部 {count} 项',
+      'rf7.assets.gapTitle': '{count} 个分镜缺参考图，video 阶段会直接报错（硬依赖 image）。',
+      'rf7.assets.gapSub': '补齐参考图才能跑 video 阶段。',
+      'rf7.assets.action': '新建资产',
+      'rf7.assets.actionDisabled': '新建资产要填分类和名字：用上方素材库里的「新建资产」入口。',
+
+      'rf7.storyboard.title': '分镜审查',
+      'rf7.storyboard.subtitle': '逐镜预览 · 不满意就重来',
+      'rf7.storyboard.capsule': '{count} 镜',
+      'rf7.storyboard.footerLabel': '分镜',
+      'rf7.storyboard.footerValue': '{count} 镜 · {pending} 待审',
+      'rf7.storyboard.duration': '{seconds}s',
+      'rf7.storyboard.refCharacter': '角色',
+      'rf7.storyboard.refScene': '场景',
+      'rf7.storyboard.refProp': '道具',
+      'rf7.storyboard.promptLine': '镜头 {size} · 参考素材与提示词',
+      'rf7.storyboard.sectionSelected': '选中镜 · 分镜 {idx}',
+      'rf7.storyboard.sectionSelectedSub': '参考素材与提示词',
+      'rf7.storyboard.sectionRegenerate': '重新生成',
+      'rf7.storyboard.actSeed': '换一个种子',
+      'rf7.storyboard.actRewrite': '按反馈改写',
+      'rf7.storyboard.feedbackPlaceholder': '写下不满意的地方，例如「车帘再慢一点」',
+      'rf7.storyboard.empty.title': '还没有分镜',
+      'rf7.storyboard.empty.hint': '先跑 llm 阶段产出分镜，再回到这里逐镜看。',
+      'rf7.storyboard.action': '重新生成选中镜',
+      'rf7.storyboard.actionDisabled': '还没有分镜：先跑 llm 阶段产出分镜。',
+      // ── 屏间入口：分镜详情（画板 07 是列表、画板 08 是单镜展开）──
+      'rf7.storyboard.actDetail': '查看分镜详情',
+      'rf7.storyboard.actDetailDisabled': '还没有分镜：先跑 llm 阶段产出分镜。',
+
+      'rf7.context.title': '上下文',
+      'rf7.context.subtitle': '生成前必须齐的三把钥匙',
+      'rf7.context.capsule.ready': '三键齐',
+      'rf7.context.capsule.missing': '缺 {missing} 把',
+      'rf7.context.footerLabel': '上下文',
+      'rf7.context.footerValue': '{ready} / {total} 键齐备 · 连续性 {continuity} 条',
+      'rf7.context.bibleTitle': '人物圣经',
+      'rf7.context.bibleMeta': '人物锚点与场景站位表',
+      'rf7.context.styleTitle': '风格指南',
+      'rf7.context.styleMeta': '统一画风 / 光线 / 色调',
+      'rf7.context.continuityTitle': '连续性记录',
+      'rf7.context.continuityMeta': '跨章连续性事实与冲突',
+      'rf7.context.stateReady': '已就绪',
+      'rf7.context.stateMissing': '未写入',
+      'rf7.context.actView': '查看',
+      'rf7.context.actWrite': '从对话写入',
+      'rf7.context.actWriteDisabled': '插件没有「从对话写入上下文」这个动作：让助手在对话里写三键，锚点会随每次生成注入。',
+      'rf7.context.sectionInject': '注入预览',
+      'rf7.context.sectionInjectSub': '每次生成时固定注入这三段',
+      'rf7.context.rule1': '只有 bible / style / continuity 三键，多写一个会直接报错。',
+      'rf7.context.rule2': 'bible 每次写入前先读回现有内容，不覆盖已有人物与衣橱。',
+      'rf7.context.action': '冻结锚点',
+      'rf7.context.actionDisabled': '还没有「冻结锚点」这个动作：让助手在对话里写入三键即可，锚点随每次生成注入。',
+
+      'rf7.output.title': '成片',
+      'rf7.output.subtitle': '合成 · 字幕 · 交付',
+      'rf7.output.capsule': '{count} 个',
+      'rf7.output.footerLabel': '交付',
+      'rf7.output.footerValue.empty': '还没有交付物',
+      'rf7.output.footerValue': '第 {chapter} 章 {duration} · {count} 个交付物',
+      'rf7.output.actDownload': '下载',
+      // ── 屏间入口：背景音乐（画板 09 · 交付步）──
+      'rf7.output.actMusic': '背景音乐',
+      'rf7.output.deliverMeta': '{size}',
+      'rf7.output.stateReady': '已生成',
+      'rf7.output.fileMeta': '{size} · {time}',
+      'rf7.output.untitled': '未命名成片',
+      'rf7.output.playerPlaceholder': '成片预览 · 0:00 / 0:00',
+      'rf7.output.sectionDeliver': '交付物',
+      'rf7.output.sectionDeliverSub': '字幕双版本 + SRT',
+      'rf7.output.sectionChapters': '章节',
+      'rf7.output.chapterTitle': '第 {chapter} 章 · {title}',
+      'rf7.output.chapterMeta': '{shots} 镜 · {duration}',
+      'rf7.output.noChapters': '还没有章节',
+      'rf7.output.empty.title': '还没有成片',
+      'rf7.output.empty.hint': '跑完 video 阶段并合成后，文件会出现在这里。',
+      'rf7.output.action': '下载成片',
+      'rf7.output.actionDisabled': '还没有交付物：先把 video 阶段跑完再合成。',
+
+      'rf7.log.title': '运行日志',
+      'rf7.log.subtitle': '谁在什么时候改了什么',
+      'rf7.log.capsule': '{count} 条',
+      'rf7.log.footerLabel': '日志',
+      'rf7.log.footerValue': '近 {count} 条变更',
+      'rf7.log.sectionChanges': '变更记录',
+      'rf7.log.sectionChangesSub': '每一步都可回滚',
+      'rf7.log.sectionOutput': '运行输出',
+      'rf7.log.sectionRollback': '回滚',
+      'rf7.log.drifted': '已漂移',
+      'rf7.log.empty.title': '还没有变更记录',
+      'rf7.log.empty.hint': '每次写入内容都会在这里留一条。',
+      'rf7.log.rollbackBatch': '按批次回滚',
+      'rf7.log.rollbackTime': '按时间点回滚',
+      'rf7.log.rollbackSingle': '回滚单条',
+      'rf7.log.actRollback': '回滚',
+      'rf7.log.actPick': '选择',
+      'rf7.log.rollbackBatchDisabled': '变更日志里没有批次号，没法按批回滚：先用「回滚单条」。',
+      'rf7.log.rollbackTimeDisabled': '变更日志里没有可选的时间点，没法按时间点回滚：先用「回滚单条」。',
+      'rf7.log.rollbackNote': '回滚只恢复内容，磁盘上的图片视频不会跟着删。',
+      'rf7.log.action': '回滚本批',
+      'rf7.log.actionDisabled': '还没有变更记录：改一次内容后这里就会有记录。',
+      'rf7.log.actionNoBatch': '变更日志没有批次号：只能用「回滚单条」或「按时间点回滚」。',
+
+      'rf7.runGate.title': '启动检查',
+      'rf7.runGate.subtitle': '首次启动 · 环境就绪',
+      'rf7.runGate.capsule': '{passed} / {total} 通过',
+      'rf7.runGate.capsule.pending': '还没探测',
+      'rf7.runGate.footerLabel': '下一步',
+      'rf7.runGate.footerValue.pending': '正在探测本机环境…',
+      'rf7.runGate.footerValue.failed': '{count} 项没通过，先修好再开跑',
+      'rf7.runGate.footerValue.ready': '全部通过即可开跑',
+      'rf7.runGate.summaryTitle': '环境检查',
+      'rf7.runGate.summaryMeta': '{total} 项检查 · {passed} 通过 · {warned} 警告 · {unconfigured} 未配置',
+      'rf7.runGate.actRerun': '重跑检查',
+      'rf7.runGate.sectionPosition': '执行位置',
+      'rf7.runGate.sectionPositionSub': '同一批生成方式，差别只在跑在哪、算不算钱',
+      'rf7.runGate.localTitle': '本地运行',
+      'rf7.runGate.localSub': 'ComfyUI · 本机',
+      'rf7.runGate.localFact1': '· 数据不出本机',
+      'rf7.runGate.localFact2': '· 无按次计费',
+      'rf7.runGate.cloudTitle': '云端运行',
+      'rf7.runGate.cloudSub': '托管工作流 · 按需调度',
+      'rf7.runGate.cloudFact1': '· 无需 GPU',
+      'rf7.runGate.cloudFact2': '· 按次计费',
+      'rf7.runGate.sectionChecks': '检查项',
+      'rf7.runGate.checkComfy': 'ComfyUI 服务',
+      'rf7.runGate.checkLlm': 'LLM 接口',
+      'rf7.runGate.checkAgent': 'Agent 运行时',
+      'rf7.runGate.checkFfmpeg': 'ffmpeg',
+      'rf7.runGate.checkDisk': '磁盘可用',
+      'rf7.runGate.checkVram': '显存预估',
+      'rf7.runGate.checkCloud': '云端账号',
+      'rf7.runGate.check.comfy': 'ComfyUI 服务',
+      'rf7.runGate.check.llm': 'LLM 接口',
+      'rf7.runGate.check.ffmpeg': 'ffmpeg',
+      'rf7.runGate.check.disk': '磁盘可用',
+      'rf7.runGate.check.vram': '显存预估',
+      'rf7.runGate.check.provider': '云端账号',
+      'rf7.runGate.check.ckVersion': 'ComfyUI-Kernel 版本',
+      'rf7.runGate.check.encoders': '视频编码器',
+      'rf7.runGate.check.videoBackend': '视频后端',
+      'rf7.runGate.agentValue': '随宿主（DSH 内置）',
+      'rf7.runGate.pass': '通过',
+      'rf7.runGate.warn': '警告',
+      'rf7.runGate.fail': '未通过',
+      'rf7.runGate.unconfigured': '未配置',
+      'rf7.runGate.noticeMain': '探测只在本机跑 · 不上传任何文件',
+      'rf7.runGate.noticeSub': '不符合本机要求时，可跳过探测直接走云端',
+      'rf7.runGate.action': '开始生产',
+      // ── 屏间入口 ──
+      // RF7 的画板只画了每块板的**屏内**内容，没写屏间入口（除 Stage 轨 3 步 + 页签 7 项）；
+      // 这两条按画板语义补：服务配置与 RunGate 同源（SettingsPage.jsx），
+      // 失败清单对应规范板「降级与失败」。属对画板的补充，待 owner 复核。
+      'rf7.runGate.actSettings': '服务配置',
+      'rf7.runGate.actFailures': '查看失败清单',
+
+      'rf7.settings.title': '服务配置',
+      'rf7.settings.subtitle': 'ComfyUI · LLM · 运行时',
+      'rf7.settings.capsule': '只读',
+      'rf7.settings.footerLabel': '设置',
+      'rf7.settings.footerValue': '只读 · 配置在插件 config 里',
+      'rf7.settings.sectionComfy': 'ComfyUI',
+      'rf7.settings.sectionComfySub': '本地渲染服务',
+      'rf7.settings.labelAddress': '服务地址',
+      'rf7.settings.labelBaseUrl': 'Base URL',
+      'rf7.settings.labelModel': '模型',
+      'rf7.settings.labelApiKey': 'API Key',
+      'rf7.settings.actTest': '测试连接',
+      'rf7.settings.testHint': '点一次「测试连接」会重跑本机探测',
+      'rf7.settings.sectionLlm': 'LLM（OpenAI 兼容）',
+      'rf7.settings.sectionLlmSub': 'Agent 的大脑',
+      'rf7.settings.llmNotice': 'LLM 配置由宿主管理，插件读不到。',
+      'rf7.settings.llmNoticeSub': 'Base URL / 模型 / API Key 在 DSH 的模型设置里改。',
+      'rf7.settings.sectionRuntime': 'Agent 运行时',
+      'rf7.settings.sectionRuntimeSub': '默认内置，也可交给本机 CLI',
+      'rf7.settings.runtimeBuiltin': '内置 openclaude',
+      'rf7.settings.runtimeClaudeCode': 'Claude Code',
+      'rf7.settings.runtimeCodex': 'Codex',
+      'rf7.settings.runtimeGemini': 'Gemini',
+      'rf7.settings.runtimeCustom': '自定义',
+      'rf7.settings.runtimeDisabled': '运行时还不能在这里切换：改运行时要在插件配置里设（这一屏是只读的）。',
+      'rf7.settings.sectionMaintenance': '生成维护',
+      'rf7.settings.rowFree': '显存释放间隔',
+      'rf7.settings.valueFree': '3 次',
+      'rf7.settings.rowTimeout': '单任务超时',
+      'rf7.settings.valueTimeout': '90 分钟',
+      'rf7.settings.rowCloudKey': 'RunningHub Key',
+      'rf7.settings.valueCloudKey': '未配置',
+      'rf7.settings.stateAdjustable': '可调',
+      'rf7.settings.stateNotLoggedIn': '未登录',
+      'rf7.settings.unset': '未配置',
+      'rf7.settings.readonlyTitle': '这一屏是只读的',
+      'rf7.settings.readonlySub': '插件没有写配置的通道：改地址、密钥、维护参数要编辑插件的 config 块（预算上限 ¥{budget} · 已开阶段 {stages} 个）。',
+      'rf7.settings.action': '保存并重测',
+      'rf7.settings.actionDisabled': '插件没有写配置的通道：改配置请编辑插件的 config 块；「测试连接」按钮可以重跑探测。',
+
+      'rf7.intake.title': '新建项目',
+      'rf7.intake.subtitle': '小说 · 剧本 · 一句话',
+      'rf7.intake.capsule.ready': '正文已写入',
+      'rf7.intake.capsule.empty': '待导入',
+      'rf7.intake.footerLabel': '下一步',
+      'rf7.intake.footerValue': '拆章并建立项目',
+      'rf7.intake.labelName': '项目名',
+      'rf7.intake.namePlaceholder': '项目名，例如《妈妈的时间》',
+      'rf7.intake.labelStyle': '画风',
+      'rf7.intake.styleRealistic': '写实',
+      'rf7.intake.styleAnime': '二次元',
+      'rf7.intake.styleComic': '国漫',
+      'rf7.intake.style3d': '3D',
+      'rf7.intake.styleSuspense': '悬疑',
+      'rf7.intake.textPlaceholder': '粘贴小说原文，或上传 .txt；一句话想法也行',
+      'rf7.intake.textHint': '自动拆章 · 一章一集 · 可从对话直接导入',
+      'rf7.intake.specResolution': '分辨率',
+      'rf7.intake.specAspect': '比例',
+      'rf7.intake.specMusic': '背景音乐',
+      'rf7.intake.on': '开',
+      'rf7.intake.off': '关',
+      'rf7.intake.sectionReferences': '参考图片素材',
+      'rf7.intake.sectionReferencesSub': '可选 · 品牌 / 产品 / 角色定妆',
+      'rf7.intake.refThumb': '参考图',
+      'rf7.intake.refName': '参考图文件名',
+      'rf7.intake.refUse': '用途：产品参考，生成时保持外观一致',
+      'rf7.intake.actAddReference': '+ 选择参考图片',
+      'rf7.intake.actRemove': '移除',
+      'rf7.intake.actRemoveDisabled': '插件还没有移除参考图的动作：重新上传覆盖即可。',
+      'rf7.intake.sectionChapters': '章节预览',
+      'rf7.intake.sectionChaptersSub': '{count} 章 · 正文 {chars} 字',
+      'rf7.intake.chapterMeta': '自动拆章 · 一章一集',
+      'rf7.intake.noChapters': '还没有拆出章节',
+      'rf7.intake.noChaptersHint': '粘贴正文后这里会显示自动拆章的结果。',
+      'rf7.intake.actImport': '导入',
+      'rf7.intake.actImportDisabled': '宿主只有「整本导入」这一个动作：先用底栏的「创建并打开」导入全文，这里就会列出章节。',
+      'rf7.intake.action': '创建并打开',
+      'rf7.intake.actionDisabled': '还没有正文：先在上面粘贴小说原文或上传 .txt，再点「创建并打开」。',
+
+      'rf7.projectSettings.title': '项目设置',
+      'rf7.projectSettings.subtitle': '规格 · 风格 · 字幕',
+      'rf7.projectSettings.capsule': '只读',
+      'rf7.projectSettings.footerLabel': '项目设置',
+      'rf7.projectSettings.footerValue': '{resolution} · {aspect}',
+      'rf7.projectSettings.sectionSpec': '成片规格',
+      'rf7.projectSettings.rowResolution': '分辨率',
+      'rf7.projectSettings.rowAspect': '比例',
+      'rf7.projectSettings.rowStyle': '风格',
+      'rf7.projectSettings.styleDefault': '写实 · 冷调',
+      'rf7.projectSettings.sectionSubtitles': '字幕',
+      'rf7.projectSettings.rowAutoSub': '自动添加字幕',
+      'rf7.projectSettings.rowPosition': '烧录位置',
+      'rf7.projectSettings.bottomCenter': '底部居中',
+      'rf7.projectSettings.rowHideName': '隐藏角色名',
+      'rf7.projectSettings.subtitleNote': '成片同时导出带字幕、不带字幕两版，外加 SRT 文件。',
+      'rf7.projectSettings.sectionSound': '声音',
+      'rf7.projectSettings.rowBgm': '生成背景音乐',
+      'rf7.projectSettings.rowVoice': '语音合成',
+      'rf7.projectSettings.voiceH3': 'H3 参考音色（flac）',
+      'rf7.projectSettings.sectionDanger': '危险操作',
+      'rf7.projectSettings.dangerText': '删除项目会连同资产、分镜与成片一起清除，不可恢复。',
+      'rf7.projectSettings.dangerAction': '删除这个项目',
+      'rf7.projectSettings.dangerDisabled': '插件还没有删除项目的动作：要让助手在对话里删除（宿主会二次确认）。',
+      'rf7.projectSettings.unset': '未设置',
+      'rf7.projectSettings.action': '保存设置',
+      'rf7.projectSettings.actionDisabled': '插件还没有写项目设置的工具：分辨率 / 比例 / 字幕 / 声音要让助手在对话里改。',
+
+      'rf7.stages.title': '生成执行',
+      'rf7.stages.subtitle': '四阶段 · 实时进度',
+      'rf7.stages.capsule': '{count} 个阶段',
+      'rf7.stages.footerLabel': '当前阶段',
+      'rf7.stages.footerValue': '{kind} · {stage}',
+      'rf7.stages.footerValue.unset': '还没选生成方式',
+      'rf7.stages.legendLlm': 'llm 完成',
+      'rf7.stages.legendImage': 'image 进行中',
+      'rf7.stages.legendTts': 'tts 待跑',
+      'rf7.stages.legendVideo': 'video 待跑',
+      'rf7.stages.currentTitle': '正在生成 · {kind}',
+      'rf7.stages.currentSub': '任务详情',
+      'rf7.stages.metaGpu': 'GPU —',
+      'rf7.stages.metaVram': '显存 —',
+      'rf7.stages.metaEta': '预计剩余 —',
+      'rf7.stages.sectionQueue': '队列',
+      'rf7.stages.sectionQueueSub': '接下来几个任务',
+      'rf7.stages.queueEmpty': '队列是空的：没有等待中的任务。',
+      'rf7.stages.sectionPicker': '本次要跑的阶段',
+      'rf7.stages.stateEnabled': '已完成',
+      'rf7.stages.stateDisabled': '待跑',
+      'rf7.stages.stateUnset': '未选生成方式',
+      'rf7.stages.desc.llm': '人物圣经 / 风格 / 拆章 / 拆分镜',
+      'rf7.stages.desc.image': '人物 / 场景 / 道具 + 服装年龄变体',
+      'rf7.stages.desc.tts': '只给有台词的角色设计音色',
+      'rf7.stages.desc.video': '硬依赖 image；软依赖 tts',
+      'rf7.stages.memMain': '每 3 次生成后自动释放 ComfyUI 显存',
+      'rf7.stages.memSub': '下一批会重新加载模型（约 1–3 分）；也可立即释放',
+      'rf7.stages.action': '暂停生成',
+      'rf7.stages.actionDisabled': '还没有「暂停生成」这个能力：等本批跑完，或去「服务配置」调显存释放间隔。',
+
+      'rf7.shotDetail.title': '分镜详情',
+      'rf7.shotDetail.subtitle': '第 {chapter} 章 · 分镜 {idx}',
+      'rf7.shotDetail.subtitle.empty': '还没有分镜',
+      'rf7.shotDetail.headTitle': '分镜 {chapter} · {idx} · {label}',
+      'rf7.shotDetail.meta': '时长 {duration}s · {ratio}',
+      'rf7.shotDetail.capsule.done': '已生成',
+      'rf7.shotDetail.capsule.pending': '待生成',
+      'rf7.shotDetail.capsule.empty': '没有分镜',
+      'rf7.shotDetail.footerLabel': '分镜',
+      'rf7.shotDetail.footerValue': '{count} 镜 · {pending} 待审',
+      'rf7.shotDetail.sectionReferences': '参考素材',
+      'rf7.shotDetail.sectionReferencesSub': '角色 / 场景 / 道具 / 服装 / 语音（仅台词角色）',
+      'rf7.shotDetail.noReferences': '这一镜还没有参考素材。',
+      'rf7.shotDetail.duration': '{seconds}s',
+      'rf7.shotDetail.sectionScript': '提示词 & 分镜脚本',
+      'rf7.shotDetail.scriptLens': '镜头：{size}',
+      'rf7.shotDetail.scriptMissing': '分镜脚本还没有写进投影：脚本由助手通过分镜写入工具落库，这一屏只显示已落库的参考与规格。',
+      'rf7.shotDetail.sectionPrompt': '视频提示词',
+      'rf7.shotDetail.promptMissing': '视频提示词还没有写进投影。',
+      'rf7.shotDetail.promptMissingSub': '提示词随分镜一起写入；这里不编内容。',
+      'rf7.shotDetail.empty.title': '还没有分镜',
+      'rf7.shotDetail.empty.hint': '先跑 llm 阶段产出分镜，再回来看单镜详情。',
+      'rf7.shotDetail.empty.action': '去分镜列表',
+      'rf7.shotDetail.action': '重新生成此镜',
+      'rf7.shotDetail.actionDisabled': '还没有分镜：先跑 llm 阶段产出分镜。',
+
+      'rf7.music.title': '背景音乐',
+      'rf7.music.subtitle': '生成 · 试听 · 应用',
+      'rf7.music.capsule': '{count} 条',
+      'rf7.music.footerLabel': '交付',
+      'rf7.music.footerValue': '{count} 条音乐',
+      'rf7.music.generateTitle': '生成新的背景音乐',
+      'rf7.music.generatePlaceholder': '描述想要的音乐，如「克制钢琴，冷调，渐强」',
+      'rf7.music.chipInstrumental': '纯音乐',
+      'rf7.music.chipVocal': '带人声',
+      'rf7.music.chipPiano': '钢琴',
+      'rf7.music.chipStrings': '弦乐',
+      'rf7.music.actGenerate': '生成',
+      'rf7.music.chipsDisabled': '音乐风格还不能选：插件还没有生成音乐的工具。',
+      'rf7.music.actGenerateDisabled': '插件还没有「生成音乐」的工具：让助手在对话里描述并生成音乐。',
+      'rf7.music.sectionLibrary': '音乐库',
+      'rf7.music.sectionLibrarySub': '一次生成可应用到多个章节',
+      'rf7.music.stateApplied': '已应用',
+      'rf7.music.actPreview': '预览',
+      'rf7.music.actApply': '应用到章节',
+      'rf7.music.actPreviewDisabled': '投影里没有音频文件路径，没有可播的地址：让助手先把音乐生成到工作区。',
+      'rf7.music.actApplyDisabled': '「应用到章节」要工作区里的音乐文件路径，投影里没有：让助手先把音乐生成到工作区。',
+      'rf7.music.emptyTitle': '音乐库还是空的',
+      'rf7.music.emptySub': '投影里没有音乐条目：音乐资产要由助手在对话里生成并落库。',
+      'rf7.music.note': '应用后会随成片一起合成；替换不删除原曲，可随时换回。',
+      'rf7.music.action': '应用到第 1 章',
+      'rf7.music.actionDisabled': '投影里没有音乐文件路径：让助手先把音乐生成到工作区，再应用。',
+
+      'rf7.skills.title': '技能与工作流',
+      'rf7.skills.subtitle': '装好的技能 · 新的工作流',
+      'rf7.skills.capsule': '{count} 已装',
+      'rf7.skills.footerLabel': '技能',
+      'rf7.skills.footerValue': '{total} 已装 · 内置 {bundled} · 已装 {installed} · 自建 {generated}',
+      'rf7.skills.sectionInstalled': '已装技能',
+      'rf7.skills.sectionInstalledSub': '{count} 个 · 磁盘上的技能目录',
+      'rf7.skills.stateReady': '可用',
+      'rf7.skills.source.bundled': '内置 · 随包',
+      'rf7.skills.source.installed': '已装 · 本机',
+      'rf7.skills.source.generated': '自建 · 本机',
+      'rf7.skills.empty.title': '还没有装技能',
+      'rf7.skills.empty.hint': '把技能目录放进插件的技能目录，重启后就会出现在这里。',
+      'rf7.skills.sectionIterate': '工作流自迭代',
+      'rf7.skills.sectionIterateSub': '粘贴 ComfyUI 工作流 JSON',
+      'rf7.skills.step1': '分析节点 · 推导工作流规格',
+      'rf7.skills.step2': '注册工作流 · 起草 SKILL.md',
+      'rf7.skills.dropHint': '把工作流 JSON 拖到这里',
+      'rf7.skills.actAnalyze': '分析并注册',
+      'rf7.skills.actAnalyzeDisabled': '插件还没有「分析工作流」的工具：把工作流 JSON 放进技能目录后由助手注册。',
+      'rf7.skills.analyzed': '已分析',
+      'rf7.skills.note': '新技能立刻可被 Agent 路由调用；不修改也能只注册工作流。',
+      'rf7.skills.action': '安装新技能',
+      'rf7.skills.actionDisabled': '插件还没有装技能的工具：把技能目录放进插件的技能目录即可被发现。',
+
+      'rf7.degraded.title': '降级与失败',
+      'rf7.degraded.subtitle': '不许静默降质',
+      'rf7.degraded.capsule': '{count} 项降级',
+      'rf7.degraded.footerLabel': '规范',
+      'rf7.degraded.footerValue': '失败要说清代价与替代',
+      'rf7.degraded.sectionBlocked': '阻塞',
+      'rf7.degraded.sectionBlockedSub': '服务没起来就直说',
+      'rf7.degraded.sectionWarning': '警告',
+      'rf7.degraded.sectionWarningSub': '能跑但会打折',
+      'rf7.degraded.sectionEmpty': '空态',
+      'rf7.degraded.sectionEmptySub': '还没开始时说什么',
+      'rf7.degraded.sectionMissing': '缺料',
+      'rf7.degraded.sectionMissingSub': '缺的东西要点名',
+      'rf7.degraded.missingTitle': '{count} 个分镜缺参考图',
+      'rf7.degraded.missingSub': '分镜 {shots} 的参考图未生成，video 阶段会直接报错（硬依赖 image）。',
+      'rf7.degraded.noMissingTitle': '没有缺料项',
+      'rf7.degraded.noMissingSub': '每一镜的参考图都齐了。',
+      'rf7.degraded.actFill': '去补齐',
+      'rf7.degraded.softTitle': '软降级 · {count} 个角色没有音色',
+      'rf7.degraded.softSub': '这些角色仍可跑，video 阶段不阻塞；出片会少一层人声质感。',
+      'rf7.assets.gapNone': '没有分镜缺参考图。',
+      'rf7.assets.gapNoShots': '还没有分镜，参考图缺口无从谈起。',
+      'rf7.degraded.blockedHint': '只能走云端档，会按次计费；也可以先修本地再续跑。',
+      'rf7.degraded.warningHint': '已自动降为分块编码，下一批会重新加载模型。',
+      'rf7.degraded.noneTitle': '没有阻塞项',
+      'rf7.degraded.noneSub': '这一批可以开跑。',
+      'rf7.degraded.noWarningTitle': '没有警告项',
+      'rf7.degraded.noWarningSub': '能力都齐。',
+      'rf7.degraded.emptyTitle': '这个项目还没有章节',
+      'rf7.degraded.emptySub': '粘贴小说原文，或直接说「用这句话做一集」。',
+      'rf7.degraded.action': '查看失败清单',
+
+      'rf7.picker.title': '素材选择器',
+      'rf7.picker.subtitle': '弹窗形态 · 右侧栏内嵌',
+      'rf7.picker.capsule': '已选 {count}',
+      'rf7.picker.footerLabel': '规范',
+      'rf7.picker.footerValue': '已选 {count} 个 · 上限 {limit} 张',
+      'rf7.picker.searchPlaceholder': '搜角色 / 场景 / 道具',
+      'rf7.picker.chipAll': '全部',
+      'rf7.picker.chipCharacter': '角色',
+      'rf7.picker.chipScene': '场景',
+      'rf7.picker.chipProp': '道具',
+      'rf7.picker.chipCostume': '服装',
+      'rf7.picker.pickedThumb': '已选',
+      'rf7.picker.pickedCount': '已选 {count} 个 · 参考图上限 {limit}',
+      'rf7.picker.actClear': '清空',
+      'rf7.picker.note': '只有出镜或出声的角色才占名额；参考图 ≤ 9、音视频 ≤ 3 是后端硬上限。',
+      'rf7.picker.action': '确定',
+      'rf7.picker.actionDisabled': '先选素材并选中要绑定的那一镜。',
+      'rf7.picker.actionNoBindable': '选中的素材没有能绑到镜头的分类：只有角色 / 场景 / 道具 / 服装 / 年龄变体 / 语音能绑。',
     },
     en: {
       'title': 'ReelForge Workbench',
@@ -760,7 +1297,7 @@ window.__ModuleLoader__.load({
       'stage.storyboard': 'Storyboard',
       'stage.deliver': 'Deliver',
       'stage.count': '{current} / 6',
-      'tab.hub': 'Home',
+      'tab.hub': 'Hub',
       'tab.chapters': 'Chapters',
       'tab.shots': 'Shots',
       'tab.assets': 'Assets',
@@ -1248,6 +1785,502 @@ window.__ModuleLoader__.load({
       'notice.sayFallback': 'what you want done',
       'notice.replayed': 'Replayed {count} queued request(s).',
       'notice.stillPending': '{count} request(s) still cannot be delivered: the workbench has no tool channel yet.',
+
+      // ── RF7 (design/DESIGN-评审稿-RF7.md · 18 boards) ─────────────────
+      'rf7.status.done': 'Done',
+      'rf7.status.generating': 'Running',
+      'rf7.status.failed': 'Failed',
+      'rf7.status.pending': 'Not generated',
+
+      'rf7.chatSync.empty': 'Nothing synced yet: what you type in the chat shows up here.',
+      'rf7.chatSync.imported': 'Synced from chat: {count} chapter(s) written ({pending})',
+      'rf7.chatSync.needRun': 'no stage run yet',
+      'rf7.chatSync.ready': 'running',
+      'rf7.chatSync.captured': 'Synced from chat: the text was written into the project',
+
+      'rf7.hub.title': 'Hub',
+      'rf7.hub.subtitle': 'Chapters · shot summary · cost',
+      'rf7.hub.capsule.empty': 'No chapters yet',
+      'rf7.hub.capsule.planned': 'Planned',
+      'rf7.hub.capsule.running': 'Running',
+      'rf7.hub.costLabel': 'Cost',
+      'rf7.hub.stageLabel': 'Current stage',
+      'rf7.hub.stageUnset': 'No plan yet',
+      'rf7.hub.kindUnset': 'No mode picked',
+      'rf7.hub.stageSub': 'Chapter {chapter} · {done} / {total} steps',
+      'rf7.hub.chapterTitle': 'Chapter {chapter} · {title}',
+      'rf7.hub.chapterMeta': '{shots} shots · {duration}',
+      'rf7.hub.sectionChapters': 'Chapter progress',
+      'rf7.hub.sectionShots': 'Shot script',
+      'rf7.hub.sectionShotsSub': 'by chapter idx',
+      'rf7.hub.shotId': 'C{seq}-S{idx}',
+      'rf7.hub.shotSizeUnknown': 'No framing',
+      'rf7.hub.moreShots': '{count} more shot(s) queued',
+      'rf7.hub.viewAll': 'View all {count} shots',
+      'rf7.hub.footerLabel': 'Current stage',
+      'rf7.hub.footerValue.empty': 'No chapters yet',
+      'rf7.hub.footerValue.generating': 'Chapter {chapter} is generating · no cut yet',
+      'rf7.hub.footerValue.ready': 'Chapter {chapter} is cut · {count} deliverable(s)',
+      'rf7.hub.empty.title': 'This project has no chapters yet',
+      'rf7.hub.empty.hint': 'Paste the novel first; chapters split automatically, then the hub shows the whole picture.',
+      'rf7.hub.empty.action': 'Create a project',
+      'rf7.hub.action': 'View the cut',
+      'rf7.hub.actionDisabled': 'No cut yet: run the video stage first; deliverables land in the Output tab.',
+      // ── cross-screen entries: project settings / skills & workflows ──
+      'rf7.hub.actProjectSettings': 'Project settings',
+      'rf7.hub.actSkills': 'Skills & workflows',
+
+      'rf7.chapters.title': 'Chapters',
+      'rf7.chapters.subtitle': 'Skeleton first, then chapter by chapter',
+      'rf7.chapters.capsule': '{count} chapters',
+      'rf7.chapters.footerLabel': 'Chapters',
+      'rf7.chapters.footerValue': '{chapters} chapters · {shots} shots',
+      'rf7.chapters.chapterTitle': 'Chapter {chapter}',
+      'rf7.chapters.shotsMeta': '{shots} shots · {duration}',
+      'rf7.chapters.noShots': 'No storyboard yet',
+      'rf7.chapters.actAdd': 'Add chapter',
+      'rf7.chapters.actGenerateAll': 'Generate all chapters',
+      'rf7.chapters.actGenerate': 'Generate',
+      'rf7.chapters.actEdit': 'Edit',
+      'rf7.chapters.actMore': 'More',
+      'rf7.chapters.actEditDisabled': 'The plugin has no tool for editing a chapter yet: ask the assistant in chat to rename or drop a chapter.',
+      'rf7.chapters.actMoreDisabled': 'The plugin has no chapter action menu yet: duplicate or reorder chapters from chat for now.',
+      'rf7.chapters.notice': 'A chapter is an independent unit of delivery: run one, or resume the one you left off.',
+      'rf7.chapters.noticeSub': 'The asset library is shared by the whole project.',
+      'rf7.chapters.action': 'Generate all chapters',
+      'rf7.chapters.actionDisabled': 'No text yet: paste the source or upload a .txt in "New project" first.',
+
+      'rf7.assets.title': 'Assets',
+      'rf7.assets.subtitle': 'Characters · scenes · props · variants',
+      'rf7.assets.capsule': '{count} items',
+      'rf7.assets.chipAll': 'All {count}',
+      'rf7.assets.footerLabel': 'Assets',
+      'rf7.assets.footerValue': '{count} items',
+      'rf7.assets.actCreate': 'New asset',
+      'rf7.assets.actGenerate': 'Generate image',
+      'rf7.assets.actReplace': 'Upload',
+      'rf7.assets.stateReady': 'Ready',
+      'rf7.assets.noDescription': 'No description',
+      'rf7.assets.more': '{count} more · sfx / video / references',
+      'rf7.assets.viewAll': 'View all {count} items',
+      'rf7.assets.gapTitle': '{count} shots are missing reference images; the video stage fails on them (image is a hard dependency).',
+      'rf7.assets.gapSub': 'Fill the references before running the video stage.',
+      'rf7.assets.action': 'New asset',
+      'rf7.assets.actionDisabled': 'A new asset needs a category and a name: use the "New asset" entry in the library above.',
+
+      'rf7.storyboard.title': 'Storyboard',
+      'rf7.storyboard.subtitle': 'Review shot by shot, redo what you dislike',
+      'rf7.storyboard.capsule': '{count} shots',
+      'rf7.storyboard.footerLabel': 'Storyboard',
+      'rf7.storyboard.footerValue': '{count} shots · {pending} to review',
+      'rf7.storyboard.duration': '{seconds}s',
+      'rf7.storyboard.refCharacter': 'Character',
+      'rf7.storyboard.refScene': 'Scene',
+      'rf7.storyboard.refProp': 'Prop',
+      'rf7.storyboard.promptLine': 'Shot {size} · references and prompt',
+      'rf7.storyboard.sectionSelected': 'Selected shot · #{idx}',
+      'rf7.storyboard.sectionSelectedSub': 'References and prompt',
+      'rf7.storyboard.sectionRegenerate': 'Regenerate',
+      'rf7.storyboard.actSeed': 'Another seed',
+      'rf7.storyboard.actRewrite': 'Rewrite from feedback',
+      'rf7.storyboard.feedbackPlaceholder': 'Say what is off, e.g. "slow the curtain down"',
+      'rf7.storyboard.empty.title': 'No storyboard yet',
+      'rf7.storyboard.empty.hint': 'Run the llm stage to get the storyboard, then come back shot by shot.',
+      'rf7.storyboard.action': 'Regenerate selected shot',
+      'rf7.storyboard.actionDisabled': 'No storyboard yet: run the llm stage first.',
+      // ── cross-screen entry: shot detail (board 07 is the list, board 08 the single shot) ──
+      'rf7.storyboard.actDetail': 'Open shot detail',
+      'rf7.storyboard.actDetailDisabled': 'No storyboard yet: run the llm stage first.',
+
+      'rf7.context.title': 'Context',
+      'rf7.context.subtitle': 'The three keys every generation needs',
+      'rf7.context.capsule.ready': 'All three keys',
+      'rf7.context.capsule.missing': '{missing} missing',
+      'rf7.context.footerLabel': 'Context',
+      'rf7.context.footerValue': '{ready} / {total} keys · {continuity} continuity note(s)',
+      'rf7.context.bibleTitle': 'Character bible',
+      'rf7.context.bibleMeta': 'Character anchors and the blocking table',
+      'rf7.context.styleTitle': 'Style guide',
+      'rf7.context.styleMeta': 'One look for art, light and tone',
+      'rf7.context.continuityTitle': 'Continuity log',
+      'rf7.context.continuityMeta': 'Cross-chapter facts and conflicts',
+      'rf7.context.stateReady': 'Ready',
+      'rf7.context.stateMissing': 'Empty',
+      'rf7.context.actView': 'View',
+      'rf7.context.actWrite': 'Write from chat',
+      'rf7.context.actWriteDisabled': 'The plugin has no write-context-from-chat action: have the assistant write the three keys in chat and they are injected on every generation.',
+      'rf7.context.sectionInject': 'Injection preview',
+      'rf7.context.sectionInjectSub': 'These three blocks go into every generation',
+      'rf7.context.rule1': 'Only bible / style / continuity are accepted; a fourth key is an error.',
+      'rf7.context.rule2': 'Writing the bible reads the current one back first; existing characters are never overwritten.',
+      'rf7.context.action': 'Freeze anchors',
+      'rf7.context.actionDisabled': 'There is no "freeze anchors" action yet: have the assistant write the three keys in chat; they are injected on every generation.',
+
+      'rf7.output.title': 'Output',
+      'rf7.output.subtitle': 'Assembly · subtitles · delivery',
+      'rf7.output.capsule': '{count} files',
+      'rf7.output.footerLabel': 'Delivery',
+      'rf7.output.footerValue.empty': 'No deliverable yet',
+      'rf7.output.footerValue': 'Chapter {chapter} {duration} · {count} deliverable(s)',
+      'rf7.output.actDownload': 'Download',
+      // ── cross-screen entry: background music (board 09 · delivery step) ──
+      'rf7.output.actMusic': 'Background music',
+      'rf7.output.deliverMeta': '{size}',
+      'rf7.output.stateReady': 'Generated',
+      'rf7.output.fileMeta': '{size} · {time}',
+      'rf7.output.untitled': 'Untitled cut',
+      'rf7.output.playerPlaceholder': 'Preview · 0:00 / 0:00',
+      'rf7.output.sectionDeliver': 'Deliverables',
+      'rf7.output.sectionDeliverSub': 'Two cuts plus an SRT',
+      'rf7.output.sectionChapters': 'Chapters',
+      'rf7.output.chapterTitle': 'Chapter {chapter} · {title}',
+      'rf7.output.chapterMeta': '{shots} shots · {duration}',
+      'rf7.output.noChapters': 'No chapters yet',
+      'rf7.output.empty.title': 'No cut yet',
+      'rf7.output.empty.hint': 'Once the video stage finishes and the chapter is assembled, the files show up here.',
+      'rf7.output.action': 'Download the cut',
+      'rf7.output.actionDisabled': 'No deliverable yet: run the video stage and assemble first.',
+
+      'rf7.log.title': 'Run log',
+      'rf7.log.subtitle': 'Who changed what, and when',
+      'rf7.log.capsule': '{count} entries',
+      'rf7.log.footerLabel': 'Log',
+      'rf7.log.footerValue': '{count} recent change(s)',
+      'rf7.log.sectionChanges': 'Change log',
+      'rf7.log.sectionChangesSub': 'Every step can be rolled back',
+      'rf7.log.sectionOutput': 'Run output',
+      'rf7.log.sectionRollback': 'Rollback',
+      'rf7.log.drifted': 'Drifted',
+      'rf7.log.empty.title': 'No changes recorded yet',
+      'rf7.log.empty.hint': 'Every content write leaves an entry here.',
+      'rf7.log.rollbackBatch': 'Roll back a batch',
+      'rf7.log.rollbackTime': 'Roll back to a point in time',
+      'rf7.log.rollbackSingle': 'Roll back one entry',
+      'rf7.log.actRollback': 'Roll back',
+      'rf7.log.actPick': 'Pick',
+      'rf7.log.rollbackBatchDisabled': 'The changelog carries no batch id, so a batch rollback is impossible: use "Roll back one entry".',
+      'rf7.log.rollbackTimeDisabled': 'The changelog carries no selectable time point, so a time-point rollback is impossible: use "Roll back one entry".',
+      'rf7.log.rollbackNote': 'A rollback restores content only; images and videos already on disk stay.',
+      'rf7.log.action': 'Roll back this batch',
+      'rf7.log.actionDisabled': 'No changes recorded yet: write something once and an entry appears here.',
+      'rf7.log.actionNoBatch': 'The change log carries no batch id: use "roll back one entry" or "roll back to a point in time".',
+
+      'rf7.runGate.title': 'Start check',
+      'rf7.runGate.subtitle': 'First run · environment readiness',
+      'rf7.runGate.capsule': '{passed} / {total} passing',
+      'rf7.runGate.capsule.pending': 'Not probed yet',
+      'rf7.runGate.footerLabel': 'Next',
+      'rf7.runGate.footerValue.pending': 'Probing this machine…',
+      'rf7.runGate.footerValue.failed': '{count} check(s) failed — fix them before starting',
+      'rf7.runGate.footerValue.ready': 'All green — ready to produce',
+      'rf7.runGate.summaryTitle': 'Environment check',
+      'rf7.runGate.summaryMeta': '{total} checks · {passed} pass · {warned} warn · {unconfigured} unset',
+      'rf7.runGate.actRerun': 'Re-run checks',
+      'rf7.runGate.sectionPosition': 'Where it runs',
+      'rf7.runGate.sectionPositionSub': 'Same kinds either way; only the machine and the bill differ',
+      'rf7.runGate.localTitle': 'Run locally',
+      'rf7.runGate.localSub': 'ComfyUI · this machine',
+      'rf7.runGate.localFact1': '· data never leaves this machine',
+      'rf7.runGate.localFact2': '· no per-run fee',
+      'rf7.runGate.cloudTitle': 'Run in the cloud',
+      'rf7.runGate.cloudSub': 'Hosted workflows · scheduled on demand',
+      'rf7.runGate.cloudFact1': '· no GPU needed',
+      'rf7.runGate.cloudFact2': '· billed per run',
+      'rf7.runGate.sectionChecks': 'Checks',
+      'rf7.runGate.checkComfy': 'ComfyUI service',
+      'rf7.runGate.checkLlm': 'LLM endpoint',
+      'rf7.runGate.checkAgent': 'Agent runtime',
+      'rf7.runGate.checkFfmpeg': 'ffmpeg',
+      'rf7.runGate.checkDisk': 'Free disk',
+      'rf7.runGate.checkVram': 'VRAM estimate',
+      'rf7.runGate.checkCloud': 'Cloud account',
+      'rf7.runGate.check.comfy': 'ComfyUI service',
+      'rf7.runGate.check.llm': 'LLM endpoint',
+      'rf7.runGate.check.ffmpeg': 'ffmpeg',
+      'rf7.runGate.check.disk': 'Free disk',
+      'rf7.runGate.check.vram': 'VRAM estimate',
+      'rf7.runGate.check.provider': 'Cloud account',
+      'rf7.runGate.check.ckVersion': 'ComfyUI-Kernel version',
+      'rf7.runGate.check.encoders': 'Video encoders',
+      'rf7.runGate.check.videoBackend': 'Video backend',
+      'rf7.runGate.agentValue': 'Provided by the host (DSH built-in)',
+      'rf7.runGate.pass': 'Pass',
+      'rf7.runGate.warn': 'Warning',
+      'rf7.runGate.fail': 'Failed',
+      'rf7.runGate.unconfigured': 'Not configured',
+      'rf7.runGate.noticeMain': 'Probing runs on this machine only · nothing is uploaded',
+      'rf7.runGate.noticeSub': 'If this machine does not qualify, skip the probe and use the cloud',
+      'rf7.runGate.action': 'Start producing',
+      // ── cross-screen entries (added per board semantics; see the zh block above) ──
+      'rf7.runGate.actSettings': 'Service setup',
+      'rf7.runGate.actFailures': 'View failure list',
+
+      'rf7.settings.title': 'Services',
+      'rf7.settings.subtitle': 'ComfyUI · LLM · runtime',
+      'rf7.settings.capsule': 'Read-only',
+      'rf7.settings.footerLabel': 'Settings',
+      'rf7.settings.footerValue': 'Read-only · lives in the plugin config',
+      'rf7.settings.sectionComfy': 'ComfyUI',
+      'rf7.settings.sectionComfySub': 'Local rendering service',
+      'rf7.settings.labelAddress': 'Service address',
+      'rf7.settings.labelBaseUrl': 'Base URL',
+      'rf7.settings.labelModel': 'Model',
+      'rf7.settings.labelApiKey': 'API key',
+      'rf7.settings.actTest': 'Test connection',
+      'rf7.settings.testHint': '"Test connection" re-runs the local probe',
+      'rf7.settings.sectionLlm': 'LLM (OpenAI compatible)',
+      'rf7.settings.sectionLlmSub': 'The agent brain',
+      'rf7.settings.llmNotice': 'The LLM is configured by the host; the plugin cannot read it.',
+      'rf7.settings.llmNoticeSub': 'Change base URL, model and API key in the DSH model settings.',
+      'rf7.settings.sectionRuntime': 'Agent runtime',
+      'rf7.settings.sectionRuntimeSub': 'Built-in by default, or hand it to a local CLI',
+      'rf7.settings.runtimeBuiltin': 'Built-in openclaude',
+      'rf7.settings.runtimeClaudeCode': 'Claude Code',
+      'rf7.settings.runtimeCodex': 'Codex',
+      'rf7.settings.runtimeGemini': 'Gemini',
+      'rf7.settings.runtimeCustom': 'Custom',
+      'rf7.settings.runtimeDisabled': 'The agent runtime cannot be switched here: change it in the plugin config (this screen is read-only).',
+      'rf7.settings.sectionMaintenance': 'Generation upkeep',
+      'rf7.settings.rowFree': 'VRAM release interval',
+      'rf7.settings.valueFree': 'every 3 runs',
+      'rf7.settings.rowTimeout': 'Per-task timeout',
+      'rf7.settings.valueTimeout': '90 min',
+      'rf7.settings.rowCloudKey': 'RunningHub key',
+      'rf7.settings.valueCloudKey': 'not set',
+      'rf7.settings.stateAdjustable': 'tunable',
+      'rf7.settings.stateNotLoggedIn': 'not logged in',
+      'rf7.settings.unset': 'Not set',
+      'rf7.settings.readonlyTitle': 'This screen is read-only',
+      'rf7.settings.readonlySub': 'The plugin has no channel for writing config: change addresses, keys and upkeep values in the plugin config block (budget ¥{budget} · {stages} stage(s) enabled).',
+      'rf7.settings.action': 'Save and re-test',
+      'rf7.settings.actionDisabled': 'The plugin cannot write config: edit the plugin config block; "Test connection" re-runs the probe.',
+
+      'rf7.intake.title': 'New project',
+      'rf7.intake.subtitle': 'Novel · script · one line',
+      'rf7.intake.capsule.ready': 'Text written',
+      'rf7.intake.capsule.empty': 'Not imported',
+      'rf7.intake.footerLabel': 'Next',
+      'rf7.intake.footerValue': 'Split the chapters and create the project',
+      'rf7.intake.labelName': 'Project name',
+      'rf7.intake.namePlaceholder': 'Project name, e.g. "The Hours of Mother"',
+      'rf7.intake.labelStyle': 'Art style',
+      'rf7.intake.styleRealistic': 'Realistic',
+      'rf7.intake.styleAnime': 'Anime',
+      'rf7.intake.styleComic': 'Comic',
+      'rf7.intake.style3d': '3D',
+      'rf7.intake.styleSuspense': 'Suspense',
+      'rf7.intake.textPlaceholder': 'Paste the novel, or upload a .txt; one line is enough',
+      'rf7.intake.textHint': 'Chapters split automatically · one chapter per episode · can come straight from chat',
+      'rf7.intake.specResolution': 'Resolution',
+      'rf7.intake.specAspect': 'Aspect',
+      'rf7.intake.specMusic': 'Background music',
+      'rf7.intake.on': 'On',
+      'rf7.intake.off': 'Off',
+      'rf7.intake.sectionReferences': 'Reference images',
+      'rf7.intake.sectionReferencesSub': 'Optional · brand / product / character look',
+      'rf7.intake.refThumb': 'Reference',
+      'rf7.intake.refName': 'reference-image.jpg',
+      'rf7.intake.refUse': 'Use: product reference, keep the look consistent',
+      'rf7.intake.actAddReference': '+ Choose reference images',
+      'rf7.intake.actRemove': 'Remove',
+      'rf7.intake.actRemoveDisabled': 'The plugin has no remove-reference action yet: upload the file again to replace it.',
+      'rf7.intake.sectionChapters': 'Chapter preview',
+      'rf7.intake.sectionChaptersSub': '{count} chapters · {chars} characters',
+      'rf7.intake.chapterMeta': 'Split automatically · one chapter per episode',
+      'rf7.intake.noChapters': 'No chapters split yet',
+      'rf7.intake.noChaptersHint': 'Paste the text and the split result shows up here.',
+      'rf7.intake.actImport': 'Import',
+      'rf7.intake.action': 'Create and open',
+      'rf7.intake.actImportDisabled': 'The host only offers whole-novel import: use "Create and open" in the footer first, then the chapters show up here.',
+      'rf7.intake.actionDisabled': 'There is no text yet: paste the novel (or upload a .txt) above, then press "Create and open".',
+
+      'rf7.projectSettings.title': 'Project settings',
+      'rf7.projectSettings.subtitle': 'Format · style · subtitles',
+      'rf7.projectSettings.capsule': 'Read-only',
+      'rf7.projectSettings.footerLabel': 'Project settings',
+      'rf7.projectSettings.footerValue': '{resolution} · {aspect}',
+      'rf7.projectSettings.sectionSpec': 'Output format',
+      'rf7.projectSettings.rowResolution': 'Resolution',
+      'rf7.projectSettings.rowAspect': 'Aspect',
+      'rf7.projectSettings.rowStyle': 'Style',
+      'rf7.projectSettings.styleDefault': 'Realistic · cold',
+      'rf7.projectSettings.sectionSubtitles': 'Subtitles',
+      'rf7.projectSettings.rowAutoSub': 'Add subtitles automatically',
+      'rf7.projectSettings.rowPosition': 'Burn-in position',
+      'rf7.projectSettings.bottomCenter': 'Bottom centre',
+      'rf7.projectSettings.rowHideName': 'Hide character names',
+      'rf7.projectSettings.subtitleNote': 'Each cut exports with subtitles, without subtitles, plus an SRT file.',
+      'rf7.projectSettings.sectionSound': 'Sound',
+      'rf7.projectSettings.rowBgm': 'Generate background music',
+      'rf7.projectSettings.rowVoice': 'Voice synthesis',
+      'rf7.projectSettings.voiceH3': 'H3 reference voice (flac)',
+      'rf7.projectSettings.sectionDanger': 'Danger zone',
+      'rf7.projectSettings.dangerText': 'Deleting the project also clears assets, storyboard and cuts. It cannot be undone.',
+      'rf7.projectSettings.dangerAction': 'Delete this project',
+      'rf7.projectSettings.dangerDisabled': 'The plugin has no delete-project action: ask the assistant in chat to delete it (the host asks for confirmation).',
+      'rf7.projectSettings.unset': 'Not set',
+      'rf7.projectSettings.action': 'Save settings',
+      'rf7.projectSettings.actionDisabled': 'The plugin has no tool for writing project settings yet: ask the assistant in chat to change resolution, aspect, subtitles or sound.',
+
+      'rf7.stages.title': 'Generation',
+      'rf7.stages.subtitle': 'Four stages · live progress',
+      'rf7.stages.capsule': '{count} stages',
+      'rf7.stages.footerLabel': 'Current stage',
+      'rf7.stages.footerValue': '{kind} · {stage}',
+      'rf7.stages.footerValue.unset': 'No mode picked yet',
+      'rf7.stages.legendLlm': 'llm done',
+      'rf7.stages.legendImage': 'image running',
+      'rf7.stages.legendTts': 'tts pending',
+      'rf7.stages.legendVideo': 'video pending',
+      'rf7.stages.currentTitle': 'Generating · {kind}',
+      'rf7.stages.currentSub': 'Task details',
+      'rf7.stages.metaGpu': 'GPU —',
+      'rf7.stages.metaVram': 'VRAM —',
+      'rf7.stages.metaEta': 'About — left',
+      'rf7.stages.sectionQueue': 'Queue',
+      'rf7.stages.sectionQueueSub': 'What comes next',
+      'rf7.stages.queueEmpty': 'The queue is empty: nothing is waiting.',
+      'rf7.stages.sectionPicker': 'Stages for this run',
+      'rf7.stages.stateEnabled': 'Done',
+      'rf7.stages.stateDisabled': 'Pending',
+      'rf7.stages.stateUnset': 'No mode picked yet',
+      'rf7.stages.desc.llm': 'Character bible / style / chapters / storyboard',
+      'rf7.stages.desc.image': 'Characters / scenes / props plus outfit and age variants',
+      'rf7.stages.desc.tts': 'Design voices only for characters that speak',
+      'rf7.stages.desc.video': 'Hard dependency on image; soft dependency on tts',
+      'rf7.stages.memMain': 'ComfyUI VRAM is released after every 3 runs',
+      'rf7.stages.memSub': 'The next batch reloads the model (about 1–3 min); you can also free it now',
+      'rf7.stages.action': 'Pause generation',
+      'rf7.stages.actionDisabled': 'There is no "pause generation" capability yet: wait for the batch to finish, or tune the VRAM interval in Services.',
+
+      'rf7.shotDetail.title': 'Shot detail',
+      'rf7.shotDetail.subtitle': 'Chapter {chapter} · shot {idx}',
+      'rf7.shotDetail.subtitle.empty': 'No storyboard yet',
+      'rf7.shotDetail.headTitle': 'Shot {chapter} · {idx} · {label}',
+      'rf7.shotDetail.meta': '{duration}s · {ratio}',
+      'rf7.shotDetail.capsule.done': 'Generated',
+      'rf7.shotDetail.capsule.pending': 'Not generated',
+      'rf7.shotDetail.capsule.empty': 'No storyboard',
+      'rf7.shotDetail.footerLabel': 'Storyboard',
+      'rf7.shotDetail.footerValue': '{count} shots · {pending} to review',
+      'rf7.shotDetail.sectionReferences': 'References',
+      'rf7.shotDetail.sectionReferencesSub': 'Character / scene / prop / outfit / voice (speaking roles only)',
+      'rf7.shotDetail.noReferences': 'This shot has no references yet.',
+      'rf7.shotDetail.duration': '{seconds}s',
+      'rf7.shotDetail.sectionScript': 'Prompt & storyboard script',
+      'rf7.shotDetail.scriptLens': 'Camera: {size}',
+      'rf7.shotDetail.scriptMissing': 'The storyboard script is not in the projection yet: the script is stored by the assistant through the storyboard write tool, so this screen only shows what is already stored.',
+      'rf7.shotDetail.sectionPrompt': 'Video prompt',
+      'rf7.shotDetail.promptMissing': 'The video prompt is not in the projection yet.',
+      'rf7.shotDetail.promptMissingSub': 'The prompt is written together with the storyboard; nothing is invented here.',
+      'rf7.shotDetail.empty.title': 'No storyboard yet',
+      'rf7.shotDetail.empty.hint': 'Run the llm stage to produce a storyboard, then come back for the single-shot detail.',
+      'rf7.shotDetail.empty.action': 'Go to the storyboard',
+      'rf7.shotDetail.action': 'Regenerate this shot',
+      'rf7.shotDetail.actionDisabled': 'No storyboard yet: run the llm stage first.',
+
+      'rf7.music.title': 'Background music',
+      'rf7.music.subtitle': 'Generate · preview · apply',
+      'rf7.music.capsule': '{count} tracks',
+      'rf7.music.footerLabel': 'Delivery',
+      'rf7.music.footerValue': '{count} track(s)',
+      'rf7.music.generateTitle': 'Generate a new track',
+      'rf7.music.generatePlaceholder': 'Describe the music, e.g. "restrained piano, cold, rising"',
+      'rf7.music.chipInstrumental': 'Instrumental',
+      'rf7.music.chipVocal': 'With vocals',
+      'rf7.music.chipPiano': 'Piano',
+      'rf7.music.chipStrings': 'Strings',
+      'rf7.music.actGenerate': 'Generate',
+      'rf7.music.chipsDisabled': 'The music style cannot be picked yet: the plugin has no generate-music tool.',
+      'rf7.music.sectionLibrary': 'Music library',
+      'rf7.music.sectionLibrarySub': 'One generated track can serve several chapters',
+      'rf7.music.stateApplied': 'Applied',
+      'rf7.music.actPreview': 'Preview',
+      'rf7.music.actApply': 'Apply to chapter',
+      'rf7.music.actGenerateDisabled': 'The plugin has no generate-music tool: describe the track in chat and let the assistant generate it.',
+      'rf7.music.actPreviewDisabled': 'The projection carries no audio file path, so there is nothing to play: have the assistant generate the track into the workspace first.',
+      'rf7.music.actApplyDisabled': 'Applying to a chapter needs the music file path inside the workspace, which the projection does not carry: have the assistant generate the track into the workspace first.',
+      'rf7.music.emptyTitle': 'The music library is empty',
+      'rf7.music.emptySub': 'The projection carries no music entries: the assistant has to generate the music into the workspace first.',
+      'rf7.music.note': 'Applied music is mixed into the cut; replacing it keeps the original, so you can switch back.',
+      'rf7.music.action': 'Apply to chapter 1',
+      'rf7.music.actionDisabled': 'The projection carries no music file path: have the assistant generate the track into the workspace first.',
+
+      'rf7.skills.title': 'Skills & workflows',
+      'rf7.skills.subtitle': 'Installed skills · new workflows',
+      'rf7.skills.capsule': '{count} installed',
+      'rf7.skills.footerLabel': 'Skills',
+      'rf7.skills.footerValue': '{total} installed · bundled {bundled} · installed {installed} · self-made {generated}',
+      'rf7.skills.sectionInstalled': 'Installed skills',
+      'rf7.skills.sectionInstalledSub': '{count} from the skills folder on disk',
+      'rf7.skills.stateReady': 'Usable',
+      'rf7.skills.source.bundled': 'Bundled · shipped with the plugin',
+      'rf7.skills.source.installed': 'Installed · local',
+      'rf7.skills.source.generated': 'Self-made · local',
+      'rf7.skills.empty.title': 'No skill installed yet',
+      'rf7.skills.empty.hint': 'Drop a skill folder into the plugin skills directory and it shows up after a restart.',
+      'rf7.skills.sectionIterate': 'Workflow self-iteration',
+      'rf7.skills.sectionIterateSub': 'Paste a ComfyUI workflow JSON',
+      'rf7.skills.step1': 'Analyse the nodes · derive the workflow spec',
+      'rf7.skills.step2': 'Register the workflow · draft SKILL.md',
+      'rf7.skills.dropHint': 'Drop the workflow JSON here',
+      'rf7.skills.actAnalyze': 'Analyse and register',
+      'rf7.skills.actAnalyzeDisabled': 'The plugin has no analyse-workflow tool: drop the workflow JSON into the skills directory and let the assistant register it.',
+      'rf7.skills.analyzed': 'Analysed',
+      'rf7.skills.note': 'A new skill can be routed by the agent right away; the workflow can also be registered without touching the skill.',
+      'rf7.skills.action': 'Install a skill',
+      'rf7.skills.actionDisabled': 'The plugin has no skill installer: drop a folder into the plugin skills directory and it is discovered.',
+
+      'rf7.degraded.title': 'Degraded & failed',
+      'rf7.degraded.subtitle': 'Never degrade silently',
+      'rf7.degraded.capsule': '{count} degradation(s)',
+      'rf7.degraded.footerLabel': 'Rules',
+      'rf7.degraded.footerValue': 'Say what it costs and what to do instead',
+      'rf7.degraded.sectionBlocked': 'Blocked',
+      'rf7.degraded.sectionBlockedSub': 'If the service is down, say so',
+      'rf7.degraded.sectionWarning': 'Warning',
+      'rf7.degraded.sectionWarningSub': 'It runs, but cheaper',
+      'rf7.degraded.sectionEmpty': 'Empty',
+      'rf7.degraded.sectionEmptySub': 'Say something before you start',
+      'rf7.degraded.sectionMissing': 'Missing inputs',
+      'rf7.degraded.sectionMissingSub': 'Name what is missing',
+      'rf7.degraded.missingTitle': '{count} shots miss reference images',
+      'rf7.degraded.missingSub': 'Shots {shots} have no reference images; the video stage needs them (hard dependency on image).',
+      'rf7.degraded.noMissingTitle': 'No missing inputs',
+      'rf7.degraded.noMissingSub': 'Every shot has its reference images.',
+      'rf7.degraded.actFill': 'Fill the gap',
+      'rf7.degraded.softTitle': 'Soft degradation · {count} characters have no voice',
+      'rf7.degraded.softSub': 'They still run; the video stage is not blocked, but the cut loses a layer of human voice.',
+      'rf7.assets.gapNone': 'No shot misses reference images.',
+      'rf7.assets.gapNoShots': 'No storyboard yet, so there is no reference gap to report.',
+      'rf7.degraded.blockedHint': 'Only the cloud path is left and it is billed per run; or fix the local one and resume.',
+      'rf7.degraded.warningHint': 'Already switched to tiled encoding; the next batch reloads the model.',
+      'rf7.degraded.noneTitle': 'Nothing is blocked',
+      'rf7.degraded.noneSub': 'This batch can run.',
+      'rf7.degraded.noWarningTitle': 'No warnings',
+      'rf7.degraded.noWarningSub': 'Every capability is in place.',
+      'rf7.degraded.emptyTitle': 'This project has no chapters yet',
+      'rf7.degraded.emptySub': 'Paste the novel, or just say "make an episode out of this".',
+      'rf7.degraded.action': 'See the failure list',
+
+      'rf7.picker.title': 'Material picker',
+      'rf7.picker.subtitle': 'Modal shape · embedded in the right panel',
+      'rf7.picker.capsule': '{count} picked',
+      'rf7.picker.footerLabel': 'Rules',
+      'rf7.picker.footerValue': '{count} picked · limit {limit}',
+      'rf7.picker.searchPlaceholder': 'Search character / scene / prop',
+      'rf7.picker.chipAll': 'All',
+      'rf7.picker.chipCharacter': 'Character',
+      'rf7.picker.chipScene': 'Scene',
+      'rf7.picker.chipProp': 'Prop',
+      'rf7.picker.chipCostume': 'Outfit',
+      'rf7.picker.pickedThumb': 'Picked',
+      'rf7.picker.pickedCount': '{count} picked · reference limit {limit}',
+      'rf7.picker.actClear': 'Clear',
+      'rf7.picker.note': 'Only characters that appear or speak take a slot; reference images ≤ 9 and audio/video ≤ 3 are hard backend limits.',
+      'rf7.picker.action': 'Confirm',
+      'rf7.picker.actionDisabled': 'Pick some material first, and select the shot to bind them to.',
+      'rf7.picker.actionNoBindable': 'None of the picked material is in a bindable category: only character / scene / prop / costume / age variant / voice can be bound to a shot.',
     },
   };
 })(RF);
@@ -1321,6 +2354,19 @@ window.__ModuleLoader__.load({
     }
     if (options.refresh === true) query.set('refresh', '1');
     return `/api/reelforge.probe?${query.toString()}`;
+  };
+
+  /**
+   * 服务配置读数的宿主路由 URL（RF7 板 14「服务配置」）。
+   *
+   * `/api/reelforge.capabilities` 是**只读**的：它把插件 Config 归一化后的
+   * 可调值回给客户端（ComfyUI 地址 / 预算上限 / BGM / 字幕 / 目标时长）。
+   * ⚠️ 它**不提供写入通道** —— 改配置要改插件的 `config` 块（见 RF7 设置屏的说明）。
+   *
+   * @returns {string} 同源 URL。
+   */
+  RF.capabilitiesUrl = function capabilitiesUrl() {
+    return '/api/reelforge.capabilities';
   };
 
   /**
@@ -1561,6 +2607,118 @@ window.__ModuleLoader__.load({
   };
 
   /**
+   * 参考素材上限（`src/core/constants.js` 的 `REFERENCE_LIMITS` 镜像）。
+   *
+   * RF7 的素材选择器板要显示「参考图上限 9」—— 那是**后端硬上限**，
+   * 不是界面自己定的数。
+   *
+   * @type {{ images: number, audios: number, videos: number }}
+   */
+  RF.REFERENCE_LIMITS = Object.freeze({ images: 9, audios: 3, videos: 3 });
+
+  /**
+   * 按 id 找一镜。
+   *
+   * 投影里的镜头 id 是 `${seq}-${idx}`（见 `src/host/projection.js`）。
+   *
+   * @param {object} project - 投影视图。
+   * @param {string | null | undefined} shotId - 镜头 id。
+   * @returns {object | null} 镜头；找不到时 null。
+   */
+  RF.shotById = function shotById(project, shotId) {
+    if (typeof shotId !== 'string' || shotId === '') return null;
+    const shots = Array.isArray(project?.shots) ? project.shots : [];
+    return shots.find(shot => String(shot?.id ?? '') === shotId) ?? null;
+  };
+
+  /**
+   * **当前这一镜**：显式选中的那一镜；没选过就取第一镜。
+   *
+   * ## 为什么要有这个（实机抓出来的）
+   *
+   * 画板 07（分镜审查）里**永远有一镜是高亮选中态**，画板 08（分镜详情）就是
+   * 那一镜的展开。所以「当前镜」的口径必须**只有一处**：
+   * 列表页高亮哪一镜，详情屏就得展开哪一镜，外壳的副标题 / 胶囊也得说哪一镜。
+   *
+   * 之前列表页有兜底（取第一镜），详情屏与外壳却是严格选中 ⇒
+   * 用户在列表页看到第 1 镜高亮，点进详情却写着「还没选镜」（实机走查抓到的真缺陷）。
+   *
+   * @param {object} project - 投影视图。
+   * @param {string | null | undefined} shotId - 显式选中的镜头 id。
+   * @returns {object | null} 当前镜头；一镜都没有时 null。
+   */
+  RF.currentShot = function currentShot(project, shotId) {
+    const explicit = RF.shotById(project, shotId);
+    if (explicit !== null) return explicit;
+    const shots = Array.isArray(project?.shots) ? project.shots : [];
+    return shots.length === 0 ? null : shots[0];
+  };
+
+  /**
+   * 缺参考图的分镜（画板 17「缺料」态 / 画板 04「缺口警示」共用同一口径）。
+   *
+   * 投影里每一镜的 `references` 是**已解析出来的**参考素材
+   * （`src/host/projection.js` 走 `resolveRefs`）⇒ 空数组 = 这一镜没参考图，
+   * 而 video 阶段硬依赖 image ⇒ 这是**真缺料**，不是「还没写」。
+   *
+   * @param {object} project - 投影视图。
+   * @returns {Array<object>} 缺参考图的分镜。
+   */
+  RF.shotsMissingReferences = function shotsMissingReferences(project) {
+    const shots = Array.isArray(project?.shots) ? project.shots : [];
+    return shots.filter(shot => {
+      const references = Array.isArray(shot?.references) ? shot.references : [];
+      return references.length === 0;
+    });
+  };
+
+  /**
+   * 没有音色的角色（画板 17「软降级」态）。
+   *
+   * 判定：分类是 `character` 的资产，**没有**任何 `voice` 资产把 `parent_id`
+   * 指到它 ⇒ 这一角色没有音色（软降级：仍可跑，出片少一层人声质感）。
+   *
+   * @param {object} project - 投影视图。
+   * @returns {Array<object>} 没有音色的角色资产。
+   */
+  RF.charactersWithoutVoice = function charactersWithoutVoice(project) {
+    const assets = Array.isArray(project?.assets) ? project.assets : [];
+    const characters = assets.filter(asset => String(asset?.category ?? '') === 'character');
+    const voices = assets.filter(asset => String(asset?.category ?? '') === 'voice');
+    return characters.filter(character => {
+      const id = String(character?.id ?? '');
+      return !voices.some(voice => String(voice?.parent_id ?? '') === id);
+    });
+  };
+
+  /**
+   * 按分类筛资产。
+   *
+   * @param {object} project - 投影视图。
+   * @param {string} category - 分类；`'all'` = 全部。
+   * @returns {Array<object>} 资产数组。
+   */
+  RF.assetsByCategory = function assetsByCategory(project, category) {
+    const assets = Array.isArray(project?.assets) ? project.assets : [];
+    if (category === 'all' || category === undefined || category === '') return assets;
+    return assets.filter(asset => String(asset?.category ?? '') === category);
+  };
+
+  /**
+   * 音乐类资产（RF7 背景音乐板的「音乐库」）。
+   *
+   * ⚠️ 投影里的资产**没有文件路径**（只有 id / name / description / category），
+   * 而 `reelforge.set_chapter_music` 要的是工作区相对路径 ——
+   * ⇒ 这一屏能列条目，但「应用到章节」接不上，见 chrome 的 `music` 屏。
+   *
+   * @param {object} project - 投影视图。
+   * @returns {Array<object>} 音乐资产数组。
+   */
+  RF.musicAssets = function musicAssets(project) {
+    return RF.assetsByCategory(project, 'music');
+  };
+
+  /**
    * 安全取词：宿主 `t` 还没绑定时不至于吐键名、也不抛异常。
    *
    * 背景：`RF.t` 是 `RF.apply` 里 `ctx.locale.bind(ns)` 的结果，
@@ -1598,12 +2756,19 @@ window.__ModuleLoader__.load({
   RF.CLS = 'rf';
 
   /**
-   * 按钮：主要 / 次要 / 禁用 / 危险。
+   * 按钮：主要 / 次要 / 幽灵 / 危险。
+   *
+   * RF7 的零件里有三种按钮：`Button/Primary`（40 高 · accent 底）、
+   * `Button/Ghost`（28 高 · surface-3 底）、`Button/Danger`（透明底 · 错误色描边）。
+   * `secondary` 是旧版的次要按钮名，保留为 `ghost` 的别名（老词条还在用）。
+   *
    * @param {{ label: string, variant?: string, onClick?: function, disabled?: boolean, title?: string }} props - 属性。
    * @returns {object} React 元素。
    */
   RF.Button = function Button(props) {
-    const variant = props.variant === 'secondary' || props.variant === 'danger' ? props.variant : 'primary';
+    const variant = ['secondary', 'ghost', 'danger'].includes(props.variant)
+      ? (props.variant === 'secondary' ? 'ghost' : props.variant)
+      : 'primary';
     const disabled = props.disabled === true;
     return h('button', {
       type: 'button',
@@ -1632,18 +2797,22 @@ window.__ModuleLoader__.load({
   };
 
   /**
-   * 胶囊 / 标签：进行中 / 已完成 / 失败 / 排队 / **降级**。
+   * 胶囊 / 标签（RF7 的 `RF/StatusPill`）。
    *
-   * ⚠️ 画板 15 的胶囊只列了 4 态；第 5 种 `warn`（降级但仍交付）是
-   * **画板 16 降级矩阵**要的语义 —— 那一板明写「每格用 10-11px 文字，
-   * 绿 #3FB950 / 黄 #D29922 / 红 #F85149」：绿=有、红=无、黄=降级但仍交付。
-   * 少了它，「静帧成片 / 部分镜 / 静音成片」会渲染成灰色 = 看不出是降级。
+   * RF7 的胶囊只有四种底：surface-3 + 文字色（中性 / 绿 / 黄 / 红），
+   * 外加 accent-dim 底 + accent 字（当前态）。
+   *
+   * ⚠️ 词条名有两套：RF7 的语义名（`accent` / `ok` / `error` / `neutral` / `warn`）
+   * 与旧版的机械名（`running` / `done` / `failed` / `queued`）。
+   * 两者都认，class 名照原样吐出去 —— 旧测试按 `rf-pill--running` 找，
+   * 样式表把两套映射到同一套配色。
    *
    * @param {{ label: string, tone?: string }} props - 属性。
    * @returns {object} React 元素。
    */
   RF.Pill = function Pill(props) {
-    const tone = ['running', 'done', 'failed', 'queued', 'warn'].includes(props.tone) ? props.tone : 'queued';
+    const tones = ['neutral', 'accent', 'ok', 'warn', 'error', 'running', 'done', 'failed', 'queued'];
+    const tone = tones.includes(props.tone) ? props.tone : 'queued';
     return h('span', { className: `${RF.CLS}-pill ${RF.CLS}-pill--${tone}` }, props.label);
   };
 
@@ -1662,6 +2831,11 @@ window.__ModuleLoader__.load({
 
   /**
    * 空态：无数据 / 出错了。
+   *
+   * ⚠️ `action` 是**可选的行动按钮**（RF7 的「去新建项目」这类入口）。
+   * 以前这个槽位不存在 ⇒ 空态里的按钮被静默丢掉，
+   * 用户看到一句「还没有章节」却没有任何可点的东西。
+   *
    * @param {{ title: string, hint?: string, tone?: string, action?: object }} props - 属性。
    * @returns {object} React 元素。
    */
@@ -1669,7 +2843,10 @@ window.__ModuleLoader__.load({
     const tone = props.tone === 'error' ? 'error' : 'empty';
     return h('div', { className: `${RF.CLS}-empty ${RF.CLS}-empty--${tone}` },
       h('div', { className: `${RF.CLS}-empty__title` }, props.title),
-      props.hint === undefined ? null : h('div', { className: `${RF.CLS}-empty__hint` }, props.hint));
+      props.hint === undefined ? null : h('div', { className: `${RF.CLS}-empty__hint` }, props.hint),
+      props.action === undefined || props.action === null
+        ? null
+        : h('div', { className: `${RF.CLS}-empty__action` }, props.action));
   };
 
   /**
@@ -1690,29 +2867,29 @@ window.__ModuleLoader__.load({
    * 卡片：默认 / 选中 / 禁用。
    *
    * ⚠️ 带 `onClick` 的卡片**必须键盘可达**：只挂 `onClick` 的 `div`
-   * 鼠标能用、键盘用不了（实机验证时抓到的：运行位置屏的两张大卡
-   * 与分镜/技能的选择卡都只能靠鼠标）。
+   * 鼠标能用、键盘用不了（实机验证时抓到的）。
    *
    * ⇒ 可点时补 `role="button"` + `tabIndex` + Enter/Space 键。
-   * 事件来自卡片**内部**的按钮时**不重复触发**卡片自己的动作
-   * （否则在子按钮上按 Enter 会同时选中卡片）。
+   * 事件来自卡片**内部**的按钮时**不重复触发**卡片自己的动作。
    *
-   * @param {{ children: any, state?: string, onClick?: function, accent?: boolean, tone?: string }} props - 属性。
+   * `className` 用来挂 RF7 的零件变体（如 `rf-hubstrip` 的横向排版）。
+   *
+   * @param {{ children: any, state?: string, onClick?: function, accent?: boolean, tone?: string, className?: string }} props - 属性。
    * @returns {object} React 元素。
    */
   RF.Card = function Card(props) {
     const state = props.state === 'selected' || props.state === 'disabled' ? props.state : 'default';
     const clickable = state !== 'disabled' && typeof props.onClick === 'function';
-    // `accent` = 左侧 4px 强调色竖条（画板 06 号板：阶段卡选中态
-    // 「描边 #4C8DFF + 左侧 4px #4C8DFF 条」）。别的板只要描边，不要竖条。
+    // `accent` = 左侧 4px 强调色竖条（RF7 阶段卡的选中态）。
     const accent = props.accent === true ? ` ${RF.CLS}-card--accent` : '';
-    // `tone` = 状态面（画板 17 号板的 WARN-SURF / ERROR-SURF 两个令牌）：
-    //   `warn`        黄面 + 黄描边（画板 06 号板「显存门槛提示条」）
-    //   `error`       红面 + 红描边（画板 04 号板「结论卡」）
-    //   `warn-border` 普通面 + 黄描边（画板 16 号板「一次真实降级」卡）
+    // `tone` = 状态面：
+    //   `warn`        黄面 + 黄描边
+    //   `error`       红面 + 红描边
+    //   `warn-border` 普通面 + 黄描边
     const tone = ['warn', 'error', 'warn-border'].includes(props.tone) ? ` ${RF.CLS}-card--${props.tone}` : '';
+    const extra = typeof props.className === 'string' && props.className !== '' ? ` ${props.className}` : '';
     return h('div', {
-      className: `${RF.CLS}-card ${RF.CLS}-card--${state}${accent}${tone}`,
+      className: `${RF.CLS}-card ${RF.CLS}-card--${state}${accent}${tone}${extra}`,
       onClick: clickable ? props.onClick : undefined,
       role: clickable ? 'button' : undefined,
       tabIndex: clickable ? 0 : undefined,
@@ -1899,24 +3076,29 @@ window.__ModuleLoader__.load({
 
 /* ── src/client/workbench/chrome.js ───────────────────────────── */
 /* ─────────────────────────────────────────────────────────────────────────────
- * 工作台外壳的**按屏定义**：Header 三件套（标题 / 副标 / 胶囊）+ Footer 三件套
- * （标签 / 值 / 按钮）。
+ * 工作台外壳的**按屏定义**（RF7 规格）：Header 三件套（标题 / 副标 / 胶囊）
+ * + Footer 三件套（标签 / 主文案 / 一个主按钮）。
  *
- * 背景：设计稿 17 块板的 Header 胶囊与 Footer 文案**每块都不同** ——
- *   01 工作台    云端 · RunningHub   |  当前阶段 / 阶段三 tts · 角色音色样本 | 查看成片
- *   07 上下文    3 个分区             |  下一步 / 生成资产参考图             | 继续
- *   08 资产库    24 项资产            |  下一步 / 逐镜写分镜                 | 继续
- *   09 分镜表    章 1 / 3             |  下一步 / 跑 video 阶段出片          | 生成第 1 章
- *   10 成片      云端渲染             |  本集用时 / 成本 ¥4.60 · 云端渲染完成 | 交付物
- *   12 技能      3 个来源             |  技能来源 / 内置 3 · 已装 1 · 自建 1 | 安装技能包
- *   13 变更日志  42 条                |  本章 6 条 / 全项目 42 条            | 导出日志
+ * ## 为什么要逐屏写
  *
- * 实现以前是**全局固定**的一套（恒为「运行位置 · provider」+「成本 + 进度 + 查看成片」）。
- * owner 已裁决（Q1 底栏按屏变化 / Q3 胶囊显示当前屏摘要）：**按屏变化**。
+ * RF7 的 18 块板，**每块的胶囊与底栏文案都不同**（画板索引逐块给了文案），
+ * 以前实现是一套全局固定的（「运行位置 · provider」+「成本 + 进度 + 查看成片」）。
+ * RF7 §6.2 把 Footer 定成硬约束：**本屏标签 / 本屏主文案 / 一个主按钮**，
+ * 不可点时**禁用并写明缺什么**。
  *
- * 本文件只回答「这一屏长什么样」；「怎么渲染」在 `Workbench.js`。
- * 计数、章节号、成本这类动态部分由这里的函数从投影视图现算 —— 不写死。
- * ───────────────────────────────────────────────────────────────────────────── */
+ * ## 底栏按钮的接线纪律（这一批最要紧的一条）
+ *
+ * 底栏主按钮**不许是「点了没反应」的死按钮**。所以每一块板分三种：
+ *
+ * 1. **有对应工具** → 接工具（`kind: 'tool'`），参数名逐字对齐宿主 schema；
+ * 2. **有对应屏** → 接导航（`kind: 'tab'` / `'flow'` / `'scroll'`）；
+ * 3. **能力还没有** → `kind: 'none'` + **禁用说明**（说清缺什么、给什么替代）。
+ *
+ * 第 3 类在本批里占 6 块板（服务配置 / 项目设置 / 生成执行 / 上下文 / 素材库 / 技能），
+ * 原因都是同一个：**RF7 画板假设插件能改配置、能暂停、能装技能**，
+ * 而插件当前**没有写配置的工具、没有暂停的工具、没有装技能的工具**。
+ * 这是**能力缺口**，不是界面 bug —— 界面按纪律禁用 + 说清，而不是假装能做。
+ * ─────────────────────────────────────────────────────────────────────────── */
 ;(function (RF) {
   'use strict';
 
@@ -1924,7 +3106,7 @@ window.__ModuleLoader__.load({
    * 当前章：优先取客户端算出来的「正在跑」那一章，否则第一章。
    *
    * @param {object} project - 投影视图。
-   * @returns {object | null} 当前章（wire view 的 chapterViews 一项）；没有章时 null。
+   * @returns {object | null} 当前章；没有章时 null。
    */
   function currentChapter(project) {
     const chapters = Array.isArray(project?.chapters) ? project.chapters : [];
@@ -1974,27 +3156,24 @@ window.__ModuleLoader__.load({
    * 技能按来源分档计数。
    *
    * @param {object} project - 投影视图。
-   * @returns {{ bundled: number, installed: number, generated: number, sources: number }} 三档计数 + 来源档数。
+   * @returns {{ bundled: number, installed: number, generated: number, total: number }} 三档计数 + 总数。
    */
   function skillCounts(project) {
     const skills = Array.isArray(project?.skills) ? project.skills : [];
     const count = source => skills.filter(skill => String(skill.source ?? 'bundled') === source).length;
-    const bundled = count('bundled');
-    const installed = count('installed');
-    const generated = count('generated');
-    // 「几个来源」= 有技能的来源档数（bundled / installed / generated），**不是技能个数**。
-    // 设计稿 12 号板：胶囊「3 个来源」而底栏是「内置 3 · 已装 1 · 自建 1」（5 个技能、3 个来源）。
-    const sources = [bundled, installed, generated].filter(value => value > 0).length;
-    return { bundled, installed, generated, sources };
+    return {
+      bundled: count('bundled'),
+      installed: count('installed'),
+      generated: count('generated'),
+      total: skills.length,
+    };
   }
 
   /**
    * 静态文案包装成函数。
    *
-   * 契约统一：外壳的 `subtitle` / `footerLabel` / `footerValue` **一律是函数**。
-   * 以前静态文案用 `xxxKey` 字符串、动态文案用 `xxx` 函数，调用方到处判类型 ——
-   * 漏判一处就是 `chrome.subtitle is not a function`（真出过）。
-   * 静态与动态的差别只该留在**这一层**，不该漏到渲染层。
+   * 契约统一：外壳的 `subtitle` / `capsule` / `footerLabel` / `footerValue`
+   * **一律是函数**。静态与动态的差别只该留在**这一层**。
    *
    * @param {string} key - 词条键。
    * @returns {(project: object, t: function) => string} 取词条的函数。
@@ -2020,9 +3199,18 @@ window.__ModuleLoader__.load({
   }
 
   /**
-   * 有没有进入生成阶段（阶段走到「生成」之后）。
+   * 变更日志条目（最新的在前）。
    *
-   * 用它区分「还没开始渲染」与「还在渲染」—— 两者都不该说成「渲染完成」。
+   * @param {object} project - 投影视图。
+   * @returns {Array<object>} 条目数组。
+   */
+  function logEntries(project) {
+    const changelog = project?.changelog ?? {};
+    return Array.isArray(changelog.entries) ? changelog.entries : [];
+  }
+
+  /**
+   * 有没有进入生成阶段。
    *
    * @param {object} project - 投影视图。
    * @returns {boolean} 是否已进入生成阶段。
@@ -2033,16 +3221,122 @@ window.__ModuleLoader__.load({
   }
 
   /**
+   * 探测结果里的检查项（RF7 RunGate 的 7 行清单的数据源）。
+   *
+   * @param {object} context - 屏外数据上下文。
+   * @returns {{ items: Array<object>, passed: number, warned: number, failed: number, total: number }} 汇总。
+   */
+  function probeSummary(context) {
+    const items = Array.isArray(context?.probe?.view?.report?.items)
+      ? context.probe.view.report.items
+      : [];
+    const count = status => items.filter(item => String(item?.status ?? '') === status).length;
+    return {
+      items,
+      passed: count('ok'),
+      warned: count('warn'),
+      failed: count('failed'),
+      total: items.length,
+    };
+  }
+
+  /**
+   * 上下文三键的齐备情况（RF7 Context 板）。
+   *
+   * @param {object} project - 投影视图。
+   * @returns {{ ready: number, total: number, continuity: number }} 齐备键数 / 总数 / 连续性条数。
+   */
+  function contextSummary(project) {
+    const context = project?.context ?? {};
+    const keys = RF.CONTEXT_KEYS;
+    const ready = keys.filter(key => String(context[key] ?? '').trim() !== '').length;
+    const continuity = String(context.continuity ?? '').trim();
+    return {
+      ready,
+      total: keys.length,
+      continuity: continuity === '' ? 0 : continuity.split(/\r?\n/).filter(line => line.trim() !== '').length,
+    };
+  }
+
+  /**
+   * 当前选中的那一镜（RF7 分镜详情 / 素材选择器都要它）。
+   *
+   * 「选中」是**交互态**，不在投影里 —— 所以从屏外数据上下文取。
+   *
+   * ⚠️ 口径统一走 `RF.currentShot`：显式选中的那一镜，没选过就取第一镜
+   * （画板 07 永远有一镜高亮）。列表页 / 详情屏 / 外壳必须同口径，
+   * 否则会出现「列表高亮第 1 镜、详情说没选镜」。
+   *
+   * @param {object} project - 投影视图。
+   * @param {object} [context] - 屏外数据上下文。
+   * @returns {object | null} 镜头；一镜都没有时 null。
+   */
+  function selectedShot(project, context) {
+    return RF.currentShot(project, context?.selectedShotId);
+  }
+
+  /**
+   * 素材选择器里已选的资产 id（交互态）。
+   *
+   * @param {object} [context] - 屏外数据上下文。
+   * @returns {Array<string>} 资产 id 数组。
+   */
+  function pickerSelection(context) {
+    return Array.isArray(context?.pickerSelection) ? context.pickerSelection : [];
+  }
+
+  /**
+   * 资产分类 → `reelforge.bind_asset` 的 `field`。
+   *
+   * ⚠️ **这六个值就是宿主 schema 的枚举**（`additionalProperties:false` +
+   * `field.enum`）—— 写成 `references` 之类会被宿主**整条拒收**，
+   * 表现为「点了没反应」。别自己发明字段名。
+   *
+   * @type {Record<string, string>}
+   */
+  const BIND_FIELD_BY_CATEGORY = {
+    character: 'character_ids',
+    scene: 'scene_ids',
+    prop: 'prop_ids',
+    costume: 'costume_ids',
+    age: 'age_ids',
+    voice: 'audio_ids',
+  };
+
+  /**
+   * 把选中的资产按「能绑的分类」分组。
+   *
+   * 一次 `bind_asset` 只吃一个 field ⇒ 角色一组、场景一组……
+   * 不能绑的分类（音乐 / 音效 / 视频 / 其它）**不绑**，也不假装绑了。
+   *
+   * @param {object} project - 投影视图。
+   * @param {Array<string>} selection - 选中的资产 id。
+   * @returns {Array<{ field: string, ids: Array<string> }>} 分组结果。
+   */
+  function bindAssetGroups(project, selection) {
+    const assets = Array.isArray(project?.assets) ? project.assets : [];
+    const groups = new Map();
+    for (const id of selection) {
+      const asset = assets.find(item => String(item?.id ?? '') === String(id));
+      const field = BIND_FIELD_BY_CATEGORY[String(asset?.category ?? '')];
+      if (field === undefined) continue;
+      if (!groups.has(field)) groups.set(field, []);
+      groups.get(field).push(String(id));
+    }
+    return [...groups.entries()].map(([field, ids]) => ({ field, ids }));
+  }
+
+  /**
    * 每屏的外壳描述。
    *
    * @typedef {object} TabChrome
    * @property {string} titleKey Header 标题词条。
    * @property {(project: object, t: function, ctx?: object) => string} subtitle Header 副标题。
-   * @property {(project: object, t: function, ctx?: object) => string} capsule Header 右侧胶囊。
+   * @property {(project: object, t: function, ctx?: object) => string} capsule Header 右侧胶囊文案。
+   * @property {(project: object, t: function, ctx?: object) => string} capsuleTone 胶囊色调。
    * @property {(project: object, t: function) => string} footerLabel Footer 第一行标签。
    * @property {(project: object, t: function) => string} footerValue Footer 第二行。
-   * @property {(project: object) => object} footerAction Footer 按钮。
-   * @property {string} [disabledHintKey] 按钮不可用时的**兜底**说明词条（说清缺什么、给什么替代）。
+   * @property {(project) => object} footerAction Footer 按钮。
    */
 
   /**
@@ -2054,463 +3348,662 @@ window.__ModuleLoader__.load({
    * @property {string} [tab] `kind === 'tab'` 时切到哪个页签。
    * @property {string} [screen] `kind === 'flow'` 时切到哪块流程屏。
    * @property {string} [tool] `kind === 'tool'` 时调哪个工具。
-   * @property {object | function} [params] `kind === 'tool'` 时的参数（可以是函数）。
+   * @property {object | function} [params] `kind === 'tool'` 时的参数。
    * @property {boolean} [disabled] 不可用时置 true。
    * @property {string} [hintKey] 不可用时的说明词条（说清缺什么、给什么替代）。
    */
 
   RF.TAB_CHROME = {
+    // ══════════════════════════════════════════════════════════════
+    // Tab 屏（7 块 · RF7 §6.4 固定页签：枢纽 · 章节 · 素材 · 分镜 · 上下文 · 成片 · 日志）
+    // ══════════════════════════════════════════════════════════════
+
     /**
-     * 01 工作台（基准板）：胶囊是全局运行状态，底栏第一行是「当前阶段」。
+     * 11 枢纽（Hub）：全局落点。
+     * 胶囊是整体状态；底栏是「当前阶段」，主按钮「查看成片」——**成片没就绪时禁用**。
      */
     hub: {
-      titleKey: 'title',
-      subtitle: (project, t) => {
-        const name = String(project?.name ?? '').trim() || t('project.unnamed');
+      titleKey: 'rf7.hub.title',
+      subtitle: staticText('rf7.hub.subtitle'),
+      capsule: (project, t) => {
         const chapters = Array.isArray(project?.chapters) ? project.chapters : [];
-        return t('project.summary', {
-          name: `《${name}》`,
-          chapters: chapters.length,
-          shots: totalShots(project),
+        if (chapters.length === 0) return t('rf7.hub.capsule.empty');
+        if (!renderStarted(project)) return t('rf7.hub.capsule.planned');
+        return t('rf7.hub.capsule.running');
+      },
+      capsuleTone: (project) => {
+        const chapters = Array.isArray(project?.chapters) ? project.chapters : [];
+        if (chapters.length === 0) return 'neutral';
+        return renderStarted(project) ? 'accent' : 'neutral';
+      },
+      footerLabel: staticText('rf7.hub.footerLabel'),
+      footerValue: (project, t) => {
+        const chapter = currentChapter(project);
+        const deliverables = Array.isArray(project?.deliverables) ? project.deliverables : [];
+        if (chapter === null) return t('rf7.hub.footerValue.empty');
+        if (deliverables.length === 0) {
+          return t('rf7.hub.footerValue.generating', {
+            chapter: Number(chapter.id) || 1,
+            title: chapter.title,
+          });
+        }
+        return t('rf7.hub.footerValue.ready', {
+          chapter: Number(chapter.id) || 1,
+          title: chapter.title,
+          count: deliverables.length,
         });
       },
-      capsule: (project, t) => {
-        const position = positionLabel(project, t);
-        const provider = String(project?.provider ?? '');
-        if (position === t('status.idle') || provider === '') return position;
-        return `${position} · ${RF.labelOf('provider', provider, t)}`;
+      footerAction: (project, t, context) => {
+        const deliverables = Array.isArray(project?.deliverables) ? project.deliverables : [];
+        if (deliverables.length === 0) {
+          return { key: 'rf7.hub.action', kind: 'none', hintKey: 'rf7.hub.actionDisabled' };
+        }
+        return { key: 'rf7.hub.action', kind: 'tab', tab: 'output' };
       },
-      footerLabel: staticText('chrome.hub.footerLabel'),
-      footerValue: (project, t) => {
-        const stageLabel = t(`stage.${RF.stageStep(project)}`);
-        const position = RF.currentPosition(project);
-        const positionText = position === null ? t('footer.idle') : t('footer.position', position);
-        return `${stageLabel} · ${positionText}`;
-      },
-      footerAction: () => ({ key: 'action.viewOutput', kind: 'tab', tab: 'output' }),
-    },
-
-    chapters: {
-      titleKey: 'title',
-      subtitle: (project, t) => {
-        // ⚠️ 只取 `name`，**不要**取 `subtitle` —— 后者可能是整段小说正文，
-        // 塞进面板头会把头撑爆（设计稿 01 号板副标是「《夜航船》· 3 章 · 24 镜」）。
-        const name = String(project?.name ?? '').trim() || t('project.unnamed');
-        const chapters = Array.isArray(project?.chapters) ? project.chapters : [];
-        return t('project.summary', {
-          name: `《${name}》`,
-          chapters: chapters.length,
-          shots: totalShots(project),
-        });
-      },
-      capsule: (project, t) => {
-        const position = positionLabel(project, t);
-        const provider = String(project?.provider ?? '');
-        if (position === t('status.idle') || provider === '') return position;
-        return `${position} · ${RF.labelOf('provider', provider, t)}`;
-      },
-      footerLabel: staticText('chrome.chapters.footerLabel'),
-      footerValue: (project, t) => {
-        const stageLabel = t(`stage.${RF.stageStep(project)}`);
-        const position = RF.currentPosition(project);
-        const positionText = position === null ? t('footer.idle') : t('footer.position', position);
-        return `${stageLabel} · ${positionText}`;
-      },
-      footerAction: () => ({ key: 'action.viewOutput', kind: 'tab', tab: 'output' }),
     },
 
     /**
-     * 09 分镜表：胶囊是「章 N / 总数」，底栏指向下一步（跑 video 出片）。
-     *
-     * ⚠️ 没有章时**不能说「章 1 / 0」**（自相矛盾），也不能让「生成第 1 章」
-     * 变成点了没反应的按钮 —— 禁用 + 说清缺什么。
+     * 03 章节（Chapters）：先骨架 · 再逐章生成。
+     * 主按钮「生成全部章节」= 跑 llm 阶段（它产出章节与分镜）。
      */
-    shots: {
-      titleKey: 'chrome.shots.title',
-      subtitle: (project, t) => {
-        const chapter = currentChapter(project);
-        if (chapter === null) return t('chrome.shots.subtitleEmpty');
-        return t('chrome.shots.subtitle', {
-          chapter: chapter.id,
-          name: chapter.title,
-          shots: chapter.shotCount,
-        });
-      },
-      capsule: (project, t) => {
+    chapters: {
+      titleKey: 'rf7.chapters.title',
+      subtitle: staticText('rf7.chapters.subtitle'),
+      capsule: (project, t) => t('rf7.chapters.capsule', {
+        count: Array.isArray(project?.chapters) ? project.chapters.length : 0,
+      }),
+      capsuleTone: () => 'neutral',
+      footerLabel: staticText('rf7.chapters.footerLabel'),
+      footerValue: (project, t) => t('rf7.chapters.footerValue', {
+        chapters: Array.isArray(project?.chapters) ? project.chapters.length : 0,
+        shots: totalShots(project),
+      }),
+      footerAction: (project, t, context) => {
         const chapters = Array.isArray(project?.chapters) ? project.chapters : [];
-        if (chapters.length === 0) return t('chrome.shots.capsuleEmpty');
-        const chapter = currentChapter(project);
-        return t('chrome.shots.capsule', { current: chapter?.id ?? 1, total: chapters.length });
-      },
-      footerLabel: staticText('chrome.shots.footerLabel'),
-      footerValue: staticText('chrome.shots.footerValue'),
-      footerAction: (project) => {
-        const chapter = currentChapter(project);
-        if (chapter === null) {
-          return { key: 'chrome.shots.action', kind: 'none', hintKey: 'chrome.shots.disabledHint' };
+        const hasNovel = Number(project?.intake?.chars ?? 0) > 0;
+        if (!hasNovel && chapters.length === 0) {
+          return { key: 'rf7.chapters.action', kind: 'none', hintKey: 'rf7.chapters.actionDisabled' };
         }
         return {
-          key: 'chrome.shots.action',
+          key: 'rf7.chapters.action',
           kind: 'tool',
           tool: RF.TOOL_IDS.runStage,
-          params: { stage: 'video', seq: Number(chapter.id) || 1 },
+          params: { stage: 'llm' },
         };
       },
     },
 
     /**
-     * 08 资产库：胶囊是资产件数，底栏指向下一步（逐镜写分镜）。
+     * 04 素材库（Assets）：10 类资产。
+     * 主按钮「新建资产」**当前没有对应工具**（`create_asset` 要求分类 + 名字，
+     * 底栏没有输入位）⇒ 禁用并指向屏内的「新建资产」表单。
      */
     assets: {
-      titleKey: 'chrome.assets.title',
-      subtitle: staticText('chrome.assets.subtitle'),
-      capsule: (project, t) => t('chrome.assets.capsule', {
+      titleKey: 'rf7.assets.title',
+      subtitle: staticText('rf7.assets.subtitle'),
+      capsule: (project, t) => t('rf7.assets.capsule', {
         count: Array.isArray(project?.assets) ? project.assets.length : 0,
       }),
-      footerLabel: staticText('chrome.assets.footerLabel'),
-      footerValue: staticText('chrome.assets.footerValue'),
-      footerAction: () => ({ key: 'chrome.assets.action', kind: 'tab', tab: 'shots' }),
+      capsuleTone: () => 'neutral',
+      footerLabel: staticText('rf7.assets.footerLabel'),
+      footerValue: (project, t) => t('rf7.assets.footerValue', {
+        count: Array.isArray(project?.assets) ? project.assets.length : 0,
+      }),
+      footerAction: () => ({ key: 'rf7.assets.action', kind: 'none', hintKey: 'rf7.assets.actionDisabled' }),
     },
 
     /**
-     * 07 上下文：胶囊是分区数，底栏指向下一步（生成资产参考图）。
+     * 07 分镜审查（Storyboard）：逐镜预览。
+     * 主按钮「重新生成选中镜」→ `reelforge.regenerate_shot`（触发类 ⇒ 宿主弹授权）。
+     */
+    shots: {
+      titleKey: 'rf7.storyboard.title',
+      subtitle: staticText('rf7.storyboard.subtitle'),
+      capsule: (project, t) => t('rf7.storyboard.capsule', {
+        count: Array.isArray(project?.shots) ? project.shots.length : 0,
+      }),
+      capsuleTone: () => 'neutral',
+      footerLabel: staticText('rf7.storyboard.footerLabel'),
+      footerValue: (project, t) => {
+        const shots = Array.isArray(project?.shots) ? project.shots : [];
+        const pending = shots.filter(shot => String(shot?.status ?? '') !== 'done').length;
+        return t('rf7.storyboard.footerValue', { count: shots.length, pending });
+      },
+      footerAction: (project, t, context) => {
+        const shots = Array.isArray(project?.shots) ? project.shots : [];
+        if (shots.length === 0) {
+          return { key: 'rf7.storyboard.action', kind: 'none', hintKey: 'rf7.storyboard.actionDisabled' };
+        }
+        return {
+          key: 'rf7.storyboard.action',
+          kind: 'tool',
+          tool: RF.TOOL_IDS.regenerateShot,
+          params: (current, _t, currentContext) => {
+            const picked = selectedShot(current, currentContext)
+              ?? shots.find(shot => String(shot?.status ?? '') !== 'done')
+              ?? shots[0];
+            return { seq: Number(picked?.seq) || 1, idx: Number(picked?.idx) || 1 };
+          },
+        };
+      },
+    },
+
+    /**
+     * 05 上下文（Context）：生成前必须齐的三把钥匙。
+     * 主按钮「冻结锚点」**当前没有对应工具** ⇒ 禁用并说清替代路径。
      */
     context: {
-      titleKey: 'chrome.context.title',
-      subtitle: staticText('chrome.context.subtitle'),
-      capsule: (project, t) => t('chrome.context.capsule', { count: RF.CONTEXT_KEYS.length }),
-      footerLabel: staticText('chrome.context.footerLabel'),
-      footerValue: staticText('chrome.context.footerValue'),
-      footerAction: () => ({ key: 'chrome.context.action', kind: 'tab', tab: 'assets' }),
-    },
-
-    /**
-     * 12 技能：胶囊是来源数，底栏第一行是来源构成。
-     */
-    skills: {
-      titleKey: 'chrome.skills.title',
-      subtitle: staticText('chrome.skills.subtitle'),
-      capsule: (project, t) => t('chrome.skills.capsule', { count: skillCounts(project).sources }),
-      footerLabel: staticText('chrome.skills.footerLabel'),
-      footerValue: (project, t) => {
-        const counts = skillCounts(project);
-        return t('chrome.skills.footerValue', counts);
+      titleKey: 'rf7.context.title',
+      subtitle: staticText('rf7.context.subtitle'),
+      capsule: (project, t) => {
+        const summary = contextSummary(project);
+        return summary.ready === summary.total
+          ? t('rf7.context.capsule.ready')
+          : t('rf7.context.capsule.missing', { missing: summary.total - summary.ready });
       },
-      footerAction: () => ({ key: 'chrome.skills.action', kind: 'none', hintKey: 'chrome.skills.disabledHint' }),
-      disabledHintKey: 'chrome.skills.disabledHint',
-    },
-
-    /**
-     * 10 成片：胶囊是渲染位置，底栏第一行是本集用时。
-     *
-     * ⚠️ 没开始渲染时不说「待开始渲染」（不通顺）；也没有交付物时，
-     * 「交付物」按钮不能点了没反应 —— 禁用 + 说清缺什么。
-     */
-    output: {
-      titleKey: 'chrome.output.title',
-      subtitle: (project, t) => {
-        const chapter = currentChapter(project);
-        if (chapter === null) return t('chrome.output.subtitleEmpty');
-        return t('chrome.output.subtitle', {
-          chapter: chapter.id,
-          name: chapter.title,
-          shots: chapter.shotCount,
-          duration: chapterDuration(chapter).toFixed(1),
+      capsuleTone: (project) => {
+        const summary = contextSummary(project);
+        return summary.ready === summary.total ? 'ok' : 'warn';
+      },
+      footerLabel: staticText('rf7.context.footerLabel'),
+      footerValue: (project, t) => {
+        const summary = contextSummary(project);
+        return t('rf7.context.footerValue', {
+          ready: summary.ready,
+          total: summary.total,
+          continuity: summary.continuity,
         });
       },
+      footerAction: () => ({ key: 'rf7.context.action', kind: 'none', hintKey: 'rf7.context.actionDisabled' }),
+    },
+
+    /**
+     * 10 成片（Output）：合成 · 字幕 · 交付。
+     * 主按钮「下载成片」→ 滚到交付物清单；没有交付物时禁用。
+     */
+    output: {
+      titleKey: 'rf7.output.title',
+      subtitle: staticText('rf7.output.subtitle'),
       capsule: (project, t) => {
-        const position = positionLabel(project, t);
-        if (position === t('status.idle')) return t('chrome.output.capsuleIdle');
-        return t('chrome.output.capsule', { position });
-      },
-      footerLabel: staticText('chrome.output.footerLabel'),
-      footerValue: (project, t) => {
-        const cost = RF.formatMoney(project?.cost?.spent ?? 0);
         const deliverables = Array.isArray(project?.deliverables) ? project.deliverables : [];
-        if (deliverables.length > 0) {
-          return t('chrome.output.footerValue', { cost, status: t('chrome.output.statusDone') });
-        }
-        // 还没到出片阶段但已经开始生成 → 说「还在渲染」，别装成已经完成。
-        if (renderStarted(project)) {
-          return t('chrome.output.footerValue', { cost, status: t('chrome.output.statusPending') });
-        }
-        return t('chrome.output.statusIdle');
+        return t('rf7.output.capsule', { count: deliverables.length });
       },
-      footerAction: (project) => {
+      capsuleTone: (project) => {
+        const deliverables = Array.isArray(project?.deliverables) ? project.deliverables : [];
+        return deliverables.length > 0 ? 'accent' : 'neutral';
+      },
+      footerLabel: staticText('rf7.output.footerLabel'),
+      footerValue: (project, t) => {
+        const deliverables = Array.isArray(project?.deliverables) ? project.deliverables : [];
+        if (deliverables.length === 0) return t('rf7.output.footerValue.empty');
+        const chapter = currentChapter(project);
+        return t('rf7.output.footerValue', {
+          chapter: Number(chapter?.id) || 1,
+          duration: chapterDuration(chapter).toFixed(0),
+          count: deliverables.length,
+        });
+      },
+      footerAction: (project, t, context) => {
         const deliverables = Array.isArray(project?.deliverables) ? project.deliverables : [];
         if (deliverables.length === 0) {
-          return { key: 'chrome.output.action', kind: 'none', hintKey: 'chrome.output.disabledHint' };
+          return { key: 'rf7.output.action', kind: 'none', hintKey: 'rf7.output.actionDisabled' };
         }
-        return { key: 'chrome.output.action', kind: 'scroll', target: 'rf-deliverables' };
+        return { key: 'rf7.output.action', kind: 'scroll', target: 'rf-deliverables' };
       },
     },
 
     /**
-     * 13 变更日志：胶囊是条目数，底栏是条目构成。
+     * 12 运行日志（Log）：谁在什么时候改了什么。
+     * 主按钮「回滚本批」—— **变更日志里没有批次号** ⇒ 禁用并指向屏内的两级回滚。
      */
     log: {
-      titleKey: 'chrome.log.title',
-      subtitle: staticText('chrome.log.subtitle'),
-      capsule: (project, t) => t('chrome.log.capsule', { count: logCount(project) }),
-      footerLabel: staticText('chrome.log.footerLabel'),
-      footerValue: (project, t) => t('chrome.log.footerValue', { count: logCount(project) }),
-      footerAction: () => ({ key: 'chrome.log.action', kind: 'export' }),
+      titleKey: 'rf7.log.title',
+      subtitle: staticText('rf7.log.subtitle'),
+      capsule: (project, t) => t('rf7.log.capsule', { count: logCount(project) }),
+      capsuleTone: () => 'neutral',
+      footerLabel: staticText('rf7.log.footerLabel'),
+      footerValue: (project, t) => t('rf7.log.footerValue', { count: logCount(project) }),
+      footerAction: (project, t, context) => {
+        const entries = logEntries(project);
+        if (entries.length === 0) {
+          return { key: 'rf7.log.action', kind: 'none', hintKey: 'rf7.log.actionDisabled' };
+        }
+        return { key: 'rf7.log.action', kind: 'none', hintKey: 'rf7.log.actionNoBatch' };
+      },
     },
 
     // ══════════════════════════════════════════════════════════════
-    // 流程屏（设计稿 02 / 03 / 04 / 05 / 06 / 16）
-    //
-    // 这些屏**不在页签栏里**（设计稿 17 号板明写右栏是 7 个页签），
-    // 它们的骨架只有 Header / StageBar / Scroll / Footer 四段。
+    // 流程屏（8 块 · 无页签条）
     // ══════════════════════════════════════════════════════════════
 
     /**
-     * 00 引导总览（v6）。
+     * 01 启动检查（RunGate）：环境门，冷启动首屏。
+     * 胶囊是**真实**探测结果（通过 / 警告 / 未通过），底栏指向「新建项目」。
      */
-    guide: {
-      titleKey: 'flow.guide.title',
-      subtitle: staticText('flow.guide.subtitle'),
-      capsule: staticText('v6.chapterUnit'),
-      footerLabel: staticText('flow.guide.footerLabel'),
-      footerValue: staticText('flow.guide.footerValue'),
-      footerAction: () => ({ key: 'flow.guide.action', kind: 'flow', screen: 'intake' }),
+    runGate: {
+      titleKey: 'rf7.runGate.title',
+      subtitle: staticText('rf7.runGate.subtitle'),
+      capsule: (project, t, context) => {
+        const summary = probeSummary(context);
+        if (summary.total === 0) return t('rf7.runGate.capsule.pending');
+        return t('rf7.runGate.capsule', {
+          passed: summary.passed,
+          total: summary.total,
+        });
+      },
+      capsuleTone: (project, t, context) => {
+        const summary = probeSummary(context);
+        if (summary.total === 0) return 'neutral';
+        if (summary.failed > 0) return 'warn';
+        if (summary.warned > 0) return 'warn';
+        return 'ok';
+      },
+      footerLabel: staticText('rf7.runGate.footerLabel'),
+      footerValue: (project, t, context) => {
+        const summary = probeSummary(context);
+        if (summary.total === 0) return t('rf7.runGate.footerValue.pending');
+        if (summary.failed > 0) {
+          return t('rf7.runGate.footerValue.failed', { count: summary.failed });
+        }
+        return t('rf7.runGate.footerValue.ready');
+      },
+      footerAction: () => ({ key: 'rf7.runGate.action', kind: 'flow', screen: 'intake' }),
     },
 
     /**
-     * 02 导入小说：胶囊是「新项目」，底栏指向「选运行位置」。
+     * 14 服务配置（Settings）：ComfyUI / LLM / 运行时 / 生成维护。
+     *
+     * ⚠️ **只读屏**：插件没有写配置的工具（配置在插件 `config` 块 / 宿主设置里）。
+     * 主按钮「保存并重测」因此禁用，屏内「重跑检查」按钮负责重测。
+     */
+    settings: {
+      titleKey: 'rf7.settings.title',
+      subtitle: staticText('rf7.settings.subtitle'),
+      capsule: staticText('rf7.settings.capsule'),
+      capsuleTone: () => 'warn',
+      footerLabel: staticText('rf7.settings.footerLabel'),
+      footerValue: staticText('rf7.settings.footerValue'),
+      footerAction: () => ({ key: 'rf7.settings.action', kind: 'none', hintKey: 'rf7.settings.actionDisabled' }),
+    },
+
+    /**
+     * 02 新建项目（Intake）：小说 → 自动拆章。
+     *
+     * 主按钮「创建并打开」= **导入正文**（`reelforge.import_novel`）⇒ 拆章并建立项目。
+     * ⚠️ `import_novel` 的必填参数是 `novel` —— 正文为空时不能发（会被宿主拒收），
+     * 所以正文为空 ⇒ 禁用并说清缺什么。
+     * 已经导入过（投影里已有正文字数）⇒ 这一步已经做完了，直接去「启动检查」。
      */
     intake: {
-      titleKey: 'flow.intake.title',
-      subtitle: staticText('flow.intake.subtitle'),
-      capsule: staticText('flow.intake.capsule'),
-      footerLabel: staticText('flow.intake.footerLabel'),
-      footerValue: staticText('flow.intake.footerValue'),
-      footerAction: () => ({ key: 'flow.intake.action', kind: 'flow', screen: 'runstack' }),
+      titleKey: 'rf7.intake.title',
+      subtitle: staticText('rf7.intake.subtitle'),
+      capsule: (project, t) => {
+        const chars = Number(project?.intake?.chars ?? 0);
+        return chars > 0 ? t('rf7.intake.capsule.ready') : t('rf7.intake.capsule.empty');
+      },
+      capsuleTone: (project) => (Number(project?.intake?.chars ?? 0) > 0 ? 'accent' : 'neutral'),
+      footerLabel: staticText('rf7.intake.footerLabel'),
+      footerValue: staticText('rf7.intake.footerValue'),
+      footerAction: (project, t, context) => {
+        const chars = Number(project?.intake?.chars ?? 0);
+        if (chars > 0) return { key: 'rf7.intake.action', kind: 'flow', screen: 'runGate' };
+        const text = String(context?.novelText ?? '').trim();
+        if (text === '') {
+          return { key: 'rf7.intake.action', kind: 'none', hintKey: 'rf7.intake.actionDisabled' };
+        }
+        return {
+          key: 'rf7.intake.action',
+          kind: 'tool',
+          tool: RF.TOOL_IDS.importNovel,
+          // ⚠️ `import_novel` 的 schema 是 `additionalProperties:false` ⇒ 只发认识的键。
+          params: (_current, _translate, currentContext) => {
+            const args = { novel: String(currentContext?.novelText ?? '').trim() };
+            const name = String(currentContext?.projectName ?? '').trim();
+            if (name !== '') args.name = name;
+            return args;
+          },
+        };
+      },
     },
 
     /**
-     * 03 运行栈（v6）：运行位置 + 本机探测。
+     * 15 项目设置（ProjectSettings）：成片规格 / 字幕 / 声音 / 危险操作。
+     *
+     * ⚠️ **只读屏**：项目层字段（分辨率 / 比例 / 字幕 / 声音）能读，
+     * 但插件**没有写项目设置的工具** ⇒ 主按钮禁用并说明改法。
      */
-    runstack: {
-      titleKey: 'flow.runstack.title',
-      subtitle: staticText('flow.runstack.subtitle'),
-      capsule: (project, t) => t('flow.runmode.capsule', { count: RF.RUN_POSITIONS.length }),
-      footerLabel: staticText('flow.runstack.footerLabel'),
-      footerValue: staticText('flow.runstack.footerValue'),
-      footerAction: () => ({ key: 'flow.runstack.action', kind: 'flow', screen: 'plan' }),
-    },
-
-    /**
-     * 03 运行位置：胶囊是「2 种位置」，底栏指向「出执行路径」。
-     */
-    runmode: {
-      titleKey: 'flow.runmode.title',
-      subtitle: staticText('flow.runmode.subtitle'),
-      capsule: (project, t) => t('flow.runmode.capsule', { count: RF.RUN_POSITIONS.length }),
-      footerLabel: staticText('flow.runmode.footerLabel'),
-      footerValue: staticText('flow.runmode.footerValue'),
-      footerAction: () => ({ key: 'flow.runmode.action', kind: 'flow', screen: 'plan' }),
-    },
-
-    /**
-     * 04 设备检查：胶囊是**真实探测项数**（不是写死的 9），
-     * 底栏指向「按探测结果出执行路径」。
-     */
-    device: {
-      titleKey: 'flow.device.title',
-      subtitle: staticText('flow.device.subtitle'),
-      capsule: (project, t, context) => t('flow.device.capsule', {
-        count: Array.isArray(context?.probe?.view?.report?.items)
-          ? context.probe.view.report.items.length
-          : 0,
+    projectSettings: {
+      titleKey: 'rf7.projectSettings.title',
+      subtitle: staticText('rf7.projectSettings.subtitle'),
+      capsule: staticText('rf7.projectSettings.capsule'),
+      capsuleTone: () => 'ok',
+      footerLabel: staticText('rf7.projectSettings.footerLabel'),
+      footerValue: (project, t) => t('rf7.projectSettings.footerValue', {
+        resolution: String(project?.settings?.resolution ?? '') || t('rf7.projectSettings.unset'),
+        aspect: String(project?.settings?.aspectRatio ?? '') || t('rf7.projectSettings.unset'),
       }),
-      footerLabel: staticText('flow.device.footerLabel'),
-      footerValue: staticText('flow.device.footerValue'),
-      footerAction: () => ({ key: 'flow.device.action', kind: 'flow', screen: 'plan' }),
+      footerAction: () => ({ key: 'rf7.projectSettings.action', kind: 'none', hintKey: 'rf7.projectSettings.actionDisabled' }),
     },
 
     /**
-     * 05 执行路径：胶囊是「5 种 kind」，底栏指向「选要跑哪些阶段」。
-     */
-    plan: {
-      titleKey: 'flow.plan.title',
-      subtitle: staticText('flow.plan.subtitle'),
-      capsule: (project, t) => t('flow.plan.capsule', { count: RF.GENERATION_KINDS.length }),
-      footerLabel: staticText('flow.plan.footerLabel'),
-      footerValue: staticText('flow.plan.footerValue'),
-      footerAction: () => ({ key: 'flow.plan.action', kind: 'flow', screen: 'stages' }),
-    },
-
-    /**
-     * 06 执行阶段：胶囊是「4 个阶段」，底栏主按钮**真的开跑阶段一**。
+     * 06 生成执行（Stages）：四阶段进度 + 勾选。
+     * 主按钮「暂停生成」—— **没有暂停能力** ⇒ 禁用并说明替代（等本批跑完 / 去设置调显存释放间隔）。
      */
     stages: {
-      titleKey: 'flow.stages.title',
-      subtitle: staticText('flow.stages.subtitle'),
-      capsule: (project, t) => t('flow.stages.capsule', { count: RF.STAGES.length }),
-      footerLabel: staticText('flow.stages.footerLabel'),
-      footerValue: staticText('flow.stages.footerValue'),
-      footerAction: () => ({
-        key: 'flow.stages.action',
-        kind: 'tool',
-        tool: RF.TOOL_IDS.runStage,
-        params: { stage: 'llm' },
-      }),
+      titleKey: 'rf7.stages.title',
+      subtitle: staticText('rf7.stages.subtitle'),
+      capsule: (project, t) => t('rf7.stages.capsule', { count: RF.STAGES.length }),
+      capsuleTone: () => 'accent',
+      footerLabel: staticText('rf7.stages.footerLabel'),
+      footerValue: (project, t) => {
+        const stage = String(project?.stage ?? '');
+        const kind = String(project?.plan?.kind ?? '');
+        if (kind === '') return t('rf7.stages.footerValue.unset');
+        return t('rf7.stages.footerValue', { kind, stage: stage === '' ? '-' : stage });
+      },
+      footerAction: () => ({ key: 'rf7.stages.action', kind: 'none', hintKey: 'rf7.stages.actionDisabled' }),
     },
 
     /**
-     * 16 降级与失败：胶囊是**真实缺失项数**，底栏指向「回到工作台」。
+     * 08 分镜详情（ShotDetail）：单镜展开。
+     * 主按钮「重新生成此镜」→ `reelforge.regenerate_shot`。
+     */
+    shotDetail: {
+      titleKey: 'rf7.shotDetail.title',
+      subtitle: (project, t, context) => {
+        const shot = selectedShot(project, context);
+        if (shot === null) return t('rf7.shotDetail.subtitle.empty');
+        return t('rf7.shotDetail.subtitle', {
+          chapter: Number(shot.seq) || 1,
+          idx: Number(shot.idx) || 1,
+        });
+      },
+      capsule: (project, t, context) => {
+        const shot = selectedShot(project, context);
+        if (shot === null) return t('rf7.shotDetail.capsule.empty');
+        return String(shot.status ?? '') === 'done'
+          ? t('rf7.shotDetail.capsule.done')
+          : t('rf7.shotDetail.capsule.pending');
+      },
+      capsuleTone: (project, t, context) => {
+        const shot = selectedShot(project, context);
+        if (shot === null) return 'neutral';
+        return String(shot.status ?? '') === 'done' ? 'ok' : 'warn';
+      },
+      footerLabel: staticText('rf7.shotDetail.footerLabel'),
+      footerValue: (project, t) => {
+        const shots = Array.isArray(project?.shots) ? project.shots : [];
+        const pending = shots.filter(shot => String(shot?.status ?? '') !== 'done').length;
+        return t('rf7.shotDetail.footerValue', { count: shots.length, pending });
+      },
+      footerAction: (project, t, context) => {
+        const shot = selectedShot(project, context);
+        if (shot === null) {
+          return { key: 'rf7.shotDetail.action', kind: 'none', hintKey: 'rf7.shotDetail.actionDisabled' };
+        }
+        return {
+          key: 'rf7.shotDetail.action',
+          kind: 'tool',
+          tool: RF.TOOL_IDS.regenerateShot,
+          params: { seq: Number(shot.seq) || 1, idx: Number(shot.idx) || 1 },
+        };
+      },
+    },
+
+    /**
+     * 09 背景音乐（Music）：生成 / 试听 / 应用。
+     *
+     * ⚠️ 音乐条目来自「音乐类资产」，而**投影里没有音乐文件路径**
+     * （`reelforge.set_chapter_music` 要的是工作区相对路径）⇒ 主按钮禁用并说清缺什么。
+     */
+    music: {
+      titleKey: 'rf7.music.title',
+      subtitle: staticText('rf7.music.subtitle'),
+      capsule: (project, t) => t('rf7.music.capsule', {
+        count: RF.musicAssets(project).length,
+      }),
+      capsuleTone: () => 'neutral',
+      footerLabel: staticText('rf7.music.footerLabel'),
+      footerValue: (project, t) => t('rf7.music.footerValue', {
+        count: RF.musicAssets(project).length,
+      }),
+      footerAction: () => ({ key: 'rf7.music.action', kind: 'none', hintKey: 'rf7.music.actionDisabled' }),
+    },
+
+    /**
+     * 13 技能与工作流（Skills）：**从旧版页签移过来的流程屏**。
+     * 主按钮「安装新技能」—— 插件没有装技能的工具 ⇒ 禁用并说清装法。
+     */
+    skills: {
+      titleKey: 'rf7.skills.title',
+      subtitle: staticText('rf7.skills.subtitle'),
+      capsule: (project, t) => t('rf7.skills.capsule', { count: skillCounts(project).total }),
+      capsuleTone: () => 'neutral',
+      footerLabel: staticText('rf7.skills.footerLabel'),
+      footerValue: (project, t) => {
+        const counts = skillCounts(project);
+        return t('rf7.skills.footerValue', counts);
+      },
+      footerAction: () => ({ key: 'rf7.skills.action', kind: 'none', hintKey: 'rf7.skills.actionDisabled' }),
+    },
+
+    // ══════════════════════════════════════════════════════════════
+    // 规范板（规则层）
+    // ══════════════════════════════════════════════════════════════
+
+    /**
+     * 17 降级与失败（Degraded）：阻塞 / 警告 / 缺料 / 空态 / 软降级五态。
+     * 主按钮「查看失败清单」→ 页签「日志」。
      */
     degraded: {
-      titleKey: 'flow.degrade.title',
-      subtitle: staticText('flow.degrade.subtitle'),
-      capsule: (project, t, context) => t('flow.degrade.capsule', {
-        count: Array.isArray(context?.probe?.view?.degrade?.matrix)
-          ? context.probe.view.degrade.matrix.length
-          : 0,
+      titleKey: 'rf7.degraded.title',
+      subtitle: staticText('rf7.degraded.subtitle'),
+      capsule: (project, t, context) => {
+        const degradations = Array.isArray(context?.probe?.view?.degrade?.degradations)
+          ? context.probe.view.degrade.degradations
+          : [];
+        return t('rf7.degraded.capsule', { count: degradations.length });
+      },
+      capsuleTone: (project, t, context) => {
+        const degradations = Array.isArray(context?.probe?.view?.degrade?.degradations)
+          ? context.probe.view.degrade.degradations
+          : [];
+        return degradations.length > 0 ? 'warn' : 'neutral';
+      },
+      footerLabel: staticText('rf7.degraded.footerLabel'),
+      footerValue: staticText('rf7.degraded.footerValue'),
+      footerAction: () => ({ key: 'rf7.degraded.action', kind: 'tab', tab: 'log' }),
+    },
+
+    /**
+     * 18 素材选择器（Picker）：右栏内嵌弹窗形态。
+     *
+     * 主按钮「确定」→ `reelforge.bind_asset`，把选中的素材绑到那一镜。
+     *
+     * ⚠️ **两个必须按宿主 schema 来的细节**：
+     *   1. `field` 的枚举只有六个（`character_ids` / `scene_ids` / `prop_ids` /
+     *      `costume_ids` / `age_ids` / `audio_ids`）—— 写 `references` 会被**整条拒收**；
+     *   2. 一次调用只吃**一个** field ⇒ 选中的素材按分类分组，逐组发。
+     */
+    picker: {
+      titleKey: 'rf7.picker.title',
+      subtitle: staticText('rf7.picker.subtitle'),
+      capsule: (project, t, context) => t('rf7.picker.capsule', { count: pickerSelection(context).length }),
+      capsuleTone: () => 'neutral',
+      footerLabel: staticText('rf7.picker.footerLabel'),
+      footerValue: (project, t, context) => t('rf7.picker.footerValue', {
+        count: pickerSelection(context).length,
+        limit: RF.REFERENCE_LIMITS?.images ?? 9,
       }),
-      footerLabel: staticText('flow.degrade.footerLabel'),
-      footerValue: staticText('flow.degrade.footerValue'),
-      footerAction: () => ({ key: 'flow.degrade.action', kind: 'tab', tab: 'hub' }),
+      footerAction: (project, t, context) => {
+        const selection = pickerSelection(context);
+        const shot = selectedShot(project, context);
+        if (selection.length === 0 || shot === null) {
+          return { key: 'rf7.picker.action', kind: 'none', hintKey: 'rf7.picker.actionDisabled' };
+        }
+        const groups = bindAssetGroups(project, selection);
+        if (groups.length === 0) {
+          return { key: 'rf7.picker.action', kind: 'none', hintKey: 'rf7.picker.actionNoBindable' };
+        }
+        return {
+          key: 'rf7.picker.action',
+          kind: 'tool',
+          tool: RF.TOOL_IDS.bindAsset,
+          // ⚠️ 返回**一组**参数：每组一个 field，Workbench 会逐个发。
+          params: groups.map(group => ({
+            seq: Number(shot.seq) || 1,
+            idx: Number(shot.idx) || 1,
+            field: group.field,
+            ids: group.ids,
+          })),
+        };
+      },
     },
   };
 
   /**
-   * 取某屏的外壳描述（找不到就回落到工作台基准板）。
+   * 取某屏的外壳描述（找不到就回落到枢纽）。
    *
-   * @param {string} tabId - 页签 id。
+   * @param {string} screenId - 页签 id 或流程屏 id。
    * @returns {TabChrome} 外壳描述。
    */
-  RF.tabChrome = function tabChrome(tabId) {
-    return RF.TAB_CHROME[tabId] ?? RF.TAB_CHROME.hub;
+  RF.tabChrome = function tabChrome(screenId) {
+    return RF.TAB_CHROME[screenId] ?? RF.TAB_CHROME.hub;
   };
 })(RF);
 
 /* ── src/client/workbench/styles.js ───────────────────────────── */
 /* ─────────────────────────────────────────────────────────────────────────────
- * 工作台样式（只用 `--dsw-alias-*` 主题 token，不写十六进制字面量）。
+ * 工作台样式 —— RF7 规格（`design/STYLE-SPEC.md` + `design/BOARD-INDEX.md`）。
  *
- * 骨架四层：Header / StageBar / Scroll（**唯一滚动容器**）/ Footer。
- * 右栏 Tab 容器是 `overflow:hidden` —— 不自建滚动容器，内容超高时底栏会被裁掉且滚不到（R7）。
+ * ## 骨架五层（RF7 画板索引 §八 / STYLE-SPEC §1）
  *
- * 状态色只用令牌色；禁用态用**实色**令牌，不用 `opacity` 表达层级。
+ *   Header 60 · StageRail 50 · TabBar 44 · Scroll（唯一滚动容器）· Footer 70
+ *   外边距 20（内容宽 520）· 圆角：卡片 10 · 按钮 8 · 芯片 6 · Stage chip 6
  *
- * ## 颜色：设计令牌 → 宿主 token 的映射（差距表 §4.17 第 1 条）
+ * ## 颜色：RF7 的 14 个设计令牌 → 宿主 `--dsw-alias-*`
  *
- * 设计稿板 17 给的是**一套深色**的 17 个令牌；宿主有明暗两套主题，
- * 所以每个设计令牌都落到一个 `--dsw-alias-*` 上 —— 跟着宿主明暗自动切，
- * 插件**不写十六进制字面量**（设计方案 §4.3 / 硬规则 R6 / 验收项 A7）。
+ * RF7 出了**暗/亮两套稿**，但**代码只绑宿主 token**（STYLE-SPEC §7 /
+ * 设计方案 §4.3 / 硬规则 R6 / 验收项 A7）—— 插件不写十六进制字面量，
+ * 明暗由宿主切。下面的映射表是 RF7 两套设计值 ↔ 宿主 token 的对照。
  *
- * ⚠️ 强调色这一支是宿主的 **accent**，**不是** `brand-primary`。
- * 宿主自己的 `packages/client/ui-dockkit/src/components/dockkit.module.css:10` 写着：
- * 「Emphasis … takes the platform's accent
- *  (`--dsw-alias-brand-primary-new-colorprimary-new-color`), not
- *  `--dsw-alias-brand-primary`, which this platform binds to its near-black」
- * —— `brand-primary` 在本平台是**近黑（浅色主题）/ 近白（暗色主题）**，
- * 拿它当强调色 = 整个工作台没有颜色（owner 实机反馈「UI 颜色都没有改变」）。
- * 设计稿板 01 / 06 的当前步点、选中卡描边、主按钮、开关、进度条全是那支蓝。
+ * ### RF7 令牌 → 宿主 token
  *
- * ### 17 个设计令牌 → 宿主 token（板 17 号板）
- *
- * 设计稿给的是**一套深色**色板；宿主有明暗两套主题，下表的「浅/暗」是宿主
- * 两套主题下该 token 的实际取值（宿主主题源：
- * packages/client/ui-theme/src/styles/design-platform.css）。
- *
- * | 设计令牌 | hex | 宿主 token | 浅色 | 暗色 | 用在哪 |
+ * | RF7 令牌 | 暗色稿 | 浅色稿 | 宿主 token | 浅色实测 | 暗色实测 |
  * | --- | --- | --- | --- | --- | --- |
- * | BG | #0B0E14 | --dsw-alias-bg-base | #FFFFFF | #151517 | 面板底 |
- * | SURFACE | #171A20 | --dsw-alias-bg-layer-1 | #FFFFFF | #232324 | 卡面 |
- * | SURFACE-2 | #12151B | --dsw-alias-bg-layer-2 | #FFFFFF | #2C2C2E | StageBar / 页签条 |
- * | SURFACE-3 | #1F2127 | --dsw-alias-bg-layer-3 | #FFFFFF | #353638 | 胶囊 / 输入底 |
- * | LINE | #23262B | --dsw-alias-border-l2 | rgba(0,0,0,.1) | rgba(255,255,255,.12) | 常规边框 |
- * | LINE-2 | #2D3035 | --dsw-alias-border-l3 | rgba(0,0,0,.12) | rgba(255,255,255,.16) | 强边框 |
- * | TEXT-1 | #F2F5F9 | --dsw-alias-label-primary | #0F1115 | #F9FAFB | 主文字 |
- * | TEXT-2 | #8A93A5 | --dsw-alias-label-secondary | #61666B | #CFD3D6 | 次文字 |
- * | TEXT-3 | #5B6472 | --dsw-alias-label-tertiary | #81858C | #ADB2B8 | 三级文字 |
- * | ACCENT | #4C8DFF | --dsw-alias-brand-primary-new-colorprimary-new-color | #4176E6 | #5686FE | 强调色：当前步点 / 选中描边 / 主按钮 / 开关 / 进度条 / logo |
- * | ACCENT-DIM | #16203A | color-mix(accent 14%, transparent) | 淡蓝 | #32394B | 选中态胶囊底（板 01 当前步 chip） |
- * | OK | #3FB950 | --dsw-alias-state-success-primary | #22C55E | #22C55E | 完成 |
- * | WARN | #D29922 | --dsw-alias-state-warn-label | #DD8629 | #DD8629 | 警告 |
- * | WARN-SURF | #2A2214 | color-mix(state-warn-label 10%, bg-layer-1) | #FCF3EA | #362D25 | 警告面（板 06 显存条 / 板 16 降级详情卡描边） |
- * | ERROR | #F85149 | --dsw-alias-state-error-primary | #EC1313 | #F25A5A | 错误 |
- * | ERROR-SURF | #2A1618 | color-mix(state-error-primary 10%, bg-layer-1) | #FDE7E7 | #382929 | 错误面（板 04 结论卡） |
- * | WHITE | #FFFFFF | --dsw-alias-toast-label | #FFFFFF | #FFFFFF | 强调色上的标记 |
+ * | rf-bg | #0A0C10 | #F4F5F7 | --dsw-alias-bg-base（浅色再压深 4%） | #F4F5F6 | #151517 |
+ * | rf-surface | #141820 | #FFFFFF | --dsw-alias-bg-base（浅色用 bg-base） | #FFFFFF | #232324 |
+ * | rf-surface-2 | #10141C | #EBEDF2 | color-mix(--dsw-alias-bg-base 94%, --dsw-alias-label-primary 6%) | #EFF0F1 | #1A1A1B |
+ * | rf-surface-3 | #1C2230 | #DDE1E8 | --dsw-alias-bg-layer-3（浅色压深 10%） | #E5E7E8 | #363638 |
+ * | rf-line | #252A34 | #D0D4DC | --dsw-alias-border-l2 | rgba(0,0,0,.1) | rgba(255,255,255,.12) |
+ * | rf-text-1 | #EEF1F6 | #121418 | --dsw-alias-label-primary | #0F1115 | #F9FAFB |
+ * | rf-text-2 | #9AA3B2 | #5C6370 | --dsw-alias-label-secondary | #61666B | #CFD3D6 |
+ * | rf-text-3 | #6B7380 | #8B919C | --dsw-alias-label-tertiary | #81858C | #ADB2B8 |
+ * | rf-accent | #5B8DEF | #3568D4 | --dsw-alias-brand-primary-new-colorprimary-new-color | #4176E6 | #5686FE |
+ * | rf-accent-dim | #1A2744 | #E3EBFA | color-mix(--rf-accent 14%, --rf-surface) | 淡蓝 | 深蓝 |
+ * | rf-ok | #3DDC84 | #1F9D55 | --dsw-alias-state-success-primary | #22C55E | #22C55E |
+ * | rf-warn | #E5A045 | #C7841A | --dsw-alias-state-warn-label | #DD8629 | #DD8629 |
+ * | rf-error | #F07178 | #D92D20 | --dsw-alias-state-error-primary | #EC1313 | #F25A5A |
+ * | rf-on-accent | #FFFFFF | #FFFFFF | --dsw-alias-toast-label | #FFFFFF | #FFFFFF |
  *
- * ⚠️ 两处**故意**不用最接近的宿主 token：
- *   1. ACCENT 用 `brand-primary-new-colorprimary-new-color` 而不是别的蓝 ——
- *      宿主自己在 dockkit / trajectory / settings 里就用它当强调色，语义一致。
- *   2. WHITE 用 `toast-label` 而不是 `label-primary-foreground` ——
- *      后者会随主题反转（暗色主题变近黑），蓝底近黑字读不清；宿主自己的
- *      做法也是「蓝底上的箭头保持白色」（InputBar.module.css:384）。
+ * ### 三条推导纪律
  *
- * 底色与中性色**跟随宿主主题**：宿主切暗色时面板与设计稿几乎 1:1
- * （BG #151517 vs #0B0E14、SURFACE #232324 vs #171A20、TEXT-1 #F9FAFB vs #F2F5F9）；
- * 浅色主题下宿主把 layer-1/2/3 全压成纯白，面板没有表面层次 —— 那是宿主
- * 浅色主题本身的取法，插件不另立一套（§4.3 / R6）。
+ * 1. **强调色必须是宿主的 accent，不是 `brand-primary`。**
+ *    宿主把 `brand-primary` 绑成近黑（浅色）/ 近白（暗色）
+ *    （`packages/client/ui-dockkit/src/components/dockkit.module.css:10` 的注释点名了这件事），
+ *    拿它当强调色 = 整个工作台没有颜色。
+ * 2. **明暗两套的「表面相对关系」要一致。**
+ *    RF7 暗色稿是 `bg < surface-2 < surface`（条比卡片深），
+ *    浅色稿是 `bg > surface-2 < surface`（卡片比底亮）——
+ *    两套的共同点是**卡片比条亮、条比底深**。宿主浅色主题把 layer-1/2/3 全压成纯白，
+ *    直接用会「一片白没有层次」，所以浅色下用 `color-mix` 从 bg-base 压深派生出层次
+ *    （**没有写死颜色值**，仍随宿主主题走）。
+ * 3. **强调色上的字用 `toast-label`，不用 `label-primary-foreground`。**
+ *    后者会随主题反转（暗色变近黑），蓝底近黑字读不清；
+ *    宿主自己的做法也是「蓝底上的箭头保持白色」
+ *    （`ui-conversation/src/client/skeleton/InputBar.module.css:384`）。
+ *
+ * ⚠️ 明暗分支用 `body[data-ds-dark-theme]`（宿主主题源
+ * `packages/client/ui-theme/src/styles/design-platform.css` 就是这么切的）。
+ * 宿主**没有设 `color-scheme`**，所以 CSS 的 `light-dark()` 不可用。
  * ─────────────────────────────────────────────────────────────────────────── */
 ;(function (RF) {
   'use strict';
 
   RF.STYLES = `
 .rf-root {
-  /* ── 插件级语义色层：设计令牌 → 宿主 token ────────────────────────────
-   * 下面每个 --rf-* 都是**一个设计令牌**，值全部由宿主 token 派生。 */
-  /* 强调色 = 设计稿 ACCENT（hex 见文件头的映射表）：宿主 accent 那一支。 */
+  /* ── RF7 令牌层（唯一颜色真源）────────────────────────────────────────
+   * 浅色是默认分支（宿主亮色主题）；暗色分支见下方 body[data-ds-dark-theme]。 */
+  /* 面板底：浅色下把纯白压深 4%，才有 RF7 浅色稿那层灰。 */
+  --rf-bg: color-mix(in srgb, var(--dsw-alias-bg-base) 96%, var(--dsw-alias-label-primary) 4%);
+  /* 卡面：浅色稿是纯白。 */
+  --rf-surface: var(--dsw-alias-bg-base);
+  /* Stage / Tab 条：比卡面深（RF7 两套稿都是「条比卡片深」）。 */
+  --rf-surface-2: color-mix(in srgb, var(--dsw-alias-bg-base) 94%, var(--dsw-alias-label-primary) 6%);
+  /* 芯片 / 输入底：浅色下压深一档。 */
+  --rf-surface-3: color-mix(in srgb, var(--dsw-alias-bg-base) 90%, var(--dsw-alias-label-primary) 10%);
+  --rf-line: var(--dsw-alias-border-l2);
+  --rf-text-1: var(--dsw-alias-label-primary);
+  --rf-text-2: var(--dsw-alias-label-secondary);
+  --rf-text-3: var(--dsw-alias-label-tertiary);
   --rf-accent: var(--dsw-alias-brand-primary-new-colorprimary-new-color);
-  /* 强调色的暗面 = 设计稿 ACCENT-DIM：选中态胶囊底（板 01 号板当前步 chip）。
-     用 color-mix 而不是写死色值 —— 跟着宿主主题自动深浅。 */
-  --rf-accent-dim: color-mix(in srgb, var(--rf-accent) 18%, var(--dsw-alias-bg-layer-2));
-  --rf-stage-passed: var(--dsw-alias-state-success-primary);
-  --rf-stage-idle: var(--dsw-alias-border-l3);
-  /* 强调色上的标记（主按钮文字 / 面板头 ▶ 三角）：**两套主题都是白**。
-     取 --dsw-alias-toast-label（明暗两套都是 neutral-bluish-00 = 白）——
-     label-primary-foreground 会随主题反转（暗色主题变近黑），蓝底近黑字读不清；
-     宿主自己的做法也是「蓝底上的箭头保持白色」
-     （ui-conversation/src/client/skeleton/InputBar.module.css:384）。 */
+  /* 当前 Stage chip 底 = accent 薄薄一层压在卡面上。 */
+  --rf-accent-dim: color-mix(in srgb, var(--rf-accent) 14%, var(--rf-surface));
+  --rf-ok: var(--dsw-alias-state-success-primary);
+  --rf-warn: var(--dsw-alias-state-warn-label);
+  --rf-error: var(--dsw-alias-state-error-primary);
   --rf-on-accent: var(--dsw-alias-toast-label);
-  /* 强调色的 hover：浅色主题压深、暗色主题提亮（靠 label-primary 的明暗差）。 */
+  /* 强调色 hover：浅色压深、暗色提亮（靠 label-primary 的明暗差）。 */
   --rf-accent-hover: color-mix(in srgb, var(--rf-accent) 86%, var(--dsw-alias-label-primary));
 
   height: 100%;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  background: var(--dsw-alias-bg-base);
-  color: var(--dsw-alias-label-primary);
+  background: var(--rf-bg);
+  color: var(--rf-text-1);
   font-size: 13px;
   line-height: 1.5;
   overflow: hidden;
 }
+/* 宿主暗色主题：RF7 暗色稿的相对关系（底 < 条 < 卡面）。 */
+body[data-ds-dark-theme] .rf-root {
+  --rf-bg: var(--dsw-alias-bg-base);
+  --rf-surface: var(--dsw-alias-bg-layer-1);
+  --rf-surface-2: color-mix(in srgb, var(--dsw-alias-bg-layer-1) 22%, var(--dsw-alias-bg-base));
+  --rf-surface-3: var(--dsw-alias-bg-layer-3);
+}
+
+/* ── Header（60）─────────────────────────────────────────────────────── */
 .rf-header {
   flex: 0 0 auto;
+  height: 60px;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 20px;
-  background: var(--dsw-alias-bg-layer-1);
-  border-bottom: 1px solid var(--dsw-alias-border-l2);
+  padding: 0 20px;
+  background: var(--rf-bg);
 }
-/* 面板头 logo = 蓝底 + 白色 ▶（设计稿板 01 号板）。 */
+/* 面板头 logo = RF/FilmMark：accent-dim 底 + 12×12 accent 方块（RF7 组件表）。 */
 .rf-header__logo {
   width: 28px;
   height: 28px;
   border-radius: 8px;
-  background: var(--rf-accent);
+  background: var(--rf-accent-dim);
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
-/* ▶ 用纯 CSS 三角（border 技巧）—— 不引图片、不写死颜色。 */
 .rf-header__logo::after {
   content: '';
-  width: 0;
-  height: 0;
-  border-left: 9px solid var(--rf-on-accent);
-  border-top: 6px solid transparent;
-  border-bottom: 6px solid transparent;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--rf-accent);
 }
-/* 流程屏里，面板头 logo 是「回到工作台」的出口。 */
+/* 流程屏里，面板头 logo 是「回到项目视图」的出口。 */
 .rf-header__logo--button {
   border: 0;
   padding: 0;
@@ -2518,200 +4011,489 @@ window.__ModuleLoader__.load({
 }
 .rf-header__text { min-width: 0; flex: 1 1 auto; }
 .rf-header__title {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
-  color: var(--dsw-alias-label-primary);
+  color: var(--rf-text-1);
 }
 .rf-header__subtitle {
-  font-size: 11px;
-  color: var(--dsw-alias-label-tertiary);
+  font-size: 10px;
+  color: var(--rf-text-3);
 }
+/* 面板头右上角的胶囊 = RF/StatusPill。 */
 .rf-header__status {
   flex: 0 0 auto;
-  padding: 4px 10px;
-  border-radius: 4px;
-  background: var(--dsw-alias-bg-layer-3);
-  color: var(--dsw-alias-label-secondary);
-  font-size: 11px;
+  border-radius: 6px;
+  padding: 5px 10px;
+  background: var(--rf-surface-3);
+  color: var(--rf-text-2);
+  font-size: 10px;
 }
+
+/* ── Stage 轨（50）───────────────────────────────────────────────────── */
 .rf-stagebar {
   flex: 0 0 auto;
+  height: 50px;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 20px;
-  background: var(--dsw-alias-bg-layer-2);
-  border-bottom: 1px solid var(--dsw-alias-border-l2);
+  gap: 20px;
+  padding: 0 20px 0 24px;
+  background: var(--rf-surface-2);
   overflow-x: auto;
 }
 .rf-stagebar__step {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 3px 8px;
-  border-radius: 6px;
-  font-size: 11px;
-  white-space: nowrap;
-  /* StageBar 的步点是**可点**的（点哪一步到那一屏）—— 按钮态要复位，
-     底色与文字色交给 current / passed / upcoming 三个修饰类。 */
+  gap: 5px;
   border: 0;
   background: transparent;
+  padding: 0;
   font-family: inherit;
-  color: inherit;
+  font-size: 10px;
+  white-space: nowrap;
   cursor: pointer;
+  color: var(--rf-text-3);
 }
-/* 当前步的胶囊底 = 设计稿 ACCENT-DIM（板 01 号板）。 */
-.rf-stagebar__step--current {
-  background: var(--rf-accent-dim);
-  color: var(--dsw-alias-label-primary);
-}
-.rf-stagebar__step--passed { color: var(--dsw-alias-label-tertiary); }
-.rf-stagebar__step--upcoming { color: var(--dsw-alias-label-caption); }
-.rf-stagebar__step--passed:hover,
-.rf-stagebar__step--upcoming:hover { color: var(--dsw-alias-label-secondary); }
 .rf-stagebar__dot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
   flex: 0 0 auto;
+  background: var(--rf-line);
 }
-/* 当前步点 = 设计稿 ACCENT（板 01 号板）。 */
-.rf-stagebar__dot--current { background: var(--rf-accent); }
-.rf-stagebar__dot--passed { background: var(--rf-stage-passed); }
-.rf-stagebar__dot--upcoming { background: var(--rf-stage-idle); }
+/* 当前步：点 = accent，文字套 accent-dim 胶囊（RF7 的 StepLabel chip）。 */
+.rf-stagebar__step--current { color: var(--rf-accent); font-weight: 600; }
+.rf-stagebar__step--current .rf-stagebar__dot { background: var(--rf-accent); }
+.rf-stagebar__step--current .rf-stagebar__label {
+  background: var(--rf-accent-dim);
+  border-radius: 6px;
+  padding: 3px 6px;
+}
+/* 已过：点 = ok，文字 = text-2。未到：点 = line，文字 = text-3。 */
+.rf-stagebar__step--passed { color: var(--rf-text-2); }
+.rf-stagebar__step--passed .rf-stagebar__dot { background: var(--rf-ok); }
+.rf-stagebar__step--upcoming { color: var(--rf-text-3); }
+.rf-stagebar__step--upcoming .rf-stagebar__dot { background: var(--rf-line); }
 .rf-stagebar__count {
   margin-left: auto;
-  font-size: 11px;
-  color: var(--dsw-alias-label-caption);
+  font-size: 10px;
+  color: var(--rf-text-3);
+  flex: 0 0 auto;
 }
+
+/* ── Tab 条（44）────────────────────────────────────────────────────── */
 .rf-tabs {
   flex: 0 0 auto;
+  height: 44px;
+  box-sizing: border-box;
   display: flex;
-  gap: 4px;
-  padding: 8px 20px;
-  background: var(--dsw-alias-bg-layer-2);
-  border-bottom: 1px solid var(--dsw-alias-border-l2);
+  align-items: center;
+  gap: 12px;
+  padding: 0 20px;
+  background: var(--rf-bg);
   overflow-x: auto;
 }
+/* 未选中：透明底 + text-2；选中：accent-dim 底 + accent 字（RF7 的 TabChip）。 */
 .rf-tabs__item {
-  padding: 4px 10px;
+  border: 0;
+  background: transparent;
   border-radius: 6px;
-  border: 1px solid var(--dsw-alias-border-l2);
-  background: var(--dsw-alias-bg-layer-3);
-  color: var(--dsw-alias-label-secondary);
+  padding: 4px 8px;
+  color: var(--rf-text-2);
   font-size: 12px;
   white-space: nowrap;
+  cursor: pointer;
+  font-family: inherit;
 }
 .rf-tabs__item--active {
-  border-color: var(--rf-accent);
   background: var(--rf-accent-dim);
-  color: var(--dsw-alias-label-primary);
+  color: var(--rf-accent);
+  font-weight: 600;
 }
+
+/* ── Scroll（唯一滚动容器）──────────────────────────────────────────── */
 .rf-scroll {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 16px 20px;
+  padding: 20px;
 }
+/* 屏内纵向排版：RF7 的 Scroll 是 lay:v + gap:16。 */
+.rf-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Footer（70）────────────────────────────────────────────────────── */
 .rf-footer {
   flex: 0 0 auto;
+  height: 70px;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 20px;
-  background: var(--dsw-alias-bg-layer-1);
-  border-top: 1px solid var(--dsw-alias-border-l2);
+  padding: 0 20px;
+  background: var(--rf-surface-2);
 }
 .rf-footer__text { min-width: 0; flex: 1 1 auto; }
 .rf-footer__label {
-  font-size: 11px;
-  color: var(--dsw-alias-label-caption);
-  /* 成本位是单行数据，不能被挤成两行 */
+  font-size: 10px;
+  color: var(--rf-text-3);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .rf-footer__value {
-  font-size: 12px;
-  color: var(--dsw-alias-label-primary);
-  /* 副标题在窄栏里单行截断（header 里还有一份全文），不要折成三行把底栏撑高 */
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--rf-text-1);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.rf-grid { display: grid; gap: 12px; grid-template-columns: 1fr; }
-.rf-grid--two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.rf-section {
-  font-size: 12px;
-  color: var(--dsw-alias-label-secondary);
-  margin: 4px 0 8px;
-}
+
+/* ── 卡片 / 分区 ────────────────────────────────────────────────────── */
 .rf-card {
-  border: 1px solid var(--dsw-alias-border-l2);
-  border-radius: 8px;
-  background: var(--dsw-alias-bg-layer-1);
-  padding: 12px;
-  margin-bottom: 12px;
+  border: 1px solid var(--rf-line);
+  border-radius: 10px;
+  background: var(--rf-surface);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
-/* 选中态描边 = 设计稿 ACCENT（板 03 / 05 / 06 号板）。
-   ⚠️ **不染底**：设计稿三块板的选中卡，填充色与没选中一样（同一个 SURFACE 色），
-   只有描边换成 ACCENT（06 号板另加左侧 4px 条）—— 染底是多加的，不是设计稿。 */
-.rf-card--selected {
-  border-color: var(--rf-accent);
-}
-/* 板 06 号板：阶段卡选中态 = 蓝描边 **+ 左侧 4px 蓝条**。 */
+/* 选中态描边 = accent（RF7 分镜行 / 素材卡）。**不染底**：RF7 三块板的
+   选中卡填充与未选中一样，只有描边换色（板 06 另加左侧 4px 条）。 */
+.rf-card--selected { border-color: var(--rf-accent); }
 .rf-card--accent { border-left: 4px solid var(--rf-accent); }
-/* 状态面（画板 17 号板的 WARN-SURF / ERROR-SURF 两个令牌）：
-   面 = 状态色薄薄一层压在卡面色上，描边 = 状态色本身。
-   画板 06 号板「显存门槛提示条」黄面 / 画板 04 号板「结论卡」红面。 */
+/* 状态面（RF7 Degraded 板）：面 = 状态色薄薄一层压在卡面上，描边 = 状态色本身。 */
 .rf-card--warn {
-  background: color-mix(in srgb, var(--dsw-alias-state-warn-label) 10%, var(--dsw-alias-bg-layer-1));
-  border-color: var(--dsw-alias-state-warn-label);
+  background: color-mix(in srgb, var(--rf-warn) 10%, var(--rf-surface));
+  border-color: var(--rf-warn);
 }
 .rf-card--error {
-  background: color-mix(in srgb, var(--dsw-alias-state-error-primary) 10%, var(--dsw-alias-bg-layer-1));
-  border-color: var(--dsw-alias-state-error-primary);
+  background: color-mix(in srgb, var(--rf-error) 10%, var(--rf-surface));
+  border-color: var(--rf-error);
 }
-/* 画板 16 号板「一次真实降级」卡：普通面 + 黄描边。 */
-.rf-card--warn-border { border-color: var(--dsw-alias-state-warn-label); }
-.rf-card--disabled { border-color: var(--dsw-alias-border-l1); background: var(--dsw-alias-bg-layer-2); color: var(--dsw-alias-label-caption); }
+.rf-card--warn-border { border-color: var(--rf-warn); }
+.rf-card--disabled {
+  border-color: var(--dsw-alias-border-l1);
+  background: var(--rf-surface-2);
+  color: var(--rf-text-3);
+}
+/* 无描边提示卡（RF7 NoticeCard）：surface-2 面 + 无描边。 */
+.rf-notice {
+  border: 0;
+  border-radius: 10px;
+  background: var(--rf-surface-2);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.rf-notice__main { font-size: 11px; color: var(--rf-text-2); }
+.rf-notice__sub { font-size: 10px; color: var(--rf-text-3); }
+/* 分区标题（RF7 SectionHead）：13/600 主标题 + 10px 副标题。 */
+.rf-sechead { display: flex; flex-direction: column; gap: 4px; }
+.rf-sechead__title { font-size: 13px; font-weight: 600; color: var(--rf-text-1); }
+.rf-sechead__sub { font-size: 10px; color: var(--rf-text-3); }
+.rf-section {
+  font-size: 12px;
+  color: var(--rf-text-2);
+  margin: 4px 0 8px;
+}
+
+/* ── 按钮 ───────────────────────────────────────────────────────────── */
 .rf-btn {
   border-radius: 8px;
-  border: 1px solid var(--dsw-alias-border-l2);
+  border: 1px solid var(--rf-line);
   padding: 6px 12px;
-  /* 按钮文字不许被 flex 压扁折行（窄栏下会变成「成／片」两行） */
   white-space: nowrap;
   flex: 0 0 auto;
   font-size: 12px;
   cursor: pointer;
-  background: var(--dsw-alias-bg-layer-3);
-  color: var(--dsw-alias-label-primary);
+  font-family: inherit;
+  background: var(--rf-surface-3);
+  color: var(--rf-text-1);
 }
-/* 主按钮 = 设计稿 ACCENT 蓝底 + 白字（板 01 / 03 / 05 / 06 号板的 Footer 主按钮）。 */
-.rf-btn--primary { background: var(--rf-accent); border-color: var(--rf-accent); color: var(--rf-on-accent); }
+/* 主按钮 = accent 底 + on-accent 字（RF7 Footer 主按钮，40 高）。 */
+.rf-btn--primary {
+  height: 40px;
+  padding: 0 16px;
+  font-weight: 600;
+  background: var(--rf-accent);
+  border-color: var(--rf-accent);
+  color: var(--rf-on-accent);
+}
 .rf-btn--primary:hover { background: var(--rf-accent-hover); border-color: var(--rf-accent-hover); }
-.rf-btn--secondary { background: var(--dsw-alias-bg-layer-3); color: var(--dsw-alias-label-secondary); }
-.rf-btn--danger { background: var(--dsw-alias-state-error-primary); border-color: var(--dsw-alias-state-error-primary); color: var(--dsw-alias-label-primary-foreground); }
-.rf-btn--disabled { background: var(--dsw-alias-bg-layer-3); border-color: var(--dsw-alias-border-l1); color: var(--dsw-alias-label-caption); cursor: not-allowed; }
-/* ⚠️ 禁用态的优先级必须压过 :hover —— 否则禁用的主按钮一悬停就变蓝，
-     看起来像可点的。.rf-btn--primary:hover 的特异性 (0,2,0) 高于
-     .rf-btn--disabled 的 (0,1,0)，所以禁用态要把 :hover 一起写。 */
+/* 次要按钮 = RF/Button/Ghost（28 高 / surface-3 底 / text-2 字）。 */
+.rf-btn--secondary,
+.rf-btn--ghost {
+  height: 28px;
+  padding: 0 10px;
+  font-size: 10px;
+  border-color: transparent;
+  background: var(--rf-surface-3);
+  color: var(--rf-text-2);
+}
+/* 危险按钮 = RF/Button/Danger（透明底 + 错误色描边与字）。 */
+.rf-btn--danger {
+  height: 34px;
+  padding: 0 14px;
+  font-size: 11px;
+  background: transparent;
+  border-color: var(--rf-error);
+  color: var(--rf-error);
+}
+.rf-btn--disabled {
+  height: 40px;
+  background: var(--rf-surface-3);
+  border-color: var(--rf-line);
+  color: var(--rf-text-3);
+  cursor: not-allowed;
+}
+/* ⚠️ 禁用态必须压过 :hover —— .rf-btn--primary:hover 的特异性 (0,2,0)
+ * 高于 .rf-btn--disabled 的 (0,1,0)，不一起写的话禁用的主按钮一悬停就变蓝。 */
 .rf-btn--disabled:hover,
-.rf-btn--disabled:focus { background: var(--dsw-alias-bg-layer-3); border-color: var(--dsw-alias-border-l1); }
-.rf-field { display: inline-flex; flex-direction: column; gap: 4px; }
-.rf-field__label { font-size: 10px; color: var(--dsw-alias-label-caption); }
-.rf-input {
+.rf-btn--disabled:focus {
+  background: var(--rf-surface-3);
+  border-color: var(--rf-line);
+  color: var(--rf-text-3);
+}
+
+/* ── 胶囊（RF7 StatusPill）──────────────────────────────────────────── */
+.rf-pill {
+  display: inline-flex;
+  align-items: center;
   border-radius: 6px;
-  border: 1px solid var(--dsw-alias-border-l3);
-  background: var(--dsw-alias-bg-layer-2);
-  color: var(--dsw-alias-label-primary);
-  padding: 6px 8px;
+  padding: 5px 10px;
+  font-size: 10px;
+  background: var(--rf-surface-3);
+  color: var(--rf-text-2);
+}
+.rf-pill--running,
+.rf-pill--accent { background: var(--rf-accent-dim); color: var(--rf-accent); }
+.rf-pill--done,
+.rf-pill--ok { background: var(--rf-surface-3); color: var(--rf-ok); }
+.rf-pill--failed,
+.rf-pill--error { background: var(--rf-surface-3); color: var(--rf-error); }
+.rf-pill--queued,
+.rf-pill--neutral { background: var(--rf-surface-3); color: var(--rf-text-3); }
+.rf-pill--warn { background: var(--rf-surface-3); color: var(--rf-warn); }
+
+/* ── 进度条 ─────────────────────────────────────────────────────────── */
+.rf-progress {
+  position: relative;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--rf-surface-3);
+  overflow: hidden;
+}
+.rf-progress__fill { height: 100%; background: var(--rf-accent); }
+.rf-progress--done .rf-progress__fill { background: var(--rf-ok); }
+.rf-progress--failed .rf-progress__fill { background: var(--rf-error); }
+.rf-progress__label { position: absolute; inset: 0; font-size: 10px; color: var(--rf-text-2); }
+/* RF7 进度条：轨道 surface-3，填充 accent，6 高 r3。 */
+.rf-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--rf-surface-3);
+  overflow: hidden;
+}
+.rf-track__fill { height: 100%; border-radius: 3px; background: var(--rf-accent); }
+.rf-track__fill--ok { background: var(--rf-ok); }
+.rf-track__fill--warn { background: var(--rf-warn); }
+
+/* ── 空态 / 提示 ────────────────────────────────────────────────────── */
+.rf-empty {
+  border: 1px dashed var(--rf-line);
+  border-radius: 10px;
+  padding: 16px;
+  text-align: center;
+}
+.rf-empty--error { border-color: var(--rf-error); }
+.rf-empty__title { font-size: 12px; color: var(--rf-text-1); }
+.rf-empty__hint { font-size: 11px; color: var(--rf-text-3); margin-top: 4px; }
+.rf-empty__action { margin-top: 12px; display: flex; justify-content: center; }
+.rf-toast {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  border-radius: 8px;
+  padding: 8px 12px;
   font-size: 12px;
+  background: var(--rf-surface-3);
+  color: var(--rf-text-1);
+}
+.rf-toast--warning { color: var(--rf-warn); }
+.rf-toast--error { color: var(--rf-error); }
+.rf-toast__close { border: 0; background: transparent; color: inherit; cursor: pointer; }
+.rf-note { font-size: 11px; color: var(--rf-text-3); margin-top: 8px; }
+.rf-note--warn { color: var(--rf-warn); }
+.rf-note--error { color: var(--rf-error); }
+
+/* ── 行 / 键值 ──────────────────────────────────────────────────────── */
+.rf-meta { display: flex; gap: 8px; font-size: 11px; padding: 2px 0; }
+.rf-meta__key { color: var(--rf-text-3); flex: 0 0 auto; }
+.rf-meta__value { color: var(--rf-text-2); min-width: 0; }
+.rf-row { display: flex; gap: 12px; align-items: center; padding: 8px 0; }
+.rf-row:last-child { border-bottom: 0; }
+.rf-row__main { flex: 1 1 auto; min-width: 0; }
+.rf-row__title { font-size: 12px; color: var(--rf-text-1); }
+.rf-row__sub { font-size: 11px; color: var(--rf-text-3); }
+/* RF7 KvRow：标签 104 定宽 + 值 + 右侧状态。 */
+.rf-kv { display: flex; gap: 10px; align-items: center; }
+.rf-kv__label { flex: 0 0 104px; font-size: 11px; color: var(--rf-text-2); }
+.rf-kv__value { flex: 1 1 auto; min-width: 0; font-size: 11px; color: var(--rf-text-1); }
+.rf-kv__state { flex: 0 0 auto; font-size: 11px; }
+.rf-kv__state--ok { color: var(--rf-ok); }
+.rf-kv__state--warn { color: var(--rf-warn); }
+.rf-kv__state--error { color: var(--rf-error); }
+.rf-kv__state--muted { color: var(--rf-text-3); }
+
+/* ── 网格 ───────────────────────────────────────────────────────────── */
+.rf-grid { display: grid; gap: 12px; grid-template-columns: 1fr; }
+.rf-grid--two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+/* ── 芯片行（RF7 ChipRow）────────────────────────────────────────────── */
+.rf-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.rf-chip {
+  border: 0;
+  background: transparent;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 10px;
+  color: var(--rf-text-2);
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.rf-chip--on {
+  background: var(--rf-accent-dim);
+  color: var(--rf-accent);
+  font-weight: 600;
+}
+
+/* ── 缩略图占位（RF7 Thumb）──────────────────────────────────────────── */
+.rf-thumb {
+  border-radius: 8px;
+  background: var(--rf-surface-3);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  color: var(--rf-text-3);
+  flex: 0 0 auto;
+}
+.rf-thumb--picked { background: var(--rf-accent-dim); color: var(--rf-accent); }
+
+/* ── 播放器条（RF7 PlayerBar）────────────────────────────────────────── */
+.rf-playerbar {
+  height: 32px;
+  border-radius: 16px;
+  background: var(--rf-surface-3);
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  color: var(--rf-text-2);
+}
+.rf-playerbar__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--rf-text-2);
+  flex: 0 0 auto;
+}
+/* 代码块（RF7 CodeBox）*/
+.rf-code {
+  border-radius: 8px;
+  background: var(--rf-surface-2);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 10px;
+  color: var(--rf-text-2);
+  word-break: break-all;
+}
+
+/* ── 单选 / 勾选（RF7 Radio / Checkbox）──────────────────────────────── */
+.rf-radio {
+  width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  border: 1px solid var(--rf-line);
+  background: var(--rf-surface);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  padding: 0;
+}
+.rf-radio--on { border-color: var(--rf-accent); }
+.rf-radio__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 4px;
+  background: var(--rf-accent);
+}
+.rf-check {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid var(--rf-line);
+  background: var(--rf-surface);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  padding: 0;
+}
+.rf-check--on { background: var(--rf-accent); border-color: var(--rf-accent); }
+.rf-check__tick { width: 6px; height: 6px; border-radius: 3px; background: var(--rf-on-accent); }
+
+/* ── 枢纽条（RF7 HubStrip）───────────────────────────────────────────── */
+.rf-hubstrip { flex-direction: row; align-items: center; gap: 14px; }
+.rf-hubstat { display: flex; flex-direction: column; gap: 4px; flex: 1 1 0; min-width: 0; }
+.rf-hubstat__caption { font-size: 10px; color: var(--rf-text-3); }
+.rf-hubstat__value { font-size: 13px; font-weight: 600; color: var(--rf-text-1); }
+.rf-hubstat__sub { font-size: 10px; color: var(--rf-text-2); }
+.rf-divider { width: 1px; height: 42px; background: var(--rf-line); flex: 0 0 auto; }
+/* 镜头摘要卡（RF7 ShotChip）*/
+.rf-shotchip { gap: 6px; padding: 12px; }
+.rf-shotchip__id { font-size: 10px; color: var(--rf-text-3); }
+.rf-shotchip__size { font-size: 12px; font-weight: 600; color: var(--rf-text-1); }
+.rf-shotstate { display: flex; align-items: center; gap: 6px; }
+.rf-shotstate__dot { width: 6px; height: 6px; border-radius: 50%; flex: 0 0 auto; }
+.rf-shotstate__text { font-size: 10px; color: var(--rf-text-2); }
+
+/* ── 对话同步行（RF7 ChatSyncLine）──────────────────────────────────── */
+.rf-chat-sync {
+  font-size: 10px;
+  color: var(--rf-text-3);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── 输入 ───────────────────────────────────────────────────────────── */
+.rf-field { display: inline-flex; flex-direction: column; gap: 4px; }
+.rf-field__label { font-size: 10px; color: var(--rf-text-3); }
+.rf-input {
+  border-radius: 8px;
+  border: 1px solid var(--dsw-alias-border-l3);
+  background: var(--rf-surface-3);
+  color: var(--rf-text-1);
+  padding: 6px 10px;
+  font-size: 12px;
+  font-family: inherit;
 }
 .rf-input--focus { border-color: var(--rf-accent); }
-.rf-input--error { border-color: var(--dsw-alias-state-error-primary); color: var(--dsw-alias-state-error-primary); }
-/* 多行正文（板 02 的「小说正文」输入）。 */
+.rf-input--error { border-color: var(--rf-error); color: var(--rf-error); }
 .rf-textarea {
   display: block;
   width: 100%;
@@ -2721,1487 +4503,1714 @@ window.__ModuleLoader__.load({
   font-family: inherit;
   line-height: 1.5;
 }
-.rf-pill {
-  display: inline-flex;
+/* RF7 输入占位块（只读展示态）：surface-3 底 + 8 圆角。 */
+.rf-fieldbox {
+  border-radius: 8px;
+  background: var(--rf-surface-3);
+  min-height: 32px;
+  padding: 6px 10px;
+  font-size: 11px;
+  color: var(--rf-text-1);
+  display: flex;
   align-items: center;
-  border-radius: 4px;
-  padding: 2px 8px;
-  font-size: 10px;
-  background: var(--dsw-alias-bg-layer-3);
-  color: var(--dsw-alias-label-secondary);
 }
-/* 进行中 = 设计稿「生成中 6/8」：ACCENT-DIM 底 + ACCENT 字（板 01 号板）。 */
-.rf-pill--running { background: var(--rf-accent-dim); color: var(--rf-accent); }
-.rf-pill--done { background: var(--dsw-alias-bg-layer-3); color: var(--dsw-alias-state-success-primary); }
-.rf-pill--failed { background: var(--dsw-alias-bg-layer-3); color: var(--dsw-alias-state-error-primary); }
-.rf-pill--queued { background: var(--dsw-alias-bg-layer-3); color: var(--dsw-alias-label-caption); }
-/* 降级但仍交付（板 16 号板降级矩阵的黄色格）：
-   板 15 的胶囊只列了 4 态，「降级」是跨流程规范板 16 追加的第 5 种语义。 */
-.rf-pill--warn { background: var(--dsw-alias-bg-layer-3); color: var(--dsw-alias-state-warn-label); }
-/* 进度条填充 = 设计稿 ACCENT（板 01 号板，运行中）。 */
-.rf-progress { position: relative; height: 8px; border-radius: 4px; background: var(--dsw-alias-bg-layer-3); overflow: hidden; }
-.rf-progress__fill { height: 100%; background: var(--rf-accent); }
-.rf-progress--done .rf-progress__fill { background: var(--dsw-alias-state-success-primary); }
-.rf-progress--failed .rf-progress__fill { background: var(--dsw-alias-state-error-primary); }
-.rf-progress__label { position: absolute; inset: 0; font-size: 10px; color: var(--dsw-alias-label-secondary); }
-.rf-empty { border: 1px dashed var(--dsw-alias-border-l3); border-radius: 8px; padding: 16px; text-align: center; }
-.rf-empty--error { border-color: var(--dsw-alias-state-error-primary); }
-.rf-empty__title { font-size: 12px; color: var(--dsw-alias-label-primary); }
-.rf-empty__hint { font-size: 11px; color: var(--dsw-alias-label-caption); margin-top: 4px; }
-.rf-toast { display: flex; gap: 8px; align-items: center; border-radius: 8px; padding: 8px 12px; font-size: 12px; background: var(--dsw-alias-bg-layer-3); color: var(--dsw-alias-label-primary); }
-.rf-toast--warning { color: var(--dsw-alias-state-warn-label); }
-.rf-toast--error { color: var(--dsw-alias-state-error-primary); }
-.rf-toast__close { border: 0; background: transparent; color: inherit; cursor: pointer; }
-.rf-meta { display: flex; gap: 8px; font-size: 11px; padding: 2px 0; }
-.rf-meta__key { color: var(--dsw-alias-label-caption); flex: 0 0 auto; }
-.rf-meta__value { color: var(--dsw-alias-label-secondary); min-width: 0; }
-.rf-row { display: flex; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--dsw-alias-border-l1); }
-.rf-row:last-child { border-bottom: 0; }
-.rf-row__main { flex: 1 1 auto; min-width: 0; }
-.rf-row__title { font-size: 12px; color: var(--dsw-alias-label-primary); }
-.rf-row__sub { font-size: 11px; color: var(--dsw-alias-label-tertiary); }
-/* 降级矩阵（板 16 号板）：缺失项 + 3 列产出形态。
-   第一列吃掉剩余宽度，三列按内容宽度 —— 窄栏（300px）也不破版。 */
-.rf-matrix { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; gap: 8px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--dsw-alias-border-l1); }
+.rf-fieldbox--placeholder { color: var(--rf-text-3); }
+.rf-fieldbox--masked { color: var(--rf-text-2); }
+
+/* ── 降级矩阵 ───────────────────────────────────────────────────────── */
+.rf-matrix {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--dsw-alias-border-l1);
+}
 .rf-matrix:last-child { border-bottom: 0; }
-.rf-matrix__head { font-size: 11px; color: var(--dsw-alias-label-tertiary); }
-.rf-note { font-size: 11px; color: var(--dsw-alias-label-caption); margin-top: 8px; }
-.rf-note--warn { color: var(--dsw-alias-state-warn-label); }
-.rf-note--error { color: var(--dsw-alias-state-error-primary); }
+.rf-matrix__head { font-size: 11px; color: var(--rf-text-3); }
+
+/* ── 捕获的对话输入 ─────────────────────────────────────────────────── */
 .rf-captured {
-  border: 1px solid var(--dsw-alias-border-l2);
+  border: 1px solid var(--rf-line);
   border-left: 3px solid var(--rf-accent);
   border-radius: 8px;
   padding: 10px 12px;
-  margin-bottom: 12px;
-  background: var(--dsw-alias-bg-layer-1);
+  background: var(--rf-surface);
 }
-.rf-captured__label {
-  font-size: 11px;
-  color: var(--dsw-alias-label-tertiary);
-  margin-bottom: 4px;
-}
+.rf-captured__label { font-size: 11px; color: var(--rf-text-3); margin-bottom: 4px; }
 .rf-captured__text {
   font-size: 12px;
-  color: var(--dsw-alias-label-primary);
+  color: var(--rf-text-1);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
-.rf-captured__text--empty { color: var(--dsw-alias-label-caption); }
-.rf-chatrow { border: 1px solid var(--dsw-alias-border-l2); border-radius: 8px; padding: 12px; margin-bottom: 8px; background: var(--dsw-alias-bg-layer-1); }
+.rf-captured__text--empty { color: var(--rf-text-3); }
+
+/* ── 对话消息行 ─────────────────────────────────────────────────────── */
+.rf-chatrow {
+  border: 1px solid var(--rf-line);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 8px;
+  background: var(--rf-surface);
+}
 .rf-chatrow__head { display: flex; gap: 8px; align-items: center; }
-.rf-chatrow__kind { font-size: 10px; color: var(--dsw-alias-label-tertiary); background: var(--dsw-alias-bg-layer-3); border-radius: 4px; padding: 2px 6px; }
-.rf-chatrow__title { font-size: 11px; color: var(--dsw-alias-label-primary); }
-.rf-chatrow__body { margin-top: 8px; font-size: 11px; color: var(--dsw-alias-label-tertiary); }
+.rf-chatrow__kind {
+  font-size: 10px;
+  color: var(--rf-text-3);
+  background: var(--rf-surface-3);
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+.rf-chatrow__title { font-size: 11px; color: var(--rf-text-1); }
+.rf-chatrow__body { margin-top: 8px; font-size: 11px; color: var(--rf-text-3); }
 .rf-chatrow__toggle { border: 0; background: transparent; color: var(--rf-accent); font-size: 11px; cursor: pointer; }
+
+/* ── 播放器 / 开关 ──────────────────────────────────────────────────── */
 .rf-player { display: flex; gap: 12px; }
-.rf-player__frame { width: 240px; aspect-ratio: 9 / 16; border-radius: 10px; background: var(--dsw-alias-bg-layer-3); border: 1px solid var(--dsw-alias-border-l2); }
+.rf-player__frame {
+  width: 240px;
+  aspect-ratio: 9 / 16;
+  border-radius: 10px;
+  background: var(--rf-surface-3);
+  border: 1px solid var(--rf-line);
+}
 .rf-player__video { object-fit: contain; display: block; }
 .rf-player__side { flex: 1 1 auto; min-width: 0; }
 .rf-switch { display: inline-flex; width: 44px; height: 20px; border-radius: 10px; background: var(--dsw-alias-state-idle-primary); border: 0; }
-/* 开关打开 = 设计稿 ACCENT 胶囊（板 10 号板）。 */
 .rf-switch--on { background: var(--rf-accent); }
-.rf-dual-entry { display: flex; gap: 0; border: 1px solid var(--dsw-alias-border-l2); border-radius: 8px; overflow: hidden; margin-bottom: 12px; }
-.rf-dual-entry__half { flex: 1 1 50%; padding: 10px 12px; font-size: 11px; color: var(--dsw-alias-label-secondary); background: var(--dsw-alias-bg-layer-1); text-align: center; }
-.rf-dual-entry__half + .rf-dual-entry__half { border-left: 1px solid var(--dsw-alias-border-l2); }
-.rf-chat-sync { font-size: 10px; color: var(--dsw-alias-label-caption); margin-bottom: 12px; }
-.rf-cost-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-.rf-cost-track { flex: 1 1 auto; height: 6px; border-radius: 3px; background: var(--dsw-alias-bg-layer-3); overflow: hidden; }
+
+/* ── 成本条 / 阶段 DNA / 其它小组件 ─────────────────────────────────── */
+.rf-cost-row { display: flex; align-items: center; gap: 8px; }
+.rf-cost-track { flex: 1 1 auto; height: 6px; border-radius: 3px; background: var(--rf-surface-3); overflow: hidden; }
 .rf-cost-fill { height: 100%; background: var(--rf-accent); }
-.rf-cost-fill--warn { background: var(--dsw-alias-state-warn-primary); }
-.rf-cost-label { flex: 0 0 auto; font-size: 10px; color: var(--dsw-alias-label-caption); }
-.rf-stage-dna { margin-bottom: 12px; }
+.rf-cost-fill--warn { background: var(--rf-warn); }
+.rf-cost-label { flex: 0 0 auto; font-size: 10px; color: var(--rf-text-3); }
 .rf-stage-dna__steps { display: flex; gap: 6px; margin-bottom: 6px; }
-.rf-stage-dna__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--dsw-alias-bg-layer-3); }
-.rf-stage-dna__dot--passed { background: var(--dsw-alias-state-success-primary); }
+.rf-stage-dna__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--rf-surface-3); }
+.rf-stage-dna__dot--passed { background: var(--rf-ok); }
 .rf-stage-dna__dot--current { background: var(--rf-accent); }
 .rf-stage-dna__bars { display: flex; gap: 4px; height: 4px; }
-.rf-stage-dna__bar { flex: 1 1 25%; border-radius: 2px; background: var(--dsw-alias-bg-layer-3); }
+.rf-stage-dna__bar { flex: 1 1 25%; border-radius: 2px; background: var(--rf-surface-3); }
 .rf-stage-dna__bar--active { background: var(--rf-accent); }
-.rf-ask-strip { border: 1px dashed var(--dsw-alias-border-l2); border-radius: 8px; padding: 10px 12px; font-size: 11px; color: var(--dsw-alias-label-secondary); margin-top: 12px; }
-.rf-next-hint { font-size: 11px; color: var(--dsw-alias-label-caption); margin-top: 12px; }
-.rf-badge { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 4px; background: var(--dsw-alias-bg-layer-3); color: var(--dsw-alias-label-secondary); }
+.rf-dual-entry {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--rf-line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.rf-dual-entry__half {
+  flex: 1 1 50%;
+  padding: 10px 12px;
+  font-size: 11px;
+  color: var(--rf-text-2);
+  background: var(--rf-surface);
+  text-align: center;
+}
+.rf-dual-entry__half + .rf-dual-entry__half { border-left: 1px solid var(--rf-line); }
+.rf-ask-strip {
+  border: 1px dashed var(--rf-line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 11px;
+  color: var(--rf-text-2);
+}
+.rf-next-hint { font-size: 11px; color: var(--rf-text-3); }
+.rf-badge {
+  display: inline-block;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--rf-surface-3);
+  color: var(--rf-text-2);
+}
+
+/* ── 分镜行（RF7 Storyboard 板）─────────────────────────────────────
+ * 选中行 = accent-dim 底 + accent 描边（RF7 画板 07 的 shotRow 就是这么画的：
+ * 选中时 fill=accent-dim、stroke=accent；未选中时**无底无描边**）。 */
+.rf-shotrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  padding: 8px 10px;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  color: var(--rf-text-1);
+}
+.rf-shotrow--on {
+  background: var(--rf-accent-dim);
+  border-color: var(--rf-accent);
+}
+.rf-shotrow__id { flex: 0 0 auto; font-size: 11px; font-weight: 600; color: var(--rf-text-2); }
+.rf-shotrow--on .rf-shotrow__id { color: var(--rf-accent); }
+.rf-shotrow__title { flex: 1 1 auto; min-width: 0; font-size: 11px; color: var(--rf-text-1); }
+.rf-shotrow__dur { flex: 0 0 auto; font-size: 10px; color: var(--rf-text-3); }
+.rf-shotrow__state { flex: 0 0 auto; font-size: 10px; color: var(--rf-text-3); }
+
+/* ── 注入预览行（RF7 Context 板）────────────────────────────────── */
+.rf-inject__line { font-size: 10px; color: var(--rf-accent); }
+
+/* ── 成片播放器占位（RF7 Output 板：168 高的占位块）───────────────── */
+.rf-playerbox {
+  height: 168px;
+  border-radius: 10px;
+  background: var(--rf-surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--rf-text-3);
+}
+
+/* ── 日志行的时间列 ─────────────────────────────────────────────── */
+.rf-log__time { flex: 0 0 auto; font-size: 10px; color: var(--rf-text-3); }
+
+/* ── 三列网格（RF7 Picker 板：缩略图 2×3）──────────────────────── */
+.rf-grid--three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+/* ── 横向规格条（RF7 Intake 板的「分辨率 / 比例 / 背景音乐」）──── */
+.rf-settingsbar { flex-direction: row; align-items: center; gap: 14px; }
+
+/* ── 虚线投放区（RF7 Intake / Skills 板的拖放框）────────────────── */
+.rf-dropzone {
+  border: 1px dashed var(--rf-line);
+  border-radius: 8px;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--rf-text-3);
+}
+
+/* ── 四阶段分段条（RF7 Stages 板）──────────────────────────────── */
+.rf-segments { display: flex; gap: 4px; }
+.rf-segment { flex: 1 1 25%; height: 6px; border-radius: 3px; background: var(--rf-surface-3); }
+.rf-segment--on { background: var(--rf-accent); }
+/* 图例色：llm 完成（绿）/ image 进行中（蓝）/ 待跑（中性）。 */
+.rf-legend { font-size: 10px; color: var(--rf-text-3); }
+.rf-legend--ok { color: var(--rf-ok); }
+.rf-legend--accent { color: var(--rf-accent); }
+.rf-legend--muted { color: var(--rf-text-3); }
+
+/* ── 步骤序号圆点（RF7 Skills 板的工作流自迭代）────────────────── */
+.rf-stepnum {
+  width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  background: var(--rf-accent-dim);
+  color: var(--rf-accent);
+  font-size: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+/* ── 素材选择器条目（RF7 Picker 板）────────────────────────────── */
+.rf-pickeritem {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+}
+.rf-pickeritem--on .rf-thumb {
+  outline: 2px solid var(--rf-accent);
+  outline-offset: 2px;
+}
 `;
 })(RF);
 
-/* ── src/client/workbench/v6widgets.js ───────────────────────────── */
+/* ── src/client/workbench/rf7.js ───────────────────────────── */
 /* ─────────────────────────────────────────────────────────────────────────────
- * v6 自有 UI 模块（设计稿 §3）—— 只用 `--dsw-alias-*` / `--rf-*`。
+ * RF7 基础件（`design/_tools/build-rf7.mjs` 里那些 `RF/*` 零件的代码版）。
+ *
+ * 设计稿的每个板都是「零件 + 内容」两层：
+ * 零件（卡片 / 分区标题 / 键值行 / 芯片行 / 缩略图 / 提示卡 / 播放器条 / 代码块 /
+ * 单选 / 勾选 / 进度条 / 枢纽条 / 镜头卡）在本文件里各有一个函数，
+ * 各板只负责**排内容**。
+ *
+ * 纪律：
+ *   1. 颜色一律走 `--rf-*`（styles.js 的令牌层），**不写十六进制字面量**；
+ *   2. 不用 `opacity` 表达层级，状态用实色；
+ *   3. 零件只吐 class 名，样式全在 `workbench/styles.js`。
  * ─────────────────────────────────────────────────────────────────────────── */
 ;(function (RF) {
   'use strict';
 
-  RF.renderChapterUnitBadge = function renderChapterUnitBadge(props) {
-    return h('span', { className: `${RF.CLS}-badge` }, props.t('v6.chapterUnit'));
+  /** 分区标题：13/600 主标题 + 10px 副标题（RF7 SectionHead）。 */
+  RF.r7SectionHead = function r7SectionHead(title, sub) {
+    return h('div', { className: `${RF.CLS}-sechead` },
+      h('div', { className: `${RF.CLS}-sechead__title` }, title),
+      sub === undefined || sub === null || sub === ''
+        ? null
+        : h('div', { className: `${RF.CLS}-sechead__sub` }, sub));
   };
 
-  RF.renderDualEntry = function renderDualEntry(props) {
-    return h('div', { className: `${RF.CLS}-dual-entry` },
-      h('div', { className: `${RF.CLS}-dual-entry__half` }, props.t('v6.dualEntry.chat')),
-      h('div', { className: `${RF.CLS}-dual-entry__half` }, props.t('v6.dualEntry.panel')));
+  /**
+   * 键值行：标签（104 定宽）+ 值 + 右侧状态（RF7 KvRow）。
+   * @param {string} label - 标签。
+   * @param {string} value - 值。
+   * @param {string} [state] - 右侧状态文字（可空）。
+   * @param {string} [tone] - 状态色调：ok / warn / error / muted。
+   * @param {object} [right] - 右侧自定义节点（按钮等）。
+   * @returns {object} React 元素。
+   */
+  RF.r7KvRow = function r7KvRow(label, value, state, tone, right) {
+    const kids = [
+      h('span', { className: `${RF.CLS}-kv__label` }, label),
+      h('span', { className: `${RF.CLS}-kv__value` }, value),
+    ];
+    if (state !== undefined && state !== null && state !== '') {
+      const key = ['ok', 'warn', 'error', 'muted'].includes(tone) ? tone : 'muted';
+      kids.push(h('span', { className: `${RF.CLS}-kv__state ${RF.CLS}-kv__state--${key}` }, state));
+    }
+    if (right !== undefined && right !== null) kids.push(right);
+    return h('div', { className: `${RF.CLS}-kv` }, kids);
   };
 
-  RF.renderChatSync = function renderChatSync(props) {
+  /**
+   * 芯片行（RF7 ChipRow）：选中项 accent-dim 底 + accent 字。
+   *
+   * ⚠️ **没有回调的芯片行 = 不可用的筛选器**（插件没有对应能力）⇒ 按钮必须
+   * **禁用并写明原因**，不能留一批「点了没反应」的按钮。
+   *
+   * @param {Array<string>} items - 芯片文案。
+   * @param {number} [activeIndex] - 选中项下标（-1 = 无选中）。
+   * @param {function} [onSelect] - 点击回调（下标）。
+   * @param {string} [disabledTitle] - 不可用时的说明（tooltip）。
+   * @returns {object} React 元素。
+   */
+  RF.r7ChipRow = function r7ChipRow(items, activeIndex, onSelect, disabledTitle) {
+    const list = Array.isArray(items) ? items : [];
+    const usable = typeof onSelect === 'function';
+    return h('div', { className: `${RF.CLS}-chips` },
+      list.map((label, index) => h('button', {
+        key: `${label}-${index}`,
+        type: 'button',
+        className: `${RF.CLS}-chip${index === activeIndex ? ` ${RF.CLS}-chip--on` : ''}`,
+        disabled: !usable,
+        title: usable ? undefined : disabledTitle,
+        onClick: usable ? () => onSelect(index) : undefined,
+      }, label)));
+  };
+
+  /**
+   * 缩略图占位（RF7 Thumb）：只定版式不画内容。
+   * @param {string} label - 占位文字。
+   * @param {{ size?: number, picked?: boolean }} [options] - 尺寸与已选态。
+   * @returns {object} React 元素。
+   */
+  RF.r7Thumb = function r7Thumb(label, options) {
+    const opts = options ?? {};
+    const size = Number(opts.size) > 0 ? Number(opts.size) : 48;
+    return h('div', {
+      className: `${RF.CLS}-thumb${opts.picked === true ? ` ${RF.CLS}-thumb--picked` : ''}`,
+      style: { width: `${size}px`, height: `${size}px` },
+    }, label);
+  };
+
+  /**
+   * 提示卡（RF7 NoticeCard）：surface-2 面 + 无描边，一行主文案 + 可选副文案。
+   * @param {string} main - 主文案。
+   * @param {string} [sub] - 副文案。
+   * @returns {object} React 元素。
+   */
+  RF.r7Notice = function r7Notice(main, sub) {
+    return h('div', { className: `${RF.CLS}-notice` },
+      h('div', { className: `${RF.CLS}-notice__main` }, main),
+      sub === undefined || sub === null || sub === ''
+        ? null
+        : h('div', { className: `${RF.CLS}-notice__sub` }, sub));
+  };
+
+  /** 播放器条（RF7 PlayerBar）：占位播放头 + 时间。 */
+  RF.r7PlayerBar = function r7PlayerBar(duration) {
+    return h('div', { className: `${RF.CLS}-playerbar` },
+      h('span', { className: `${RF.CLS}-playerbar__dot` }),
+      h('span', null, `0:00 / ${duration}`));
+  };
+
+  /** 代码块（RF7 CodeBox）。 */
+  RF.r7CodeBox = function r7CodeBox(lines) {
+    const list = Array.isArray(lines) ? lines : [];
+    return h('div', { className: `${RF.CLS}-code` },
+      list.map((line, index) => h('div', { key: `${index}` }, line)));
+  };
+
+  /** 单选圈（RF7 Radio）：选中 = accent 描边 + 中心点。 */
+  RF.r7Radio = function r7Radio(selected) {
+    return h('span', {
+      className: `${RF.CLS}-radio${selected === true ? ` ${RF.CLS}-radio--on` : ''}`,
+      'aria-hidden': true,
+    }, selected === true ? h('span', { className: `${RF.CLS}-radio__dot` }) : null);
+  };
+
+  /** 勾选框（RF7 Checkbox）：选中 = accent 底 + 白色对勾。 */
+  RF.r7Checkbox = function r7Checkbox(checked) {
+    return h('span', {
+      className: `${RF.CLS}-check${checked === true ? ` ${RF.CLS}-check--on` : ''}`,
+      'aria-hidden': true,
+    }, checked === true ? h('span', { className: `${RF.CLS}-check__tick` }) : null);
+  };
+
+  /**
+   * 进度条（RF7 ProgressBar）：轨道 surface-3 + 填充 accent。
+   * @param {number} ratio - 0..1。
+   * @param {string} [tone] - ok / warn。
+   * @returns {object} React 元素。
+   */
+  RF.r7Track = function r7Track(ratio, tone) {
+    const value = Math.max(0, Math.min(1, Number(ratio) || 0));
+    const key = ['ok', 'warn'].includes(tone) ? tone : '';
+    return h('div', { className: `${RF.CLS}-track` },
+      h('div', {
+        className: `${RF.CLS}-track__fill${key === '' ? '' : ` ${RF.CLS}-track__fill--${key}`}`,
+        style: { width: `${Math.round(value * 100)}%` },
+      }));
+  };
+
+  /**
+   * 枢纽条的一格（RF7 HubStrip 的 stat）。
+   * @param {string} caption - 小标题。
+   * @param {string} value - 主值。
+   * @param {string} sub - 副值。
+   * @returns {object} React 元素。
+   */
+  RF.r7Stat = function r7Stat(caption, value, sub) {
+    return h('div', { className: `${RF.CLS}-hubstat` },
+      h('div', { className: `${RF.CLS}-hubstat__caption` }, caption),
+      h('div', { className: `${RF.CLS}-hubstat__value` }, value),
+      h('div', { className: `${RF.CLS}-hubstat__sub` }, sub));
+  };
+
+  /**
+   * 镜头摘要卡（RF7 ShotChip）：镜号 + 景别 + 状态点。
+   * @param {string} id - 镜号。
+   * @param {string} size - 景别。
+   * @param {string} state - 状态文字。
+   * @param {string} tone - 状态点颜色令牌：ok / accent / line。
+   * @returns {object} React 元素。
+   */
+  RF.r7ShotChip = function r7ShotChip(id, size, state, tone) {
+    const color = tone === 'ok'
+      ? 'var(--rf-ok)'
+      : (tone === 'accent' ? 'var(--rf-accent)' : 'var(--rf-line)');
+    return h('div', { className: `${RF.CLS}-card ${RF.CLS}-shotchip` },
+      h('div', { className: `${RF.CLS}-shotchip__id` }, id),
+      h('div', { className: `${RF.CLS}-shotchip__size` }, size),
+      h('div', { className: `${RF.CLS}-shotstate` },
+        h('span', { className: `${RF.CLS}-shotstate__dot`, style: { background: color } }),
+        h('span', { className: `${RF.CLS}-shotstate__text` }, state)));
+  };
+
+  /**
+   * 对话同步行（RF7 `RF/ChatSyncLine`）：一行 10px 次级文案。
+   *
+   * 语义：「同一状态两边可读」—— 对话面写入的东西，右栏用一行字说明它到了。
+   *
+   * @param {{ t: function, project: object }} props - 属性。
+   * @returns {object} React 元素。
+   */
+  RF.r7ChatSync = function r7ChatSync(props) {
+    const t = props.t;
     const project = props.project ?? {};
     const chapters = Array.isArray(project.chapters) ? project.chapters : [];
     const text = String(project.input?.text ?? '').trim();
     const position = String(project.runPosition ?? '');
-    let message = props.t('v6.chatSync.empty');
+    let message = t('rf7.chatSync.empty');
     if (chapters.length > 0) {
-      message = props.t('v6.chatSync.imported', {
+      message = t('rf7.chatSync.imported', {
         count: chapters.length,
-        pending: position === '' ? props.t('v6.chatSync.needRun') : props.t('v6.chatSync.ready'),
+        pending: position === '' ? t('rf7.chatSync.needRun') : t('rf7.chatSync.ready'),
       });
     } else if (text !== '') {
-      message = props.t('v6.chatSync.captured');
+      message = t('rf7.chatSync.captured');
     }
     return h('div', { className: `${RF.CLS}-chat-sync` }, message);
   };
 
-  RF.renderCostThermometer = function renderCostThermometer(props) {
-    const spent = Number(props.project?.cost?.spent) || 0;
-    const cap = Number(props.project?.cost?.cap) || 0;
-    const ratio = cap > 0 ? Math.min(1, spent / cap) : 0;
-    const warn = cap > 0 && spent / cap >= 0.8;
-    return h('div', { className: `${RF.CLS}-cost-row` },
-      h('div', { className: `${RF.CLS}-cost-track` },
-        h('div', {
-          className: `${RF.CLS}-cost-fill${warn ? ` ${RF.CLS}-cost-fill--warn` : ''}`,
-          style: { width: `${Math.round(ratio * 100)}%` },
-        })),
-      h('span', { className: `${RF.CLS}-cost-label` }, props.t('v6.cost', {
-        spent: RF.formatMoney(spent),
-        cap: RF.formatMoney(cap),
-      })));
+  /**
+   * 只读输入占位（RF7 的 Set-input / Intake-name 那种「只定版式」的框）。
+   * @param {string} text - 框里的文字。
+   * @param {string} [kind] - placeholder（占位）/ masked（打码）/ value（正常）。
+   * @returns {object} React 元素。
+   */
+  RF.r7FieldBox = function r7FieldBox(text, kind) {
+    const variant = kind === 'masked' ? 'masked' : (kind === 'value' ? 'value' : 'placeholder');
+    return h('div', {
+      className: `${RF.CLS}-fieldbox ${variant === 'value' ? '' : `${RF.CLS}-fieldbox--${variant}`}`.trim(),
+    }, text);
   };
-
-  RF.renderStageDNA = function renderStageDNA(props) {
-    const project = props.project ?? {};
-    const stage = RF.stageStepsState(project);
-    return h('div', { className: `${RF.CLS}-stage-dna` },
-      h('div', { className: `${RF.CLS}-stage-dna__steps` },
-        RF.STAGE_STEPS.map((step, index) => h('span', {
-          key: step,
-          className: `${RF.CLS}-stage-dna__dot${index === stage.current ? ` ${RF.CLS}-stage-dna__dot--current` : index < stage.current ? ` ${RF.CLS}-stage-dna__dot--passed` : ''}`,
-          title: props.t(`stage.${step}`),
-        }))),
-      h('div', { className: `${RF.CLS}-stage-dna__bars` },
-        RF.STAGES.map(stageId => h('span', {
-          key: stageId,
-          className: `${RF.CLS}-stage-dna__bar${stageId === 'tts' ? ` ${RF.CLS}-stage-dna__bar--active` : ''}`,
-          title: props.t(`stages.${stageId}`),
-        }))));
-  };
-
-  RF.renderAskStrip = function renderAskStrip(props) {
-    return h('div', { className: `${RF.CLS}-ask-strip` }, props.message ?? props.t(props.messageKey));
-  };
-
-  RF.renderNextHint = function renderNextHint(props) {
-    return h('div', { className: `${RF.CLS}-next-hint` }, props.t(props.hintKey));
-  };
-
 })(RF);
 
-/* ── src/client/workbench/hub.js ───────────────────────────── */
+/* ── src/client/workbench/tabs.js ───────────────────────────── */
 /* ─────────────────────────────────────────────────────────────────────────────
- * 01 · 枢纽首页（v6 Hub，设计稿 01-RF-Hub）。
+ * 项目视图的 7 块 Tab 屏（RF7 画板索引 §八「Tab 屏」）。
+ *
+ * 枢纽 11 · 章节 03 · 素材 04 · 分镜 07 · 上下文 05 · 成片 10 · 日志 12
+ *
+ * 每块屏按 `design/_tools/build-rf7.mjs` 里对应的 `boardXxx()` 排版 ——
+ * 那份脚本是设计稿的**真源**（几何 + 令牌变量），这里是它的代码版。
+ *
+ * 纪律：
+ *   1. 数据只从宿主投影读（R1）；交互态走 `props.state`；
+ *   2. **数据没有就说清楚没有**，不编内容（RF7 §6.7「失败不许静默降质」）；
+ *   3. 排版用 `workbench/rf7.js` 的零件，样式只写 class 名。
  * ─────────────────────────────────────────────────────────────────────────── */
 ;(function (RF) {
   'use strict';
 
-  function emptyOf(props) {
-    return h(RF.ui.EmptyState, {
-      title: props.t('empty.hub'),
-      hint: props.t('empty.hubHint'),
-      action: h(RF.ui.Button, {
-        label: props.t('v6.firstRun.openRunStack'),
-        variant: 'primary',
-        onClick: () => {
-          props.state.setDeviceExpanded(true);
-          props.state.goFlow('runstack');
-        },
-      }),
-    });
+  /**
+   * 镜头状态 → 胶囊色调 + 词条键。
+   *
+   * @param {string} status - 机器状态。
+   * @returns {{ tone: string, key: string }} 胶囊信息。
+   */
+  function shotStatus(status) {
+    const raw = String(status ?? '');
+    if (raw === 'done') return { tone: 'done', key: 'rf7.status.done' };
+    if (raw === 'generating') return { tone: 'running', key: 'rf7.status.generating' };
+    if (raw === 'failed') return { tone: 'failed', key: 'rf7.status.failed' };
+    return { tone: 'queued', key: 'rf7.status.pending' };
   }
+
+  /**
+   * 章节状态 → 胶囊色调 + 词条键。
+   *
+   * @param {string} status - 机器状态。
+   * @returns {{ tone: string, key: string }} 胶囊信息。
+   */
+  function chapterStatus(status) {
+    const raw = String(status ?? '');
+    if (raw === 'done') return { tone: 'done', key: 'rf7.status.done' };
+    if (raw === 'running') return { tone: 'running', key: 'rf7.status.generating' };
+    if (raw === 'failed') return { tone: 'failed', key: 'rf7.status.failed' };
+    return { tone: 'queued', key: 'rf7.status.pending' };
+  }
+
+  /**
+   * 资产分类 → 展示名（RF7 素材板的筛选芯片）。
+   *
+   * @param {string} category - 机器分类。
+   * @param {function} t - 翻译函数。
+   * @returns {string} 展示名。
+   */
+  function assetCategoryName(category, t) {
+    return RF.labelOf('asset.category', category, t);
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // 11 枢纽（Hub）—— 有章节后的默认落点
+  // ══════════════════════════════════════════════════════════════
 
   RF.tabHub = function tabHub(props) {
     const t = props.t;
     const project = props.project ?? {};
     const chapters = Array.isArray(project.chapters) ? project.chapters : [];
     const shots = Array.isArray(project.shots) ? project.shots : [];
-    if (chapters.length === 0) return emptyOf(props);
 
+    if (chapters.length === 0) {
+      return h('div', { className: `${RF.CLS}-stack` },
+        RF.r7ChatSync({ t, project }),
+        h(RF.ui.EmptyState, {
+          title: t('rf7.hub.empty.title'),
+          hint: t('rf7.hub.empty.hint'),
+          action: h(RF.ui.Button, {
+            label: t('rf7.hub.empty.action'),
+            variant: 'primary',
+            onClick: () => props.state.goFlow('intake'),
+          }),
+        }));
+    }
+
+    // 成本 + 当前阶段 = RF/HubStrip（横向两格 + 竖分隔线）。
+    const cost = project.cost ?? {};
+    const kind = String(project.plan?.kind ?? '');
     const position = RF.currentPosition(project);
-    const chapterSeq = position === null ? Number(chapters[0]?.id) || 1 : Number(position.chapter);
-    const chapterShots = shots.filter(shot => Number(shot.seq) === chapterSeq);
-    const visibleShots = chapterShots.slice(0, 4);
-    const rest = chapterShots.length - visibleShots.length;
+    const chapter = chapters.find(item => Number(item.id) === Number(position?.chapter)) ?? chapters[0];
+    const chapterShots = shots.filter(shot => Number(shot.seq) === Number(chapter.id));
+    const doneShots = chapterShots.filter(shot => String(shot.status ?? '') === 'done').length;
+    const visible = chapterShots.slice(0, 6);
+    const rest = chapterShots.length - visible.length;
 
-    return h('div', null,
-      RF.renderCostThermometer({ t, project }),
-      RF.renderStageDNA({ t, project }),
-      RF.renderChatSync({ t, project }),
-      h(RF.ui.SectionLabel, null, t('v6.hub.chapterProgress')),
-      h(RF.ui.Card, null,
-        chapters.map(chapter => h('div', { key: chapter.id ?? chapter.title, className: `${RF.CLS}-row` },
-          h('div', { className: `${RF.CLS}-row__main` },
-            h('div', { className: `${RF.CLS}-row__title` }, chapter.title ?? ''),
-            h('div', { className: `${RF.CLS}-row__sub` },
-              `${chapter.shotCount ?? 0} ${t('unit.shot')} · ${RF.formatDuration(chapter.durationSec ?? 0)}`)),
-          h(RF.ui.Pill, {
-            label: RF.labelOf('chapter.status', chapter.status, t),
-            tone: chapter.status ?? 'queued',
-          })))),
-      h('div', { className: `${RF.CLS}-note` }, t('chapter.unit')),
-      h(RF.ui.SectionLabel, null, t('v6.hub.shotScript')),
-      visibleShots.length === 0
-        ? h('div', { className: `${RF.CLS}-note` }, t('v6.hub.noShots'))
-        : visibleShots.map(shot => h(RF.ui.Card, {
-          key: shot.id ?? `${shot.seq}-${shot.idx}`,
-          state: 'default',
-        },
-          h('div', { className: `${RF.CLS}-row__title` }, shot.label ?? shot.id),
-          h('div', { className: `${RF.CLS}-row__sub` },
-            `${shot.shotSize ?? ''} · ${RF.formatDuration(shot.duration ?? 0)} · ${shot.aspectRatio ?? ''}`))),
-      rest > 0
-        ? h('div', { className: `${RF.CLS}-row` },
-          h(RF.ui.Button, {
-            label: t('v6.hub.moreShots', { count: rest }),
-            variant: 'secondary',
-            onClick: () => props.state.goTab('shots'),
-          }))
-        : null,
-      RF.renderNextHint({ t, hintKey: 'v6.hub.nextHint' }));
+    const hubStrip = h(RF.ui.Card, { className: `${RF.CLS}-hubstrip` },
+      RF.r7Stat(t('rf7.hub.costLabel'), RF.formatMoney(cost.spent ?? 0), kind === '' ? t('rf7.hub.kindUnset') : kind),
+      h('div', { className: `${RF.CLS}-divider` }),
+      RF.r7Stat(
+        t('rf7.hub.stageLabel'),
+        kind === '' ? t('rf7.hub.stageUnset') : kind,
+        t('rf7.hub.stageSub', {
+          chapter: Number(chapter.id) || 1,
+          done: doneShots,
+          total: chapterShots.length,
+        })));
+
+    const chapterRail = h(RF.ui.Card, null,
+      h('div', { className: `${RF.CLS}-row` },
+        h('div', { className: `${RF.CLS}-row__main` },
+          h('div', { className: `${RF.CLS}-row__title` }, t('rf7.hub.chapterTitle', {
+            chapter: Number(chapter.id) || 1,
+            title: chapter.title,
+          })),
+          h('div', { className: `${RF.CLS}-row__sub` }, t('rf7.hub.chapterMeta', {
+            shots: chapter.shotCount ?? 0,
+            duration: RF.formatDuration(chapter.durationSec ?? 0),
+          }))),
+        h(RF.ui.Pill, {
+          label: t(chapterStatus(chapter.status).key),
+          tone: chapterStatus(chapter.status).tone,
+        })),
+      RF.r7Track(chapterShots.length === 0 ? 0 : doneShots / chapterShots.length));
+
+    const rows = [];
+    for (let index = 0; index < visible.length; index += 2) {
+      const pair = visible.slice(index, index + 2);
+      rows.push(h('div', { className: `${RF.CLS}-grid ${RF.CLS}-grid--two` },
+        pair.map(shot => RF.r7ShotChip(
+          t('rf7.hub.shotId', { seq: Number(shot.seq) || 1, idx: Number(shot.idx) || 1 }),
+          shot.shotSize === '' ? t('rf7.hub.shotSizeUnknown') : shot.shotSize,
+          t(shotStatus(shot.status).key),
+          shotStatus(shot.status).tone === 'done'
+            ? 'ok'
+            : (shotStatus(shot.status).tone === 'running' ? 'accent' : 'line')))));
+    }
+
+    return h('div', { className: `${RF.CLS}-stack` },
+      hubStrip,
+      RF.r7ChatSync({ t, project }),
+      RF.r7SectionHead(t('rf7.hub.sectionChapters')),
+      chapterRail,
+      RF.r7SectionHead(t('rf7.hub.sectionShots'), t('rf7.hub.sectionShotsSub')),
+      ...rows,
+      h('div', { className: `${RF.CLS}-row` },
+        h('span', { className: `${RF.CLS}-note` }, t('rf7.hub.moreShots', { count: rest > 0 ? rest : 0 })),
+        h(RF.ui.Button, {
+          label: t('rf7.hub.viewAll', { count: chapterShots.length }),
+          variant: 'secondary',
+          onClick: () => props.state.goTab('shots'),
+        })),
+      // ── 屏间入口 ──
+      // RF7 画板只画屏内内容；「项目设置」「技能与工作流」在 RF7 里是流程屏
+      // （技能是从旧页签挪过来的，页签条里已经没有它）⇒ 枢纽是它们的落点。
+      h('div', { className: `${RF.CLS}-row` },
+        h(RF.ui.Button, {
+          label: t('rf7.hub.actProjectSettings'),
+          variant: 'secondary',
+          onClick: () => props.state.goFlow('projectSettings'),
+        }),
+        h(RF.ui.Button, {
+          label: t('rf7.hub.actSkills'),
+          variant: 'secondary',
+          onClick: () => props.state.goFlow('skills'),
+        })));
   };
-})(RF);
 
-/* ── src/client/workbench/tabs.js ───────────────────────────── */
-/* ─────────────────────────────────────────────────────────────────────────────
- * 7 个页签（Tab **内部**的二级分区，segmented control —— 不是开 7 个宿主 Tab）。
- *
- * 每页都有空态，文案说清「为什么空 + 下一步做什么」。
- * 业务数据只从宿主投影读（R1）；组件里的 `useState` 只放交互态。
- * ─────────────────────────────────────────────────────────────────────────── */
-;(function (RF) {
-  'use strict';
+  // ══════════════════════════════════════════════════════════════
+  // 03 章节（Chapters）
+  // ══════════════════════════════════════════════════════════════
 
-  /**
-   * 空态（统一口径：说清为什么空 + 下一步做什么）。
-   * @param {{ t: function, key: string }} props - 属性。
-   * @returns {object} React 元素。
-   */
-  function emptyOf(props) {
-    return h(RF.ui.EmptyState, {
-      title: props.t(`empty.${props.key}`),
-      hint: props.t('empty.hint'),
-    });
-  }
-
-  /**
-   * 降级入口卡（设计稿 16 号板的入口）。
-   *
-   * ## 为什么它不能挂在「有交付物」分支里
-   *
-   * 降级矩阵是**跨流程规范板**，入口在成片页（交付物最常被降级影响）。
-   *
-   * ⚠️ 但它**必须**在成片页的空态下**也**渲染 ——
-   * 降级恰恰是「**没出成片**」的时候最该看的（设计稿 16 号板：「缺什么就说清楚，
-   * 不假装成功」）。早期版本把它放在 `tabOutput` 的末尾，而空态早退
-   * （`deliverables.length === 0`）会把它整块跳过 ⇒
-   * **最需要降级说明的场景，恰恰看不到降级说明的入口**（实机抓到）。
-   *
-   * @param {{ t: function, state: object }} props - 属性。
-   * @returns {object} React 元素。
-   */
-  function degradeEntryCard(props) {
-    return h(RF.ui.Card, null,
-      h('div', { className: `${RF.CLS}-row__title` }, props.t('flow.degrade.title')),
-      h('div', { className: `${RF.CLS}-row__sub` }, props.t('flow.degrade.subtitle')),
-      h(RF.ui.Button, {
-        label: props.t('flow.degrade.action'),
-        variant: 'secondary',
-        onClick: () => props.state.goFlow('degraded'),
-      }));
-  }
-
-  /**
-   * 章节页：章节列表 + 每章四阶段勾选 + 依赖提示。
-   * @param {{ t: function, project: object }} props - 属性。
-   * @returns {object} React 元素。
-   */
   RF.tabChapters = function tabChapters(props) {
-    const chapters = Array.isArray(props.project.chapters) ? props.project.chapters : [];
-    if (chapters.length === 0) return emptyOf({ t: props.t, key: 'chapters' });
-    return h('div', null,
-      h(RF.ui.SectionLabel, null, props.t('tab.chapters')),
-      chapters.map(chapter => h(RF.ui.Card, { key: chapter.id ?? chapter.title, state: 'default' },
-        h('div', { className: `${RF.CLS}-row` },
-          h('div', { className: `${RF.CLS}-row__main` },
-            h('div', { className: `${RF.CLS}-row__title` }, chapter.title ?? ''),
-            h('div', { className: `${RF.CLS}-row__sub` }, `${chapter.shotCount ?? 0} ${props.t('unit.shot')} · ${RF.formatDuration(chapter.durationSec ?? 0)}`)),
-          h(RF.ui.Pill, { label: RF.labelOf('chapter.status', chapter.status, props.t), tone: chapter.status ?? 'queued' })),
-        h('div', { className: `${RF.CLS}-row` }, RF.STAGES.map(stage => h(RF.ui.Pill, {
-          key: stage,
-          label: props.t(`stages.${stage}`),
-          tone: (chapter.stages ?? []).includes(stage) ? 'done' : 'queued',
-        }))))),
-      h('div', { className: `${RF.CLS}-note` }, props.t('hardDependency')),
-      h('div', { className: `${RF.CLS}-note` }, props.t('softDependency')),
-      h('div', { className: `${RF.CLS}-note` }, props.t('chapter.unit')));
+    const t = props.t;
+    const project = props.project ?? {};
+    const chapters = Array.isArray(project.chapters) ? project.chapters : [];
+
+    const card = chapter => h(RF.ui.Card, null,
+      h('div', { className: `${RF.CLS}-row__title` }, t('rf7.chapters.chapterTitle', { chapter: Number(chapter.id) || 1 })),
+      h('div', { className: `${RF.CLS}-row` },
+        h('span', { className: `${RF.CLS}-row__sub` }, (Number(chapter.shotCount) || 0) === 0
+          ? t('rf7.chapters.noShots')
+          : t('rf7.chapters.shotsMeta', {
+            shots: chapter.shotCount,
+            duration: RF.formatDuration(chapter.durationSec ?? 0),
+          })),
+        h(RF.ui.Pill, {
+          label: t(chapterStatus(chapter.status).key),
+          tone: chapterStatus(chapter.status).tone,
+        })),
+      h('div', { className: `${RF.CLS}-row` },
+        // 「生成」接得到工具（`run_stage` 的 `seq` 限定章节）⇒ 真接线。
+        h(RF.ui.Button, {
+          label: t('rf7.chapters.actGenerate'),
+          variant: 'secondary',
+          onClick: () => props.state.runStage('llm', chapter.id),
+        }),
+        // 「编辑」「操作」插件**没有对应工具** ⇒ 禁用 + 说清缺什么（不做死按钮）。
+        h(RF.ui.Button, {
+          label: t('rf7.chapters.actEdit'),
+          variant: 'secondary',
+          disabled: true,
+          title: t('rf7.chapters.actEditDisabled'),
+        }),
+        h(RF.ui.Button, {
+          label: t('rf7.chapters.actMore'),
+          variant: 'secondary',
+          disabled: true,
+          title: t('rf7.chapters.actMoreDisabled'),
+        })));
+
+    const rows = [];
+    for (let index = 0; index < chapters.length; index += 2) {
+      const pair = chapters.slice(index, index + 2);
+      rows.push(h('div', { className: `${RF.CLS}-grid ${RF.CLS}-grid--two` }, pair.map(card)));
+    }
+
+    return h('div', { className: `${RF.CLS}-stack` },
+      RF.r7ChatSync({ t, project }),
+      h('div', { className: `${RF.CLS}-row` },
+        h(RF.ui.Button, {
+          label: t('rf7.chapters.actAdd'),
+          variant: 'primary',
+          onClick: () => props.state.goFlow('intake'),
+        }),
+        h(RF.ui.Button, {
+          label: t('rf7.chapters.actGenerateAll'),
+          variant: 'secondary',
+          onClick: () => props.state.runStage('llm'),
+        })),
+      ...rows,
+      RF.r7Notice(t('rf7.chapters.notice'), t('rf7.chapters.noticeSub')));
   };
 
-  /**
-   * 分镜页：逐镜卡片 + 选中镜详情（时长量化三选一 / 参考标签 / 装配顺序）。
-   * @param {{ t: function, project: object, state: object }} props - 属性。
-   * @returns {object} React 元素。
-   */
-  RF.tabShots = function tabShots(props) {
-    const shots = Array.isArray(props.project.shots) ? props.project.shots : [];
-    if (shots.length === 0) return emptyOf({ t: props.t, key: 'shots' });
-    const selected = shots.find(shot => shot.id === props.state.selectedShotId) ?? shots[0];
-    const quantize = Array.isArray(selected.quantized) ? selected.quantized : [];
-    return h('div', null,
-      h(RF.ui.SectionLabel, null, props.t('tab.shots')),
-      shots.map(shot => h(RF.ui.Card, {
-        key: shot.id,
-        state: shot.id === selected.id ? 'selected' : 'default',
-        onClick: () => props.state.selectShot(shot.id),
-      },
-        h('div', { className: `${RF.CLS}-row__title` }, shot.label ?? shot.id),
-        h('div', { className: `${RF.CLS}-row__sub` }, `${shot.shotSize ?? ''} · ${RF.formatDuration(shot.duration ?? 0)} · ${shot.aspectRatio ?? ''}`))),
-      h(RF.ui.SectionLabel, null, props.t('shots.quantize')),
-      h('div', { className: `${RF.CLS}-row` }, quantize.map(value => h(RF.ui.Button, {
-        key: value,
-        label: RF.formatDuration(value),
-        variant: value === selected.duration ? 'primary' : 'secondary',
-        // 把「选中的是哪一镜」一起传出去：改时长要发 `seq` + `idx`（工具必填）。
-        onClick: () => props.state.setDuration(selected, value),
-      }))),
-      h(RF.ui.SectionLabel, null, props.t('shots.refs')),
-      h('div', null, (selected.references ?? []).map(reference => h(RF.ui.MetaRow, {
-        key: reference.tag,
-        label: reference.tag,
-        value: reference.label,
-      }))),
-      h('div', { className: `${RF.CLS}-note` }, props.t('shots.assembly')));
-  };
+  // ══════════════════════════════════════════════════════════════
+  // 04 素材库（Assets）
+  // ══════════════════════════════════════════════════════════════
 
-  /**
-   * 资产页：10 类筛选 + 网格 + 变体挂载说明。
-   * @param {{ t: function, project: object, state: object }} props - 属性。
-   * @returns {object} React 元素。
-   */
   RF.tabAssets = function tabAssets(props) {
-    const assets = Array.isArray(props.project.assets) ? props.project.assets : [];
-    const filter = props.state.assetCategory;
-    const visible = filter === 'all' ? assets : assets.filter(asset => asset.category === filter);
-    const grid = assets.length === 0
-      ? emptyOf({ t: props.t, key: 'assets' })
-      : h('div', { className: `${RF.CLS}-grid${props.state.twoColumns ? ` ${RF.CLS}-grid--two` : ''}` },
-        visible.map(asset => h(RF.ui.Card, { key: asset.id },
-          h('div', { className: `${RF.CLS}-row__title` }, asset.name ?? ''),
-          h('div', { className: `${RF.CLS}-row__sub` }, asset.description ?? ''),
-          asset.parent_id === undefined ? null : h(RF.ui.Pill, { label: asset.parent_id, tone: 'running' }))));
-    return h('div', null,
-      h('div', { className: `${RF.CLS}-row` }, ['all'].concat(RF.ASSET_CATEGORIES).map(category => h('button', {
-        key: category,
-        type: 'button',
-        className: `${RF.CLS}-tabs__item${category === filter ? ` ${RF.CLS}-tabs__item--active` : ''}`,
-        onClick: () => props.state.setAssetCategory(category),
-      }, category === 'all' ? props.t('tab.assets') : RF.labelOf('asset.category', category, props.t)))),
-      grid,
-      h('div', { className: `${RF.CLS}-note` }, props.t('assets.variants')),
-      h('div', { className: `${RF.CLS}-note` }, props.t('assets.priority')));
+    const t = props.t;
+    const project = props.project ?? {};
+    const assets = Array.isArray(project.assets) ? project.assets : [];
+    const category = props.state.assetCategory;
+    const shown = RF.assetsByCategory(project, category);
+    // 缺口警示：**实算**缺参考图的分镜数（写死「3 个」= 面板在骗人）。
+    const missingShots = RF.shotsMissingReferences(project);
+    const shots = Array.isArray(project.shots) ? project.shots : [];
+    const gapText = missingShots.length > 0
+      ? t('rf7.assets.gapTitle', { count: missingShots.length })
+      : (shots.length === 0 ? t('rf7.assets.gapNoShots') : t('rf7.assets.gapNone'));
+
+    const chipItems = ['all'].concat(RF.ASSET_CATEGORIES.filter(item => (
+      assets.filter(asset => String(asset?.category ?? '') === item).length > 0
+    )));
+    const chipLabels = chipItems.map(item => (item === 'all'
+      ? t('rf7.assets.chipAll', { count: assets.length })
+      : `${assetCategoryName(item, t)} ${assets.filter(asset => String(asset?.category ?? '') === item).length}`));
+
+    const card = asset => h(RF.ui.Card, null,
+      h('div', { className: `${RF.CLS}-row__title` }, asset.name),
+      h('div', { className: `${RF.CLS}-row` },
+        h('span', { className: `${RF.CLS}-row__sub` }, assetCategoryName(asset.category, t)),
+        h(RF.ui.Pill, { label: t('rf7.assets.stateReady'), tone: 'done' })),
+      h('div', { className: `${RF.CLS}-row__sub` }, asset.description === ''
+        ? t('rf7.assets.noDescription')
+        : asset.description),
+      h('div', { className: `${RF.CLS}-chips` },
+        [t('rf7.assets.actGenerate'), t('rf7.assets.actReplace')].map(action => h('span', {
+          className: `${RF.CLS}-chip`,
+        }, action))));
+
+    const rows = [];
+    for (let index = 0; index < shown.length; index += 2) {
+      const pair = shown.slice(index, index + 2);
+      rows.push(h('div', { className: `${RF.CLS}-grid ${RF.CLS}-grid--two` }, pair.map(card)));
+    }
+
+    return h('div', { className: `${RF.CLS}-stack` },
+      h('div', { className: `${RF.CLS}-row` },
+        h(RF.ui.Button, {
+          label: t('rf7.assets.actCreate'),
+          variant: 'primary',
+          onClick: () => props.state.goFlow('picker'),
+        })),
+      RF.r7ChipRow(chipLabels, chipItems.indexOf(category), index => {
+        props.state.setAssetCategory(chipItems[index] ?? 'all');
+      }),
+      ...rows,
+      h('div', { className: `${RF.CLS}-row` },
+        h('span', { className: `${RF.CLS}-note` }, t('rf7.assets.more', { count: assets.length - shown.length })),
+        h(RF.ui.Button, {
+          label: t('rf7.assets.viewAll', { count: assets.length }),
+          variant: 'secondary',
+          onClick: () => props.state.setAssetCategory('all'),
+        })),
+      RF.r7Notice(gapText, t('rf7.assets.gapSub')));
   };
 
-  /**
-   * 上下文页：三栏 bible / style / continuity，**写入语义不同**。
-   * @param {{ t: function, project: object }} props - 属性。
-   * @returns {object} React 元素。
-   */
-  /**
-   * 工作流解析结果 + diagnostics（§8.3 · T5 A27）。
-   * @param {{ t: function, analysis: object | null }} props
-   * @returns {object | null}
-   */
-  RF.renderWorkflowAnalysis = function renderWorkflowAnalysis(props) {
-    const analysis = props.analysis;
-    if (analysis === null || analysis === undefined || typeof analysis !== 'object') return null;
-    const diag = analysis.diagnostics ?? {};
-    const rows = [
-      ['loaders', diag.loaders],
-      ['modelLoaders', diag.modelLoaders],
-      ['saves', diag.saves],
-      ['samplers', diag.samplers],
-      ['sizeNodes', diag.sizeNodes],
-      ['textCandidates', diag.textCandidates],
-    ];
-    return h(RF.ui.Card, null,
-      h(RF.ui.SectionLabel, null, props.t('workflow.diagnostics')),
-      h('div', { className: `${RF.CLS}-row__title` }, `${analysis.kind ?? ''} · ${analysis.name ?? analysis.id ?? ''}`),
-      h('div', { className: `${RF.CLS}-row__sub` }, analysis.sourceFile ?? ''),
-      rows.map(([key, entries]) => h(RF.ui.MetaRow, {
-        key,
-        label: props.t(`workflow.${key}`),
-        value: String(Array.isArray(entries) ? entries.length : 0),
-      })),
-      h(RF.ui.MetaRow, {
-        label: props.t('workflow.hasVideoFields'),
-        value: diag.hasVideoFields ? 'true' : 'false',
-      }),
-      Array.isArray(analysis.outputs) && analysis.outputs.length
-        ? h('div', { className: `${RF.CLS}-note` }, analysis.outputs.join(' · '))
-        : null);
+  // ══════════════════════════════════════════════════════════════
+  // 07 分镜审查（Storyboard）
+  // ══════════════════════════════════════════════════════════════
+
+  RF.tabShots = function tabShots(props) {
+    const t = props.t;
+    const project = props.project ?? {};
+    const shots = Array.isArray(project.shots) ? project.shots : [];
+    const selectedId = props.state.selectedShotId;
+    const selected = RF.currentShot(project, selectedId);
+
+    const rows = shots.map(shot => {
+      const on = selected !== null && String(shot.id) === String(selected.id);
+      const status = shotStatus(shot.status);
+      return h('button', {
+        key: String(shot.id),
+        type: 'button',
+        className: `${RF.CLS}-shotrow${on ? ` ${RF.CLS}-shotrow--on` : ''}`,
+        onClick: () => props.state.selectShot(String(shot.id)),
+      },
+      h('span', { className: `${RF.CLS}-shotrow__id` }, String(Number(shot.idx) || 0).padStart(2, '0')),
+      h('span', { className: `${RF.CLS}-shotrow__title` }, shot.label),
+      h('span', { className: `${RF.CLS}-shotrow__dur` }, t('rf7.storyboard.duration', { seconds: shot.duration ?? 0 })),
+      h('span', { className: `${RF.CLS}-shotrow__state` }, t(status.key)));
+    });
+
+    const preview = selected === null
+      ? null
+      : h(RF.ui.Card, null,
+        h('div', { className: `${RF.CLS}-row` },
+          RF.r7Thumb(t('rf7.storyboard.refCharacter'), { size: 48 }),
+          RF.r7Thumb(t('rf7.storyboard.refScene'), { size: 48 }),
+          RF.r7Thumb(t('rf7.storyboard.refProp'), { size: 48 }),
+          h('div', { style: { flex: '1 1 auto' } }),
+          RF.r7PlayerBar(t('rf7.storyboard.duration', { seconds: selected.duration ?? 0 }))),
+        h('div', { className: `${RF.CLS}-row__sub` }, t('rf7.storyboard.promptLine', {
+          size: selected.shotSize === '' ? '-' : selected.shotSize,
+        })));
+
+    return h('div', { className: `${RF.CLS}-stack` },
+      ...rows,
+      selected === null
+        ? h(RF.ui.EmptyState, { title: t('rf7.storyboard.empty.title'), hint: t('rf7.storyboard.empty.hint') })
+        : RF.r7SectionHead(
+          t('rf7.storyboard.sectionSelected', { idx: Number(selected.idx) || 1 }),
+          t('rf7.storyboard.sectionSelectedSub')),
+      preview,
+      RF.r7SectionHead(t('rf7.storyboard.sectionRegenerate')),
+      h(RF.ui.Card, null,
+        h('div', { className: `${RF.CLS}-row` },
+          h(RF.ui.Button, {
+            label: t('rf7.storyboard.actSeed'),
+            variant: 'secondary',
+            onClick: () => props.state.regenerateShot(selected),
+          }),
+          h(RF.ui.Button, {
+            label: t('rf7.storyboard.actRewrite'),
+            variant: 'secondary',
+            onClick: () => props.state.regenerateShot(selected),
+          })),
+        RF.r7FieldBox(t('rf7.storyboard.feedbackPlaceholder'), 'placeholder')),
+      // ── 屏间入口 ──
+      // 画板 07 是分镜**列表**，画板 08 是**单镜展开** ⇒ 列表页给一条进详情的路。
+      h('div', { className: `${RF.CLS}-row` },
+        h(RF.ui.Button, {
+          label: t('rf7.storyboard.actDetail'),
+          variant: 'secondary',
+          disabled: selected === null,
+          title: selected === null ? t('rf7.storyboard.actDetailDisabled') : undefined,
+          onClick: () => {
+            // 进详情前把「当前镜」落成显式选中 —— 列表高亮哪一镜，详情就展开哪一镜。
+            props.state.selectShot(String(selected.id));
+            props.state.goFlow('shotDetail');
+          },
+        })));
   };
+
+  // ══════════════════════════════════════════════════════════════
+  // 05 上下文（Context）
+  // ══════════════════════════════════════════════════════════════
 
   RF.tabContext = function tabContext(props) {
-    const context = props.project.context ?? {};
-    const keys = RF.CONTEXT_KEYS;
-    const empty = keys.every(key => String(context[key] ?? '').trim() === '');
-    const workflowBlock = RF.renderWorkflowAnalysis({
-      t: props.t,
-      analysis: props.project.workflowAnalysis,
-    });
-    return h('div', null,
-      workflowBlock,
-      empty && workflowBlock === null ? emptyOf({ t: props.t, key: 'context' }) : null,
-      keys.map(key => h(RF.ui.Card, { key },
+    const t = props.t;
+    const project = props.project ?? {};
+    const context = project.context ?? {};
+
+    const expanded = String(props.state.expandedContextKey ?? '');
+    const card = (key, titleKey, metaKey, value, tone) => {
+      const filled = String(value ?? '').trim() !== '';
+      return h(RF.ui.Card, null,
         h('div', { className: `${RF.CLS}-row` },
           h('div', { className: `${RF.CLS}-row__main` },
-            h('div', { className: `${RF.CLS}-row__title` }, RF.labelOf('context.section', key, props.t)),
-            h('div', { className: `${RF.CLS}-row__sub` }, String(context[key] ?? '').slice(0, 240))),
+            h('div', { className: `${RF.CLS}-row__title` }, t(titleKey)),
+            h('div', { className: `${RF.CLS}-row__sub` }, t(metaKey))),
           h(RF.ui.Pill, {
-            label: props.t(RF.CONTEXT_WRITE_MODE[key] === 'append' ? 'context.append' : 'context.overwrite'),
-            tone: RF.CONTEXT_WRITE_MODE[key] === 'append' ? 'running' : 'queued',
-          })))),
-      h('div', { className: `${RF.CLS}-note` }, props.t('context.keys')));
+            label: t(filled ? 'rf7.context.stateReady' : 'rf7.context.stateMissing'),
+            tone: filled ? tone : 'queued',
+          })),
+        // 「查看」= 展开这一键的正文（纯本地交互，不需要工具）。
+        expanded === key
+          ? h('div', { className: `${RF.CLS}-row__sub` }, filled ? value : t('rf7.context.stateMissing'))
+          : null,
+        h('div', { className: `${RF.CLS}-row` },
+          h(RF.ui.Button, {
+            label: t('rf7.context.actView'),
+            variant: 'secondary',
+            onClick: () => props.state.toggleContextKey(key),
+          }),
+          // 「从对话写入」需要先选键再填内容，而这一屏没有输入位 ⇒ 禁用 + 说清。
+          h(RF.ui.Button, {
+            label: t('rf7.context.actWrite'),
+            variant: 'secondary',
+            disabled: true,
+            title: t('rf7.context.actWriteDisabled'),
+          })));
+    };
+
+    return h('div', { className: `${RF.CLS}-stack` },
+      RF.r7ChatSync({ t, project }),
+      card('bible', 'rf7.context.bibleTitle', 'rf7.context.bibleMeta', context.bible, 'done'),
+      card('style', 'rf7.context.styleTitle', 'rf7.context.styleMeta', context.style, 'done'),
+      card('continuity', 'rf7.context.continuityTitle', 'rf7.context.continuityMeta', context.continuity, 'warn'),
+      RF.r7SectionHead(t('rf7.context.sectionInject'), t('rf7.context.sectionInjectSub')),
+      h(RF.ui.Card, null, RF.CONTEXT_INJECTION_ORDER.map(key => h('div', {
+        className: `${RF.CLS}-inject__line`,
+      }, RF.CONTEXT_INJECTION_TITLES[key]))),
+      RF.r7Notice(t('rf7.context.rule1'), t('rf7.context.rule2')));
   };
 
-  /**
-   * 技能页：来源筛选 + 列表 + 正文预览 + 参考文件索引。
-   * @param {{ t: function, project: object, state: object }} props - 属性。
-   * @returns {object} React 元素。
-   */
-  RF.tabSkills = function tabSkills(props) {
-    const skills = Array.isArray(props.project.skills) ? props.project.skills : [];
-    const source = props.state.skillSource;
-    const visible = source === 'all' ? skills : skills.filter(skill => skill.source === source);
-    const selected = skills.find(skill => skill.name === props.state.selectedSkillName);
-    return h('div', null,
-      h('div', { className: `${RF.CLS}-row` }, ['all'].concat(RF.SKILL_SOURCES).map(item => h('button', {
-        key: item,
-        type: 'button',
-        className: `${RF.CLS}-tabs__item${item === source ? ` ${RF.CLS}-tabs__item--active` : ''}`,
-        onClick: () => props.state.setSkillSource(item),
-      }, item === 'all' ? props.t('tab.skills') : props.t(`skills.${item}`)))),
-      skills.length === 0 ? emptyOf({ t: props.t, key: 'skills' }) : visible.map(skill => h(RF.ui.Card, {
-        key: skill.name,
-        state: skill.name === props.state.selectedSkillName ? 'selected' : 'default',
-        onClick: () => props.state.selectSkill(skill.name),
-      },
+  // ══════════════════════════════════════════════════════════════
+  // 10 成片（Output）
+  // ══════════════════════════════════════════════════════════════
+
+  RF.tabOutput = function tabOutput(props) {
+    const t = props.t;
+    const project = props.project ?? {};
+    const deliverables = Array.isArray(project.deliverables) ? project.deliverables : [];
+    const chapters = Array.isArray(project.chapters) ? project.chapters : [];
+
+    const videos = deliverables.filter(item => String(item.kind ?? '').startsWith('video'));
+    const first = videos[0] ?? deliverables[0] ?? null;
+
+    const exportRow = first === null
+      ? null
+      : h(RF.ui.Card, null,
         h('div', { className: `${RF.CLS}-row` },
           h('div', { className: `${RF.CLS}-row__main` },
-            h('div', { className: `${RF.CLS}-row__title` }, skill.name ?? ''),
-            h('div', { className: `${RF.CLS}-row__sub` }, skill.description ?? '')),
-          h(RF.ui.Pill, { label: props.t(`skills.${skill.source ?? 'bundled'}`), tone: 'running' })),
-        // 右侧「3.4 KB · 2026-10-22」（设计稿 12 号板）：体积 + 最近修改日期。
-        h('div', { className: `${RF.CLS}-row__sub` }, skillMeta(skill)),
-        String(skill.description ?? '').trim() === ''
-          ? h('div', { className: `${RF.CLS}-note ${RF.CLS}-note--warn` }, props.t('skills.emptyDescription'))
-          : null)),
-      selected === undefined ? null : h(RF.ui.Card, null,
-        // 卡片标题是「正文预览 · {技能名}」（设计稿 12 号板），不是「技能 · {技能名}」。
-        h(RF.ui.SectionLabel, null, `${props.t('skills.previewTitle')} · ${selected.name}`),
-        // 正文**预览**（宿主只送预览，不送整篇正文）。
-        h('div', { className: `${RF.CLS}-row__sub` }, String(selected.bodyPreview ?? '').slice(0, 400)),
-        (selected.references ?? []).map(reference => h(RF.ui.MetaRow, {
-          key: reference.file ?? '',
-          label: reference.file ?? '',
-          value: reference.preview ?? '',
-        }))),
-      h('div', { className: `${RF.CLS}-note` }, props.t('skills.notDistributed')));
+            h('div', { className: `${RF.CLS}-row__title` }, first.label === '' ? t('rf7.output.untitled') : first.label),
+            h('div', { className: `${RF.CLS}-row__sub` }, t('rf7.output.fileMeta', {
+              size: RF.formatBytes(first.bytes ?? 0),
+              time: RF.formatDateTime(first.at ?? ''),
+            }))),
+          h(RF.ui.Button, {
+            label: t('rf7.output.actDownload'),
+            variant: 'primary',
+            onClick: () => window.open(RF.deliverableUrl(first), '_blank'),
+          })));
+
+    const deliverList = deliverables.length === 0
+      ? h(RF.ui.EmptyState, { title: t('rf7.output.empty.title'), hint: t('rf7.output.empty.hint') })
+      : h(RF.ui.Card, null, deliverables.map(item => RF.r7KvRow(
+        item.label === '' ? String(item.kind ?? '') : item.label,
+        t('rf7.output.deliverMeta', { size: RF.formatBytes(item.bytes ?? 0) }),
+        t('rf7.output.stateReady'),
+        'ok')));
+
+    return h('div', { className: `${RF.CLS}-stack` },
+      exportRow,
+      h('div', { className: `${RF.CLS}-playerbox` }, t('rf7.output.playerPlaceholder')),
+      RF.r7SectionHead(t('rf7.output.sectionDeliver'), t('rf7.output.sectionDeliverSub')),
+      h('div', { id: 'rf-deliverables' }, deliverList),
+      RF.r7SectionHead(t('rf7.output.sectionChapters')),
+      h(RF.ui.Card, null, chapters.length === 0
+        ? h('div', { className: `${RF.CLS}-row__sub` }, t('rf7.output.noChapters'))
+        : chapters.map(chapter => h('div', { className: `${RF.CLS}-row` },
+          h('div', { className: `${RF.CLS}-row__main` },
+            h('div', { className: `${RF.CLS}-row__title` }, t('rf7.output.chapterTitle', {
+              chapter: Number(chapter.id) || 1,
+              title: chapter.title,
+            })),
+            h('div', { className: `${RF.CLS}-row__sub` }, t('rf7.output.chapterMeta', {
+              shots: chapter.shotCount ?? 0,
+              duration: RF.formatDuration(chapter.durationSec ?? 0),
+            })))))),
+      // ── 屏间入口：背景音乐（画板 09 · 交付步；音乐库按章应用）──
+      h('div', { className: `${RF.CLS}-row` },
+        h(RF.ui.Button, {
+          label: t('rf7.output.actMusic'),
+          variant: 'secondary',
+          onClick: () => props.state.goFlow('music'),
+        })));
   };
 
-  /**
-   * 技能行的「体积 · 日期」副行（设计稿 12 号板）。
-   *
-   * 两样都没有就返回空串 —— 不拼一个假的「0 B」出来。
-   *
-   * @param {object} skill 技能视图。
-   * @returns {string} 文本。
-   */
-  function skillMeta(skill) {
-    const parts = [];
-    if (Number(skill?.bytes) > 0) parts.push(RF.formatBytes(skill.bytes));
-    const date = RF.formatDate(skill?.updatedAt ?? '');
-    if (date !== '') parts.push(date);
-    return parts.join(' · ');
-  }
+  // ══════════════════════════════════════════════════════════════
+  // 12 运行日志（Log）
+  // ══════════════════════════════════════════════════════════════
 
-  /**
-   * 成片页：播放器（章节刻度 / 倍速 / 字幕音轨开关）+ 交付物下载。
-   * @param {{ t: function, project: object, state: object }} props - 属性。
-   * @returns {object} React 元素。
-   */
-  RF.tabOutput = function tabOutput(props) {
-    const deliverables = Array.isArray(props.project.deliverables) ? props.project.deliverables : [];
-    // 空态**也要**给降级入口（见 {@link degradeEntryCard} 的说明）。
-    if (deliverables.length === 0) {
-      return h('div', null,
-        emptyOf({ t: props.t, key: 'output' }),
-        degradeEntryCard(props));
-    }
-    const primaryVideo = deliverables.find(item => item.kind === 'video_clean' || item.kind === 'video_subtitled' || (typeof item.path === 'string' && item.path.endsWith('.mp4')));
-    const videoSrc = primaryVideo?.path ? RF.deliverableUrl(primaryVideo.path) : '';
-    return h('div', null,
-      h('div', { className: `${RF.CLS}-player` },
-        videoSrc === ''
-          ? h('div', { className: `${RF.CLS}-player__frame` })
-          : h('video', {
-            className: `${RF.CLS}-player__frame ${RF.CLS}-player__video`,
-            controls: true,
-            preload: 'metadata',
-            src: videoSrc,
-          }),
-        h('div', { className: `${RF.CLS}-player__side` },
-          h(RF.ui.SectionLabel, null, props.t('output.chapters')),
-          (props.project.chapters ?? []).map(chapter => h(RF.ui.Progress, {
-            key: chapter.id,
-            value: chapter.progress ?? 0,
-            tone: chapter.progress >= 1 ? 'done' : 'running',
-            label: chapter.title,
-          })),
-          h('div', { className: `${RF.CLS}-row__sub` }, props.t('output.speed', { rate: props.state.speed })),
-          h('div', { className: `${RF.CLS}-row` },
-            h('span', { className: `${RF.CLS}-row__sub` }, props.t('output.subtitles')),
-            h('button', {
-              type: 'button',
-              className: `rf-switch${props.state.subtitles ? ' rf-switch--on' : ''}`,
-              role: 'switch',
-              'aria-checked': props.state.subtitles ? 'true' : 'false',
-              onClick: () => props.state.toggle('subtitles'),
-            })),
-          h('div', { className: `${RF.CLS}-row` },
-            h('span', { className: `${RF.CLS}-row__sub` }, props.t('output.voice')),
-            h('button', {
-              type: 'button',
-              className: `rf-switch${props.state.voice ? ' rf-switch--on' : ''}`,
-              role: 'switch',
-              'aria-checked': props.state.voice ? 'true' : 'false',
-              onClick: () => props.state.toggle('voice'),
-            })),
-          h('div', { className: `${RF.CLS}-row` },
-            h('span', { className: `${RF.CLS}-row__sub` }, props.t('output.bgm')),
-            h('button', {
-              type: 'button',
-              className: `rf-switch${props.state.bgm ? ' rf-switch--on' : ''}`,
-              role: 'switch',
-              'aria-checked': props.state.bgm ? 'true' : 'false',
-              onClick: () => props.state.toggle('bgm'),
-            })))),
-      h(RF.ui.SectionLabel, null, props.t('tab.output')),
-      // 交付物清单带锚点：底栏「交付物」按钮滚到这里（设计稿 10 号板的主按钮）。
-      h('div', { id: 'rf-deliverables' },
-        deliverables.map(item => h(RF.ui.Card, { key: `${item.chapterId ?? ''}-${item.kind}` },
-          h('div', { className: `${RF.CLS}-row` },
-            h('div', { className: `${RF.CLS}-row__main` },
-              h('div', { className: `${RF.CLS}-row__title` }, item.label ?? item.kind),
-              h('div', { className: `${RF.CLS}-row__sub` }, RF.formatBytes(item.bytes ?? 0))),
-            item.path
-              ? h('a', {
-                className: `${RF.CLS}-btn ${RF.CLS}-btn--secondary`,
-                href: RF.deliverableUrl(item.path),
-                download: item.label ?? item.kind,
-              }, props.t('common.download'))
-              : h(RF.ui.Button, { label: props.t('common.download'), variant: 'secondary' }))))),
-      h('div', { className: `${RF.CLS}-note` }, props.t('deliver.binaryKept')),
-      // ── 降级入口（板 16 号板）──
-      // 降级矩阵是**跨流程规范板**，不该占一个页签；它的入口就在成片页
-      // （交付物最常被降级影响），底栏按钮就是设计稿 16 号板写的那句「查看降级说明」。
-      degradeEntryCard(props));
-  };
-
-  /**
-   * 日志页：变更日志 + 三级回滚 + 漂移保护。
-   * @param {{ t: function, project: object, state: object }} props - 属性。
-   * @returns {object} React 元素。
-   */
   RF.tabLog = function tabLog(props) {
-    const changelog = props.project.changelog ?? { entries: [], modes: ['single', 'batch', 'timepoint'] };
+    const t = props.t;
+    const project = props.project ?? {};
+    const changelog = project.changelog ?? {};
     const entries = Array.isArray(changelog.entries) ? changelog.entries : [];
-    const modes = Array.isArray(changelog.modes) ? changelog.modes : ['single', 'batch', 'timepoint'];
-    if (entries.length === 0) return emptyOf({ t: props.t, key: 'log' });
-    const drifted = entries.find(entry => entry.drifted === true);
-    return h('div', null,
-      h('div', { className: `${RF.CLS}-row` }, modes.map(mode => h(RF.ui.Button, {
-        key: mode,
-        label: props.t(`log.${mode}`),
-        variant: mode === props.state.rollbackMode ? 'primary' : 'secondary',
-        onClick: () => props.state.setRollbackMode(mode),
-      }))),
-      entries.map(entry => {
-        // ⚠️ 项目层的「新建 / 删除」**永不可回滚**（宿主硬约束：没有删除项目的 API，
-        // 回滚项目创建等于变相创建项目 ⇒ 403 拒绝）。
-        // 以前这里照样挂一个可点的「回滚」⇒ 点了必然失败，用户只看到「什么都没发生」。
-        // 现在禁用 + 说清缺什么。
-        const locked = entry.layer === 'project' && (entry.op === 'create' || entry.op === 'delete');
-        return h(RF.ui.Card, { key: entry.id },
-          h('div', { className: `${RF.CLS}-row` },
-            h('div', { className: `${RF.CLS}-row__main` },
-              h('div', { className: `${RF.CLS}-row__sub` }, RF.formatDateTime(entry.at ?? '')),
-              h('div', { className: `${RF.CLS}-row__title` }, entry.summary ?? ''),
-              // 字段 + 批次（设计稿 13 号板：行内标签含「批次 batch_7f3a」）。
-              h('div', { className: `${RF.CLS}-row__sub` },
-                [entry.field ?? '', entry.batchId ?? ''].filter(Boolean).join(' · ')),
-              locked
-                ? h('div', { className: `${RF.CLS}-row__sub ${RF.CLS}-note--warn` }, props.t('log.projectLocked'))
-                : null),
-            h(RF.ui.Button, {
-              label: props.t('common.rollback'),
-              variant: 'secondary',
-              disabled: locked,
-              title: locked ? props.t('log.projectLocked') : undefined,
-              onClick: () => props.state.rollback(entry),
-            })));
-      }),
-      drifted === undefined ? null : h(RF.ui.Card, null,
-        h('div', { className: `${RF.CLS}-note ${RF.CLS}-note--warn` }, props.t('log.drifted')),
-        h(RF.ui.Button, { label: props.t('log.force'), variant: 'danger', onClick: () => props.state.rollback(drifted, true) })),
-      h('div', { className: `${RF.CLS}-note` }, props.t('deliver.binaryKept')));
+
+    const changeList = entries.length === 0
+      ? h(RF.ui.EmptyState, { title: t('rf7.log.empty.title'), hint: t('rf7.log.empty.hint') })
+      : h(RF.ui.Card, null, entries.slice(0, 20).map(entry => h('div', { className: `${RF.CLS}-row` },
+        h('span', { className: `${RF.CLS}-log__time` }, RF.formatDateTime(entry.at ?? '')),
+        h('span', { className: `${RF.CLS}-row__main` }, String(entry.summary ?? '')),
+        entry.drifted === true
+          ? h(RF.ui.Pill, { label: t('rf7.log.drifted'), tone: 'warn' })
+          : null)));
+
+    const latest = entries[entries.length - 1] ?? null;
+
+    return h('div', { className: `${RF.CLS}-stack` },
+      RF.r7SectionHead(t('rf7.log.sectionChanges'), t('rf7.log.sectionChangesSub')),
+      changeList,
+      RF.r7SectionHead(t('rf7.log.sectionOutput')),
+      RF.r7CodeBox(entries.slice(-6).reverse().map(entry => `[${RF.formatDateTime(entry.at ?? '')}] ${String(entry.summary ?? '')}`)),
+      RF.r7SectionHead(t('rf7.log.sectionRollback')),
+      h(RF.ui.Card, null,
+        // 「按批次回滚」需要批次号、「按时间点回滚」需要可选时间点 ——
+        // 投影里的变更日志**两者都没有** ⇒ 禁用 + 说清（不假装能做）。
+        RF.r7KvRow(t('rf7.log.rollbackBatch'), '-', '', 'muted',
+          h(RF.ui.Button, {
+            label: t('rf7.log.actRollback'),
+            variant: 'secondary',
+            disabled: true,
+            title: t('rf7.log.rollbackBatchDisabled'),
+          })),
+        RF.r7KvRow(t('rf7.log.rollbackTime'), '-', '', 'muted',
+          h(RF.ui.Button, {
+            label: t('rf7.log.actPick'),
+            variant: 'secondary',
+            disabled: true,
+            title: t('rf7.log.rollbackTimeDisabled'),
+          })),
+        RF.r7KvRow(t('rf7.log.rollbackSingle'),
+          latest === null ? '-' : String(latest.summary ?? ''),
+          '', 'muted',
+          h(RF.ui.Button, {
+            label: t('rf7.log.actRollback'),
+            variant: 'secondary',
+            onClick: latest === null ? undefined : () => props.state.rollback(latest, 'single'),
+          })),
+        h('div', { className: `${RF.CLS}-notice__sub` }, t('rf7.log.rollbackNote'))));
   };
 })(RF);
 
 /* ── src/client/workbench/flow.js ───────────────────────────── */
 /* ─────────────────────────────────────────────────────────────────────────────
- * 流程屏（设计稿 02 / 03 / 04 / 05 / 06 / 16）。
+ * 流程屏（RF7 画板索引 §八「流程屏」8 块）+ 两块规范板。
  *
- * ## 为什么是「独立屏」而不是页签
+ * 启动检查 01 · 服务配置 14 · 新建项目 02 · 项目设置 15
+ * 生成执行 06 · 分镜详情 08 · 背景音乐 09 · 技能与工作流 13
+ * 规范板：降级与失败 17 · 素材选择器 18
  *
- * 设计稿 17 号板自己写明：右栏工作台是 **7 个页签**（章节 / 分镜 / 资产 / 上下文 /
- * 技能 / 成片 / 日志）—— 那是**项目视图**。
- * 板 02–06 的公共骨架只有 4 条（Header / StageBar / Scroll / Footer），**没有页签条**，
- * 它们按用户操作流程串成一条链：导入 → 运行位置 → 设备检查 → 执行路径 → 执行阶段。
- * 板 16 是跨流程规范板（降级矩阵）。
+ * 排版照 `design/_tools/build-rf7.mjs` 里对应的 `boardXxx()`。
  *
- * ⇒ **两层并存**：项目视图（7 页签）+ 流程屏（这 6 块）。13 个页签在 326–547px 的右栏放不下。
+ * ## 数据纪律
  *
- * ## 三条纪律
- *
- * 1. **没有写入口的控件一律禁用 + 说清缺什么** —— 不许留「点了没反应」的按钮。
- * 2. **不编数据**：没有的字段显示「未接入 / 未设置」，不拿样例值冒充真实值。
- * 3. 业务数据只从宿主投影读（R1）；组件里的 `useState` 只放交互态。
+ * 1. **探测结果**走独立只读路由（`/api/reelforge.probe`），不进 wire view；
+ * 2. **服务配置**走 `/api/reelforge.capabilities`（**只读**，插件没有写配置的通道）；
+ * 3. 数据没有就**说清没有**（RF7 §6.7），不编内容。
  * ─────────────────────────────────────────────────────────────────────────── */
 ;(function (RF) {
   'use strict';
 
   /**
-   * 设备检查的 9 行（设计稿 04 号板的行序）。
+   * 启动检查的 7 行清单（RF7 板 01）。
    *
-   * 「GPU」不是独立探测项 —— 型号是 `vram` 探测的副产品（`nvidia-smi` 一次问两件事），
-   * 所以那一行从 `vram` 的 `gpuName` 取。
+   * `probeId` = 对应宿主探测项 id（`src/core/probe.js` 的 `PROBE_IDS`）；
+   * `null` = 这一行**没有对应的探测项**（Agent 运行时是宿主自己，不是被探测的对象）。
    *
-   * @typedef {object} DeviceRow
-   * @property {string} id 探测项 id（`gpu` 是从 `vram` 派生的行）。
-   * @property {string} labelKey 行名词条。
-   * @property {string} methodKey 探测方式词条。
-   * @property {function} extra 补充值（由探测项算出）。
+   * @type {Array<{ probeId: string | null, label: string }>}
    */
-
-  /** @type {DeviceRow[]} */
-  var DEVICE_ROWS = [
-    {
-      id: 'comfy',
-      labelKey: 'flow.device.row.comfy',
-      methodKey: 'flow.device.method.comfy',
-      extra: function (item) { return String(item?.value ?? ''); },
-    },
-    {
-      id: 'ckVersion',
-      labelKey: 'flow.device.row.ckVersion',
-      methodKey: 'flow.device.method.ckVersion',
-      extra: function () { return '≥ 0.2.36'; },
-    },
-    {
-      id: 'vram',
-      labelKey: 'flow.device.row.vram',
-      methodKey: 'flow.device.method.vram',
-      extra: function () { return '门槛 8 GB'; },
-    },
-    {
-      id: 'gpu',
-      labelKey: 'flow.device.row.gpu',
-      methodKey: 'flow.device.method.gpu',
-      extra: function (item) { return String(item?.source ?? ''); },
-    },
-    {
-      id: 'ffmpeg',
-      labelKey: 'flow.device.row.ffmpeg',
-      methodKey: 'flow.device.method.ffmpeg',
-      extra: function () { return '在 PATH'; },
-    },
-    {
-      id: 'encoders',
-      labelKey: 'flow.device.row.encoders',
-      methodKey: 'flow.device.method.encoders',
-      extra: function (item) {
-        const list = Array.isArray(item?.value) ? item.value : [];
-        return list.join(' / ');
-      },
-    },
-    {
-      id: 'disk',
-      labelKey: 'flow.device.row.disk',
-      methodKey: 'flow.device.method.disk',
-      extra: function (item) {
-        const value = Number(item?.value);
-        return Number.isFinite(value) ? `${value} GB` : '';
-      },
-    },
-    {
-      id: 'llm',
-      labelKey: 'flow.device.row.llm',
-      methodKey: 'flow.device.method.llm',
-      extra: function () { return '阶段一可用'; },
-    },
-    {
-      id: 'provider',
-      labelKey: 'flow.device.row.provider',
-      methodKey: 'flow.device.method.provider',
-      extra: function (item, view) {
-        const specs = view?.specs ?? {};
-        return `${specs.total ?? 0} 套 · 本地 ${specs.local ?? 0} / 云端 ${specs.cloud ?? 0}`;
-      },
-    },
+  const RUN_GATE_ROWS = [
+    { probeId: 'comfy', label: 'rf7.runGate.checkComfy' },
+    { probeId: 'llm', label: 'rf7.runGate.checkLlm' },
+    { probeId: null, label: 'rf7.runGate.checkAgent' },
+    { probeId: 'ffmpeg', label: 'rf7.runGate.checkFfmpeg' },
+    { probeId: 'disk', label: 'rf7.runGate.checkDisk' },
+    { probeId: 'vram', label: 'rf7.runGate.checkVram' },
+    { probeId: 'provider', label: 'rf7.runGate.checkCloud' },
   ];
 
   /**
-   * 找探测项。
-   * @param {object} report 探测报告。
-   * @param {string} id 探测项 id。
-   * @returns {object | undefined} 探测项。
+   * 探测项状态 → 展示词条键 + 色调。
+   *
+   * @param {string} status - 机器状态（ok / warn / failed）。
+   * @returns {{ key: string, tone: string }} 展示信息。
    */
-  function itemOf(report, id) {
-    const items = Array.isArray(report?.items) ? report.items : [];
-    return items.find(item => item?.id === id);
+  function probeState(status) {
+    const raw = String(status ?? '');
+    if (raw === 'ok') return { key: 'rf7.runGate.pass', tone: 'ok' };
+    if (raw === 'warn') return { key: 'rf7.runGate.warn', tone: 'warn' };
+    if (raw === 'failed') return { key: 'rf7.runGate.fail', tone: 'error' };
+    return { key: 'rf7.runGate.unconfigured', tone: 'muted' };
   }
 
   /**
-   * 探测项的状态色（done / failed / queued）。
-   * @param {object | undefined} item 探测项。
-   * @returns {string} 色调。
+   * 探测项 → 按 id 索引。
+   *
+   * @param {object} state - 屏状态。
+   * @returns {Map<string, object>} id → 探测项。
    */
-  function itemTone(item) {
-    const status = String(item?.status ?? '');
-    if (status === 'ok') return 'done';
-    if (status === 'failed') return 'failed';
-    if (status === 'warn') return 'queued';
-    return 'queued';
+  function probeIndex(state) {
+    const items = Array.isArray(state?.probe?.view?.report?.items)
+      ? state.probe.view.report.items
+      : [];
+    return new Map(items.map(item => [String(item?.id ?? ''), item]));
   }
 
-  /**
-   * 探测结论的文案（状态点旁边的字）。
-   * @param {object | undefined} item 探测项。
-   * @returns {string} 结论。
-   */
-  function itemVerdict(item) {
-    const status = String(item?.status ?? '');
-    if (status === 'ok') return RF.locale?.zh?.['flow.device.ok'] ?? '已通过';
-    if (status === 'warn') return String(item?.message ?? '');
-    return String(item?.message ?? '');
-  }
+  // ══════════════════════════════════════════════════════════════
+  // 01 启动检查（RunGate）—— 环境门，冷启动首屏
+  // ══════════════════════════════════════════════════════════════
 
-  /**
-   * 02 · 小说导入与自动拆章。
-   * @param {{ t: function, project: object, state: object }} props - 属性。
-   * @returns {object} React 元素。
-   */
-  RF.flowIntake = function flowIntake(props) {
+  RF.flowRunGate = function flowRunGate(props) {
     const t = props.t;
-    const project = props.project ?? {};
-    const intake = project.intake ?? {};
-    const settings = project.settings ?? {};
-    const chapters = Array.isArray(project.chapters) ? project.chapters : [];
-    const headings = Array.isArray(intake.headings) ? intake.headings : [];
-    const fallbackChars = Number(intake.fallbackChars) || 0;
-    const text = String(props.state.novelText ?? '');
+    const state = props.state;
+    const index = probeIndex(state);
+    const items = Array.isArray(state.probe?.view?.report?.items)
+      ? state.probe.view.report.items
+      : [];
+    const position = String(props.project?.runPosition ?? state.pendingPosition ?? '');
 
-    return h('div', null,
-      RF.renderDualEntry({ t }),
-      RF.renderChatSync({ t, project }),
-      // ── 来源卡 ──
-      h(RF.ui.Card, null,
-        h(RF.ui.SectionLabel, null, t('flow.intake.sourceLabel')),
-        h(RF.ui.MetaRow, { label: t('flow.intake.chars'), value: String(intake.chars ?? 0) }),
-        headings.length === 0
-          ? h('div', { className: `${RF.CLS}-note` }, t('flow.intake.noHeadings'))
-          : h('div', null, headings.slice(0, 5).map(heading => h('div', {
-            key: `heading-${heading.seq}`,
-            className: `${RF.CLS}-row`,
-          },
-          h('span', { className: `${RF.CLS}-row__title` }, heading.title ?? '')))),
-        h('div', { className: `${RF.CLS}-note` }, t('flow.intake.fallbackRule', {
-          count: headings.length,
-          fallback: fallbackChars,
-        }))),
+    const count = status => items.filter(item => String(item?.status ?? '') === status).length;
+    const passed = count('ok');
+    const warned = count('warn');
+    const failed = count('failed');
+    const unconfigured = items.length - passed - warned - failed;
 
-      // ── 导入入口（正文 + 导入按钮）──
-      h(RF.ui.Card, null,
-        h(RF.ui.SectionLabel, null, t('flow.intake.importLabel')),
-        h('textarea', {
-          className: `${RF.CLS}-input ${RF.CLS}-textarea`,
-          value: text,
-          placeholder: t('flow.intake.importPlaceholder'),
-          onChange: event => props.state.setNovelText(event?.target?.value ?? ''),
-        }),
-        h('div', { className: `${RF.CLS}-row` },
-          h(RF.ui.Button, {
-            label: t('flow.intake.importAction'),
-            variant: 'primary',
-            disabled: text.trim() === '',
-            title: text.trim() === '' ? t('flow.intake.importDisabled') : undefined,
-            onClick: () => props.state.importNovel(),
-          })),
-        h('div', { className: `${RF.CLS}-note` }, t('flow.intake.safetyNote'))),
-
-      // ── 自动拆章预览卡 ──
-      h(RF.ui.Card, null,
-        h(RF.ui.SectionLabel, null, t('flow.intake.previewLabel')),
-        chapters.length === 0
-          ? h('div', { className: `${RF.CLS}-note` }, t('flow.intake.previewEmpty'))
-          : h('div', null, chapters.map(chapter => h('div', {
-            key: chapter.id ?? chapter.title,
-            className: `${RF.CLS}-row`,
-          },
-          h('div', { className: `${RF.CLS}-row__main` },
-            h('div', { className: `${RF.CLS}-row__title` }, chapter.title ?? ''),
-            h('div', { className: `${RF.CLS}-row__sub` },
-              `${chapter.shotCount ?? 0} ${t('unit.shot')} · ${RF.formatDuration(chapter.durationSec ?? 0)}`))))),
-        h('div', { className: `${RF.CLS}-note` }, t('flow.intake.previewRule'))),
-
-      // ── 项目设置卡（只读 + 说清为什么改不了）──
-      h(RF.ui.Card, null,
-        h(RF.ui.SectionLabel, null, t('flow.intake.settingsLabel')),
-        h(RF.ui.MetaRow, {
-          label: t('flow.intake.setting.aspectRatio'),
-          value: settings.aspectRatio === '' ? t('flow.intake.unset') : settings.aspectRatio,
-        }),
-        h(RF.ui.MetaRow, {
-          label: t('flow.intake.setting.resolution'),
-          value: settings.resolution === '' ? t('flow.intake.unset') : settings.resolution,
-        }),
-        h(RF.ui.MetaRow, {
-          label: t('flow.intake.setting.targetDuration'),
-          value: settings.targetDuration === null || settings.targetDuration === undefined
-            ? t('flow.intake.durationUnlimited')
-            : `${settings.targetDuration}s`,
-        }),
-        h(RF.ui.MetaRow, {
-          label: t('flow.intake.setting.bgm'),
-          value: settings.enableBgm === true ? t('common.on') : t('common.off'),
-        }),
-        h('div', { className: `${RF.CLS}-note ${RF.CLS}-note--warn` }, t('flow.intake.settingsReadonly'))),
-
-      // ── 待确认卡 ──
-      h(RF.ui.Card, null,
-        h(RF.ui.SectionLabel, null, t('flow.intake.pendingLabel')),
-        h('div', { className: `${RF.CLS}-note` }, t('flow.intake.pendingEmpty'))));
-  };
-
-  /**
-   * 03 · 运行位置选择。
-   * @param {{ t: function, project: object, state: object }} props - 属性。
-   * @returns {object} React 元素。
-   */
-  RF.flowRunMode = function flowRunMode(props) {
-    const t = props.t;
-    const project = props.project ?? {};
-    const plan = project.plan ?? null;
-    const current = String(project.runPosition ?? '');
-    const pending = String(props.state.pendingPosition ?? '');
-    const provider = String(project.provider ?? '');
-    const clouds = RF.CLOUD_PROVIDERS;
-
-    const positionCard = (position, title, subtitle, pros, cons) => {
-      const selected = (current !== '' ? current : pending) === position;
-      return h(RF.ui.Card, {
-        key: position,
-        state: selected ? 'selected' : 'default',
-        onClick: () => props.state.choosePosition(position),
-      },
-      h(RF.ui.Pill, { label: position.toUpperCase(), tone: selected ? 'running' : 'queued' }),
-      h('div', { className: `${RF.CLS}-row__title` }, t(title)),
-      h('div', { className: `${RF.CLS}-row__sub` }, t(subtitle)),
-      h('div', null, pros.map(pro => h('div', { key: `pro-${pro}`, className: `${RF.CLS}-row__sub` },
-        `· ${t(pro)}`))),
-      h('div', null, cons.map(con => h('div', { key: `con-${con}`, className: `${RF.CLS}-note ${RF.CLS}-note--warn` },
-        `· ${t(con)}`))),
-      position === 'local'
-        ? h('div', { className: `${RF.CLS}-row` }, h(RF.ui.Button, {
-          label: t('flow.runmode.deviceCheck'),
-          variant: 'secondary',
-            onClick: event => {
-            if (event?.stopPropagation) event.stopPropagation();
-            props.state.setDeviceExpanded(true);
-            props.state.reloadProbe();
-          },
-        }))
-        : h('div', { className: `${RF.CLS}-row__sub` }, t('flow.runmode.providersAvailable', { count: clouds.length })));
-    };
-
-    return h('div', null,
-      h(RF.ui.SectionLabel, null, t('flow.runmode.sectionLabel')),
-      h('div', { className: `${RF.CLS}-note` }, t('flow.runmode.sectionNote')),
-      h('div', { className: `${RF.CLS}-grid${props.state.twoColumns ? ` ${RF.CLS}-grid--two` : ''}` },
-        positionCard(
-          'local',
-          'flow.runmode.localTitle',
-          'flow.runmode.localSubtitle',
-          ['flow.runmode.local.pro1', 'flow.runmode.local.pro2', 'flow.runmode.local.pro3'],
-          ['flow.runmode.local.con1', 'flow.runmode.local.con2', 'flow.runmode.local.con3'],
-        ),
-        positionCard(
-          'cloud',
-          'flow.runmode.cloudTitle',
-          'flow.runmode.cloudSubtitle',
-          ['flow.runmode.cloud.pro1', 'flow.runmode.cloud.pro2', 'flow.runmode.cloud.pro3'],
-          ['flow.runmode.cloud.con1', 'flow.runmode.cloud.con2', 'flow.runmode.cloud.con3'],
-        )),
-
-      // ── 云端 provider 三选一（当前配置值是唯一事实源）──
-      h(RF.ui.Card, null,
-        h(RF.ui.SectionLabel, null, t('flow.runmode.providerLabel')),
-        h('div', { className: `${RF.CLS}-row` }, clouds.map(item => h(RF.ui.Pill, {
-          key: item,
-          label: RF.labelOf('provider', item, t),
-          tone: provider === item ? 'done' : 'queued',
-        }))),
-        h('div', { className: `${RF.CLS}-note ${RF.CLS}-note--warn` }, t('flow.runmode.providerReadonly'))),
-
-      // ── 影响对照表四行 ──
-      h(RF.ui.Card, null,
-        h(RF.ui.SectionLabel, null, t('flow.runmode.compareLabel')),
-        h(RF.ui.MetaRow, { label: t('flow.runmode.compare.kinds'), value: t('flow.runmode.compare.kindsValue') }),
-        h(RF.ui.MetaRow, { label: t('flow.runmode.compare.diff'), value: t('flow.runmode.compare.diffValue') }),
-        h(RF.ui.MetaRow, { label: t('flow.runmode.compare.cost'), value: t('flow.runmode.compare.costValue') }),
-        h(RF.ui.MetaRow, { label: t('flow.runmode.compare.limit'), value: t('flow.runmode.compare.limitValue') })),
-
-      h(RF.ui.Card, null,
-        h('div', { className: `${RF.CLS}-row__sub` }, t('flow.runmode.switchable'))),
-      h('div', { className: `${RF.CLS}-note` }, t('flow.runmode.footerHint')));
-  };
-
-  /**
-   * 04 · 本地档设备检查。
-   * @param {{ t: function, project: object, state: object }} props - 属性。
-   * @returns {object} React 元素。
-   */
-  RF.flowDevice = function flowDevice(props) {
-    const t = props.t;
-    const probe = props.state.probe ?? null;
-
-    if (probe === null) {
-      return h('div', null, h(RF.ui.EmptyState, { title: t('flow.device.loading'), hint: t('empty.hint') }));
-    }
-    if (probe.error !== undefined && probe.error !== null && probe.error !== '') {
-      return h('div', null, h(RF.ui.EmptyState, {
-        title: t('flow.device.failed'),
-        hint: String(probe.error),
-        tone: 'error',
-      }), h(RF.ui.Button, {
-        label: t('flow.device.retry'),
-        variant: 'secondary',
-        onClick: () => props.state.reloadProbe(),
-      }));
+    // 7 行清单（设计稿固定 7 行）+ 探测到但没被这 7 行覆盖的项（不许藏起来）。
+    const rows = RUN_GATE_ROWS.map(row => {
+      const item = row.probeId === null ? undefined : index.get(row.probeId);
+      const state_ = item === undefined ? probeState('') : probeState(item.status);
+      return RF.r7KvRow(
+        t(row.label),
+        item === undefined ? t('rf7.runGate.agentValue') : String(item.message ?? ''),
+        t(state_.key),
+        state_.tone);
+    });
+    const covered = new Set(RUN_GATE_ROWS.map(row => row.probeId).filter(Boolean));
+    for (const item of items) {
+      const id = String(item?.id ?? '');
+      if (covered.has(id)) continue;
+      const state_ = probeState(item.status);
+      rows.push(RF.r7KvRow(
+        t(`rf7.runGate.check.${id}`),
+        String(item.message ?? ''),
+        t(state_.key),
+        state_.tone));
     }
 
-    const view = probe.view ?? {};
-    const report = view.report ?? {};
-    const items = Array.isArray(report.items) ? report.items : [];
-    const blockers = Array.isArray(report.blockers) ? report.blockers : [];
-    const warnings = Array.isArray(report.warnings) ? report.warnings : [];
-    const vram = itemOf(report, 'vram');
-    const vramGb = Number(vram?.value);
-    const vramOk = Number.isFinite(vramGb) && vramGb >= 8;
+    const positionCard = (key, titleKey, subKey, facts, value) => h(RF.ui.Card, {
+      state: position === value ? 'selected' : 'default',
+      onClick: () => state.choosePosition(value),
+    },
+    h('div', { className: `${RF.CLS}-row` },
+      RF.r7Radio(position === value),
+      h('span', { className: `${RF.CLS}-row__title` }, t(titleKey))),
+    h('div', { className: `${RF.CLS}-row__sub` }, t(subKey)),
+    ...facts.map(fact => h('div', { className: `${RF.CLS}-row__sub` }, t(fact.key, fact.params))));
 
-    // 设计稿 9 行之外的探测项：**失败才显示**（成功的那条没有信息量）。
-    const extraFailures = items.filter(item => (
-      !DEVICE_ROWS.some(row => row.id === item?.id) && String(item?.status ?? '') === 'failed'
-    ));
-
-    return h('div', null,
-      // ── 检测状态条 ──
+    return h('div', { className: `${RF.CLS}-stack` },
       h(RF.ui.Card, null,
         h('div', { className: `${RF.CLS}-row` },
           h('div', { className: `${RF.CLS}-row__main` },
-            h('div', { className: `${RF.CLS}-row__title` }, t('flow.device.done', {
-              count: items.length,
-              seconds: ((Number(view.at) || 0) > 0 ? ((Date.now() - Number(view.at)) / 1000).toFixed(1) : '0.0'),
-            })),
-            h('div', { className: `${RF.CLS}-row__sub` }, t('flow.device.footnote'))),
+            h('div', { className: `${RF.CLS}-row__title` }, t('rf7.runGate.summaryTitle')),
+            h('div', { className: `${RF.CLS}-row__sub` }, t('rf7.runGate.summaryMeta', {
+              total: items.length,
+              passed,
+              warned,
+              unconfigured,
+            }))),
           h(RF.ui.Button, {
-            label: t('flow.device.recheck'),
+            label: t('rf7.runGate.actRerun'),
             variant: 'secondary',
-            disabled: probe.loading === true,
-            onClick: () => props.state.reloadProbe(),
-          }))),
-
-      // ── 9 行探测表 ──
-      h(RF.ui.SectionLabel, null, t('flow.device.tableLabel')),
-      h(RF.ui.Card, null,
-        DEVICE_ROWS.map(row => {
-          const item = row.id === 'gpu' ? vram : itemOf(report, row.id);
-          return h('div', { key: row.id, className: `${RF.CLS}-row` },
-            h('div', { className: `${RF.CLS}-row__main` },
-              h('div', { className: `${RF.CLS}-row__title` }, t(row.labelKey)),
-              h('div', { className: `${RF.CLS}-row__sub` }, t(row.methodKey))),
-            h(RF.ui.Pill, {
-              label: itemVerdict(item),
-              tone: itemTone(item),
-            }));
+            onClick: () => state.reloadProbe(),
+          })),
+        RF.r7Track(items.length === 0 ? 0 : passed / items.length)),
+      RF.r7SectionHead(t('rf7.runGate.sectionPosition'), t('rf7.runGate.sectionPositionSub')),
+      h('div', { className: `${RF.CLS}-grid ${RF.CLS}-grid--two` },
+        positionCard('local', 'rf7.runGate.localTitle', 'rf7.runGate.localSub', [
+          { key: 'rf7.runGate.localFact1' },
+          { key: 'rf7.runGate.localFact2' },
+        ], 'local'),
+        positionCard('cloud', 'rf7.runGate.cloudTitle', 'rf7.runGate.cloudSub', [
+          { key: 'rf7.runGate.cloudFact1' },
+          { key: 'rf7.runGate.cloudFact2' },
+        ], 'cloud')),
+      RF.r7SectionHead(t('rf7.runGate.sectionChecks')),
+      h(RF.ui.Card, null, ...rows),
+      RF.r7Notice(t('rf7.runGate.noticeMain'), t('rf7.runGate.noticeSub')),
+      // ── 屏间入口 ──
+      // 「服务配置」与 RunGate 同源（IC SettingsPage.jsx）；「查看失败清单」是规范板
+      // 「降级与失败」的入口。RF7 画板没画屏间入口，这里按画板语义补，待 owner 复核。
+      h('div', { className: `${RF.CLS}-row` },
+        h(RF.ui.Button, {
+          label: t('rf7.runGate.actSettings'),
+          variant: 'secondary',
+          onClick: () => state.goFlow('settings'),
         }),
-        extraFailures.map(item => h('div', { key: `extra-${item.id}`, className: `${RF.CLS}-row` },
-          h('div', { className: `${RF.CLS}-row__main` },
-            h('div', { className: `${RF.CLS}-row__title` }, t('flow.device.row.videoBackend')),
-            h('div', { className: `${RF.CLS}-row__sub` }, t('flow.device.method.videoBackend'))),
-          h(RF.ui.Pill, { label: String(item.message ?? ''), tone: 'failed' }))),
-        h('div', { className: `${RF.CLS}-row__sub` }, t('flow.device.tableNote'))),
-
-      // ── 结论卡 ──
-      blockers.length > 0
-        // 板 04 号板：结论卡是**红底**（ERROR-SURF），不是普通卡面。
-        ? h(RF.ui.Card, { tone: 'error' },
-          h('div', { className: `${RF.CLS}-row__title ${RF.CLS}-note--error` }, t('flow.device.conclusionTitle')),
-          blockers.map(blocker => h('div', {
-            key: `blocker-${blocker.id}`,
-            className: `${RF.CLS}-row__sub`,
-          }, `· ${String(blocker.message ?? '')}`)),
-          h('div', { className: `${RF.CLS}-row` },
-            h(RF.ui.Button, {
-              label: t('flow.device.toCloud'),
-              variant: 'primary',
-              onClick: () => props.state.choosePosition('cloud'),
-            }),
-            h(RF.ui.Button, {
-              label: t('flow.device.onlyImage'),
-              variant: 'secondary',
-              onClick: () => props.state.runStage('image'),
-            })))
-        : h(RF.ui.Card, null,
-          h('div', { className: `${RF.CLS}-row__title` }, t('flow.device.allOk')),
-          warnings.map(warning => h('div', {
-            key: `warn-${warning.id}`,
-            className: `${RF.CLS}-note ${RF.CLS}-note--warn`,
-          }, `· ${String(warning.message ?? '')}`))),
-
-      // ── 本地仍可完成 ──
-      h(RF.ui.Card, null,
-        h('div', { className: `${RF.CLS}-row__sub` }, t('flow.device.localStillLabel')),
-        h('div', { className: `${RF.CLS}-row` },
-          h(RF.ui.Pill, { label: t('flow.device.localStill.storyboard'), tone: 'queued' }),
-          h(RF.ui.Pill, { label: t('flow.device.localStill.references'), tone: 'queued' }),
-          h(RF.ui.Pill, { label: t('flow.device.localStill.compose'), tone: 'queued' })),
-        h('div', { className: `${RF.CLS}-note` }, t('flow.device.bottomNote'))),
-
-      vramOk
-        ? null
-        : h('div', { className: `${RF.CLS}-note ${RF.CLS}-note--warn` }, t('flow.device.vramHint', {
-          have: Number.isFinite(vramGb) ? vramGb : 0,
-          need: 8,
+        h(RF.ui.Button, {
+          label: t('rf7.runGate.actFailures'),
+          variant: 'secondary',
+          onClick: () => state.goFlow('degraded'),
         })));
   };
 
-  /**
-   * 05 · 执行路径（kind × 位置矩阵）。
-   * @param {{ t: function, project: object, state: object }} props - 属性。
-   * @returns {object} React 元素。
-   */
-  RF.flowPlan = function flowPlan(props) {
+  // ══════════════════════════════════════════════════════════════
+  // 14 服务配置（Settings）—— 只读屏
+  // ══════════════════════════════════════════════════════════════
+
+  RF.flowSettings = function flowSettings(props) {
     const t = props.t;
-    const project = props.project ?? {};
-    const plan = project.plan ?? null;
-    const matrix = Array.isArray(project.planMatrix) ? project.planMatrix : [];
-    const position = String(props.state.pendingPosition ?? (plan?.position ?? ''));
+    const capabilities = props.state.capabilities ?? {};
+    const comfy = String(capabilities.comfyBaseUrl ?? '');
+    const budget = Number(capabilities.budgetLimitCny ?? 0);
+    const stages = Array.isArray(capabilities.stages) ? capabilities.stages : [];
 
-    /** 矩阵里 kind 的分组（设计稿：图像 = t2i/i2i，视频 = r2v/tts/music）。 */
-    var GROUPS = [
-      { key: 'image', kinds: ['t2i', 'i2i'], label: 'flow.plan.group.image' },
-      { key: 'video', kinds: ['r2v', 'tts', 'music'], label: 'flow.plan.group.video' },
-    ];
+    const field = (labelKey, value, kind) => h('div', { className: `${RF.CLS}-field` },
+      h('span', { className: `${RF.CLS}-field__label` }, t(labelKey)),
+      RF.r7FieldBox(value === '' ? t('rf7.settings.unset') : value, kind));
 
-    const cell = (group, where) => {
-      const rows = matrix.filter(row => group.kinds.includes(String(row?.kind ?? '')));
-      const brief = where === 'local'
-        ? rows.map(row => row?.local).find(Boolean)
-        : rows.map(row => row?.cloud).find(Boolean);
-      const selected = plan !== null
-        && String(plan.position ?? '') === where
-        && group.kinds.includes(String(plan.kind ?? ''));
-      return h(RF.ui.Card, {
-        key: `${group.key}-${where}`,
-        state: selected ? 'selected' : 'default',
-        onClick: () => props.state.choosePosition(where),
-      },
-      h('div', { className: `${RF.CLS}-row__title` }, t(group.label)),
-      h('div', { className: `${RF.CLS}-row__sub` }, t(where === 'local' ? 'flow.plan.localSub' : 'flow.plan.cloudSub')),
-      h('div', { className: `${RF.CLS}-row__sub` }, t('flow.plan.specCount', { count: rows.length })),
-      brief
-        ? h('div', { className: `${RF.CLS}-row__sub` }, brief.sourceFile ?? '')
-        : h('div', { className: `${RF.CLS}-note ${RF.CLS}-note--warn` }, t('flow.plan.noSpec')),
-      where === 'cloud'
-        ? h('div', { className: `${RF.CLS}-row__sub` }, t('flow.plan.billed'))
-        : null);
-    };
-
-    /**
-     * 规格 id（拿不到就说「这一档没有规格」，不编）。
-     * @param {object | null | undefined} brief 规格摘要。
-     * @returns {string} 规格 id。
-     */
-    const specIdOf = (brief) => {
-      const id = String(brief?.id ?? '');
-      return id === '' ? t('flow.plan.noSpec') : id;
-    };
-
-    return h('div', null,
-      h(RF.ui.SectionLabel, null, t('flow.plan.axisLabel')),
-      h('div', { className: `${RF.CLS}-grid${props.state.twoColumns ? ` ${RF.CLS}-grid--two` : ''}` },
-        cell(GROUPS[0], 'local'),
-        cell(GROUPS[0], 'cloud'),
-        cell(GROUPS[1], 'local'),
-        cell(GROUPS[1], 'cloud')),
-
-      // ── kind → 规格映射 ──
+    return h('div', { className: `${RF.CLS}-stack` },
+      RF.r7SectionHead(t('rf7.settings.sectionComfy'), t('rf7.settings.sectionComfySub')),
       h(RF.ui.Card, null,
-        h(RF.ui.SectionLabel, null, t('flow.plan.mappingLabel')),
-        matrix.map(row => h('div', {
-          key: String(row?.kind ?? ''),
-          className: `${RF.CLS}-row`,
-          onClick: () => props.state.chooseKind(String(row?.kind ?? '')),
-        },
-        h('div', { className: `${RF.CLS}-row__main` },
-          h('div', { className: `${RF.CLS}-row__title` }, String(row?.kind ?? '')),
-          // 板 05 号板：「t2i → 文生图 · local_sdxl_t2i / cloud_h3_t2i」
-          // —— 同一 kind 的**两套 sourceFile**，不是两档能力（少一列就讲不清这件事）。
-          h('div', { className: `${RF.CLS}-row__sub` },
-            `${t(`flow.plan.kind.${row?.kind ?? ''}`)} · `
-            + `${t('flow.plan.spec.local')} ${specIdOf(row?.local)} / `
-            + `${t('flow.plan.spec.cloud')} ${specIdOf(row?.cloud)}`)),
-        h(RF.ui.Pill, {
-          label: plan !== null && String(plan.kind ?? '') === String(row?.kind ?? '') ? t('flow.plan.current') : '',
-          tone: plan !== null && String(plan.kind ?? '') === String(row?.kind ?? '') ? 'running' : 'queued',
-        }))),
-        h('div', { className: `${RF.CLS}-note` }, t('flow.plan.mappingNote'))),
-
-      // ── 辅助评分（没有评分器 ⇒ 明说，不编数字）──
+        field('rf7.settings.labelAddress', comfy, 'value'),
+        h('div', { className: `${RF.CLS}-row` },
+          h(RF.ui.Button, {
+            label: t('rf7.settings.actTest'),
+            variant: 'secondary',
+            onClick: () => props.state.reloadProbe(),
+          }),
+          h('span', { className: `${RF.CLS}-row__sub` }, t('rf7.settings.testHint')))),
+      RF.r7SectionHead(t('rf7.settings.sectionLlm'), t('rf7.settings.sectionLlmSub')),
       h(RF.ui.Card, null,
-        h(RF.ui.SectionLabel, null, t('flow.plan.scoreLabel')),
-        h('div', { className: `${RF.CLS}-note ${RF.CLS}-note--warn` }, t('flow.plan.scoreMissing')),
-        h('div', { className: `${RF.CLS}-note` }, t('flow.plan.bottomNote'))));
+        field('rf7.settings.labelBaseUrl', '', 'placeholder'),
+        field('rf7.settings.labelModel', '', 'placeholder'),
+        field('rf7.settings.labelApiKey', '', 'masked'),
+        RF.r7Notice(t('rf7.settings.llmNotice'), t('rf7.settings.llmNoticeSub'))),
+      RF.r7SectionHead(t('rf7.settings.sectionRuntime'), t('rf7.settings.sectionRuntimeSub')),
+      h(RF.ui.Card, null,
+        // 运行时切换 = 改插件配置 ⇒ 这一屏是只读的 ⇒ 芯片行禁用 + 说清。
+        RF.r7ChipRow(
+          [t('rf7.settings.runtimeBuiltin'), t('rf7.settings.runtimeClaudeCode'), t('rf7.settings.runtimeCodex'), t('rf7.settings.runtimeGemini'), t('rf7.settings.runtimeCustom')],
+          0,
+          undefined,
+          t('rf7.settings.runtimeDisabled'))),
+      RF.r7SectionHead(t('rf7.settings.sectionMaintenance')),
+      h(RF.ui.Card, null,
+        RF.r7KvRow(t('rf7.settings.rowFree'), t('rf7.settings.valueFree'), t('rf7.settings.stateAdjustable'), 'muted'),
+        RF.r7KvRow(t('rf7.settings.rowTimeout'), t('rf7.settings.valueTimeout'), '', 'muted'),
+        RF.r7KvRow(t('rf7.settings.rowCloudKey'), t('rf7.settings.valueCloudKey'), t('rf7.settings.stateNotLoggedIn'), 'warn')),
+      RF.r7Notice(
+        t('rf7.settings.readonlyTitle'),
+        t('rf7.settings.readonlySub', { budget: RF.formatMoney(budget), stages: stages.length })));
   };
 
-  /**
-   * 06 · 四阶段勾选。
-   * @param {{ t: function, project: object, state: object }} props - 属性。
-   * @returns {object} React 元素。
-   */
+  // ══════════════════════════════════════════════════════════════
+  // 02 新建项目（Intake）
+  // ══════════════════════════════════════════════════════════════
+
+  RF.flowIntake = function flowIntake(props) {
+    const t = props.t;
+    const state = props.state;
+    const project = props.project ?? {};
+    const intake = project.intake ?? {};
+    const headings = Array.isArray(intake.headings) ? intake.headings : [];
+
+    return h('div', { className: `${RF.CLS}-stack` },
+      h(RF.ui.Card, null,
+        h('div', { className: `${RF.CLS}-field` },
+          h('span', { className: `${RF.CLS}-field__label` }, t('rf7.intake.labelName')),
+          h('input', {
+            className: `${RF.CLS}-input`,
+            value: state.projectName ?? '',
+            placeholder: t('rf7.intake.namePlaceholder'),
+            onChange: (event) => state.setProjectName(event?.target?.value ?? ''),
+          })),
+        h('span', { className: `${RF.CLS}-field__label` }, t('rf7.intake.labelStyle')),
+        RF.r7ChipRow([
+          t('rf7.intake.styleRealistic'),
+          t('rf7.intake.styleAnime'),
+          t('rf7.intake.styleComic'),
+          t('rf7.intake.style3d'),
+          t('rf7.intake.styleSuspense'),
+        ], state.projectStyleIndex ?? 0, index => state.setProjectStyleIndex(index))),
+      h(RF.ui.Card, null,
+        h('textarea', {
+          className: `${RF.CLS}-textarea ${RF.CLS}-input--focus`,
+          value: state.novelText ?? '',
+          placeholder: t('rf7.intake.textPlaceholder'),
+          onChange: (event) => state.setNovelText(event?.target?.value ?? ''),
+        }),
+        h('div', { className: `${RF.CLS}-row__sub` }, t('rf7.intake.textHint'))),
+      h(RF.ui.Card, { className: `${RF.CLS}-settingsbar` },
+        RF.r7Stat(t('rf7.intake.specResolution'), String(project.settings?.resolution ?? '') || t('rf7.settings.unset'), ''),
+        h('div', { className: `${RF.CLS}-divider` }),
+        RF.r7Stat(t('rf7.intake.specAspect'), String(project.settings?.aspectRatio ?? '') || t('rf7.settings.unset'), ''),
+        h('div', { className: `${RF.CLS}-divider` }),
+        RF.r7Stat(t('rf7.intake.specMusic'), project.settings?.enableBgm === true ? t('rf7.intake.on') : t('rf7.intake.off'), '')),
+      RF.r7SectionHead(t('rf7.intake.sectionReferences'), t('rf7.intake.sectionReferencesSub')),
+      h(RF.ui.Card, null,
+        h('div', { className: `${RF.CLS}-row` },
+          RF.r7Thumb(t('rf7.intake.refThumb'), { size: 48 }),
+          h('div', { className: `${RF.CLS}-row__main` },
+            h('div', { className: `${RF.CLS}-row__title` }, t('rf7.intake.refName')),
+            h('div', { className: `${RF.CLS}-row__sub` }, t('rf7.intake.refUse'))),
+          // 移除参考图没有对应工具 ⇒ 禁用 + 说清。
+          h(RF.ui.Button, {
+            label: t('rf7.intake.actRemove'),
+            variant: 'secondary',
+            disabled: true,
+            title: t('rf7.intake.actRemoveDisabled'),
+          })),
+        h('div', { className: `${RF.CLS}-dropzone` }, t('rf7.intake.actAddReference'))),
+      RF.r7SectionHead(t('rf7.intake.sectionChapters'), t('rf7.intake.sectionChaptersSub', {
+        count: headings.length,
+        chars: Number(intake.chars ?? 0),
+      })),
+      h('div', { className: `${RF.CLS}-stack` }, headings.length === 0
+        ? [h(RF.ui.EmptyState, { title: t('rf7.intake.noChapters'), hint: t('rf7.intake.noChaptersHint') })]
+        : headings.slice(0, 4).map(heading => h(RF.ui.Card, null,
+          h('div', { className: `${RF.CLS}-row` },
+            h('span', { className: `${RF.CLS}-row__sub` }, String(heading.seq ?? 0).padStart(2, '0')),
+            h('div', { className: `${RF.CLS}-row__main` },
+              h('div', { className: `${RF.CLS}-row__title` }, heading.title),
+              h('div', { className: `${RF.CLS}-row__sub` }, t('rf7.intake.chapterMeta'))),
+            // 逐章导入：宿主只有「整本 import_novel」这一个导入工具，
+            // 没有「只导入这一章」⇒ 禁用并指向底栏的「创建并打开」。
+            h(RF.ui.Button, {
+              label: t('rf7.intake.actImport'),
+              variant: 'secondary',
+              disabled: true,
+              title: t('rf7.intake.actImportDisabled'),
+            }))))),
+      RF.r7ChatSync({ t, project }));
+  };
+
+  // ══════════════════════════════════════════════════════════════
+  // 15 项目设置（ProjectSettings）—— 只读屏
+  // ══════════════════════════════════════════════════════════════
+
+  RF.flowProjectSettings = function flowProjectSettings(props) {
+    const t = props.t;
+    const settings = props.project?.settings ?? {};
+
+    return h('div', { className: `${RF.CLS}-stack` },
+      RF.r7SectionHead(t('rf7.projectSettings.sectionSpec')),
+      h(RF.ui.Card, null, h('div', { className: `${RF.CLS}-grid ${RF.CLS}-grid--two` },
+        RF.r7Stat(t('rf7.projectSettings.rowResolution'), String(settings.resolution ?? '') || t('rf7.settings.unset'), ''),
+        RF.r7Stat(t('rf7.projectSettings.rowAspect'), String(settings.aspectRatio ?? '') || t('rf7.settings.unset'), ''),
+        RF.r7Stat(t('rf7.projectSettings.rowStyle'), t('rf7.projectSettings.styleDefault'), ''))),
+      RF.r7SectionHead(t('rf7.projectSettings.sectionSubtitles')),
+      h(RF.ui.Card, null,
+        RF.r7KvRow(t('rf7.projectSettings.rowAutoSub'), settings.enableSubtitles === true ? t('rf7.intake.on') : t('rf7.intake.off'), '', 'muted'),
+        RF.r7KvRow(t('rf7.projectSettings.rowPosition'), t('rf7.projectSettings.bottomCenter'), '', 'muted'),
+        RF.r7KvRow(t('rf7.projectSettings.rowHideName'), t('rf7.intake.on'), '', 'muted'),
+        h('div', { className: `${RF.CLS}-notice__sub` }, t('rf7.projectSettings.subtitleNote'))),
+      RF.r7SectionHead(t('rf7.projectSettings.sectionSound')),
+      h(RF.ui.Card, null,
+        RF.r7KvRow(t('rf7.projectSettings.rowBgm'), settings.enableBgm === true ? t('rf7.intake.on') : t('rf7.intake.off'), '', 'muted'),
+        RF.r7KvRow(t('rf7.projectSettings.rowVoice'), t('rf7.projectSettings.voiceH3'), '', 'muted')),
+      RF.r7SectionHead(t('rf7.projectSettings.sectionDanger')),
+      h(RF.ui.Card, { tone: 'error' },
+        h('div', { className: `${RF.CLS}-notice__main` }, t('rf7.projectSettings.dangerText')),
+        // 危险操作（删项目 / 清空）插件**没有对应工具** ⇒ 禁用 + 说清替代。
+        h(RF.ui.Button, {
+          label: t('rf7.projectSettings.dangerAction'),
+          variant: 'danger',
+          disabled: true,
+          title: t('rf7.projectSettings.dangerDisabled'),
+        })));
+  };
+
+  // ══════════════════════════════════════════════════════════════
+  // 06 生成执行（Stages）
+  // ══════════════════════════════════════════════════════════════
+
   RF.flowStages = function flowStages(props) {
     const t = props.t;
+    const state = props.state;
     const project = props.project ?? {};
-    const stages = project.stages ?? {};
-    const global = Array.isArray(stages.global) ? stages.global : [];
-    const byChapter = Array.isArray(stages.byChapter) ? stages.byChapter : [];
-    const chapters = Array.isArray(project.chapters) ? project.chapters : [];
+    const stageData = project.stages ?? {};
+    const globalStages = Array.isArray(stageData.global) ? stageData.global : [];
+    const kind = String(project.plan?.kind ?? '');
 
-    return h('div', null,
-      // ── 四张全局阶段卡 ──
-      RF.STAGES.map((stage, index) => {
-        const enabled = global.includes(stage);
-        // 板 06 号板：阶段卡选中态 = 蓝描边 **+ 左侧 4px 蓝条**（`accent`）。
-        return h(RF.ui.Card, { key: stage, state: enabled ? 'selected' : 'default', accent: true },
-          h('div', { className: `${RF.CLS}-row` },
-            h('div', { className: `${RF.CLS}-row__main` },
-              h('div', { className: `${RF.CLS}-row__title` }, stage),
-              h('div', { className: `${RF.CLS}-row__sub` }, t(`flow.stages.${stage}.sub`)),
-              h('div', { className: `${RF.CLS}-note` }, t(`flow.stages.${stage}.hint`))),
-            h(RF.ui.Pill, { label: `STAGE ${index + 1}`, tone: enabled ? 'running' : 'queued' })));
-        }),
-      h('div', { className: `${RF.CLS}-note ${RF.CLS}-note--warn` }, t('flow.stages.readonly')),
+    const legend = [
+      { key: 'rf7.stages.legendLlm', tone: 'ok' },
+      { key: 'rf7.stages.legendImage', tone: 'accent' },
+      { key: 'rf7.stages.legendTts', tone: 'muted' },
+      { key: 'rf7.stages.legendVideo', tone: 'muted' },
+    ];
 
-      // ── 显存门槛提示条 ──
-      // 板 06 号板：这条是**黄底**（WARN-SURF），不是普通卡面。
-      h(RF.ui.Card, { tone: 'warn' },
-        h('div', { className: `${RF.CLS}-row__title ${RF.CLS}-note--warn` }, t('flow.stages.vramTitle')),
-        h('div', { className: `${RF.CLS}-note` }, t('flow.stages.vramNote'))),
-
-      // ── 按章勾选 ──
+    return h('div', { className: `${RF.CLS}-stack` },
       h(RF.ui.Card, null,
-        h(RF.ui.SectionLabel, null, t('flow.stages.byChapterLabel')),
-        byChapter.length === 0
-          ? h('div', { className: `${RF.CLS}-note` }, t('flow.stages.noChapter'))
-          : byChapter.map(row => {
-            const chapter = chapters.find(item => Number(item?.id) === Number(row?.seq));
-            const list = Array.isArray(row?.stages) ? row.stages : [];
-            return h('div', { key: String(row?.seq ?? ''), className: `${RF.CLS}-row` },
-              h('div', { className: `${RF.CLS}-row__main` },
-                h('div', { className: `${RF.CLS}-row__title` },
-                  t('flow.stages.chapterRow', {
-                    seq: row?.seq ?? '',
-                    name: chapter?.title ?? '',
-                  })),
-                h('div', { className: `${RF.CLS}-row__sub` },
-                  list.length === 0
-                    ? t('flow.stages.chapterPending')
-                    : list.map(stage => t(`stages.${stage}`)).join(' · '))));
-          }),
-        h('div', { className: `${RF.CLS}-note` }, t('flow.stages.bottomNote'))));
-  };
-
-  /**
-   * 16 · 降级矩阵。
-   * @param {{ t: function, project: object, state: object }} props - 属性。
-   * @returns {object} React 元素。
-   */
-  RF.flowDegraded = function flowDegraded(props) {
-    const t = props.t;
-    const probe = props.state.probe ?? null;
-
-    if (probe === null) {
-      return h('div', null, h(RF.ui.EmptyState, { title: t('flow.degrade.loading'), hint: t('empty.hint') }));
-    }
-    if (probe.error !== undefined && probe.error !== null && probe.error !== '') {
-      return h('div', null, h(RF.ui.EmptyState, {
-        title: t('flow.degrade.failed'),
-        hint: String(probe.error),
-        tone: 'error',
-      }), h(RF.ui.Button, {
-        label: t('flow.device.retry'),
-        variant: 'secondary',
-        onClick: () => props.state.reloadProbe(),
-      }));
-    }
-
-    const degrade = probe.view?.degrade ?? {};
-    const rows = Array.isArray(degrade.matrix) ? degrade.matrix : [];
-    const degradations = Array.isArray(degrade.degradations) ? degrade.degradations : [];
-    const notices = Array.isArray(degrade.notices) ? degrade.notices : [];
-
-    /**
-     * 产出形态 → 胶囊色调。
-     *
-     * 板 16 号板明写「每格用 10-11px 文字，绿 #3FB950 / 黄 #D29922 / 红 #F85149」：
-     * 绿=有、红=无、**黄=降级但仍交付**。中间那档（静帧成片 / 部分镜 /
-     * 静音成片 / 无声成片 / 占位帧）原来落在「排队」的灰色上，
-     * 看不出是降级 —— 现在落到黄。
-     *
-     * @param {string} form 形态（`none` / `text_card` / `placeholder` / `silent` / `full` / `partial`）。
-     * @returns {string} 色调。
-     */
-    const formTone = (form) => {
-      if (form === 'none') return 'failed';
-      if (form === 'full') return 'done';
-      return 'warn';
-    };
-
-    return h('div', null,
-      // ── 降级矩阵表（板 16 号板：缺失项 × 成片 / 分镜表 / 参考图，7 行 3 列值）──
-      // ⚠️ 三列值**都要显示** —— 只显示成片那一列，
-      // 「分镜表还在、参考图没了」这种关键事实就说不出来了。
-      h(RF.ui.Card, null,
-        h('div', { className: `${RF.CLS}-matrix` },
-          h('div', { className: `${RF.CLS}-matrix__head` }, t('flow.degrade.missingItem')),
-          h('div', { className: `${RF.CLS}-matrix__head` }, t('flow.degrade.colVideo')),
-          h('div', { className: `${RF.CLS}-matrix__head` }, t('flow.degrade.colStoryboard')),
-          h('div', { className: `${RF.CLS}-matrix__head` }, t('flow.degrade.colPack'))),
-        rows.map(row => h('div', { key: String(row?.kind ?? ''), className: `${RF.CLS}-matrix` },
-          h('div', { className: `${RF.CLS}-row__title` }, t(`degrade.kind.${row?.kind ?? ''}`)),
-          h(RF.ui.Pill, {
-            label: t(`degrade.video.${row?.video ?? 'none'}`),
-            tone: formTone(String(row?.video ?? 'none')),
-          }),
-          h(RF.ui.Pill, {
-            label: row?.storyboard === false ? t('degrade.storyboard.no') : t('degrade.storyboard.yes'),
-            tone: row?.storyboard === false ? 'failed' : 'done',
-          }),
-          h(RF.ui.Pill, {
-            label: t(`degrade.pack.${row?.referencePack ?? 'none'}`),
-            tone: formTone(String(row?.referencePack ?? 'none')),
+        h('div', { className: `${RF.CLS}-segments` },
+          RF.STAGES.map(stageId => h('span', {
+            key: stageId,
+            className: `${RF.CLS}-segment ${globalStages.includes(stageId)
+              ? `${RF.CLS}-segment--on`
+              : `${RF.CLS}-segment--off`}`,
           }))),
-        h('div', { className: `${RF.CLS}-note` }, t('flow.degrade.matrixNote'))),
-
-      // ── 一次真实降级 ──
-      // 板 16 号板：这张卡是**普通面 + 黄描边**（WARN-SURF 用在描边上）。
-      degradations.length === 0
-        ? h(RF.ui.Card, null,
-          h('div', { className: `${RF.CLS}-row__title` }, t('flow.degrade.noneTitle')),
-          h('div', { className: `${RF.CLS}-note` }, t('flow.degrade.noneBody')))
-        : h(RF.ui.Card, { tone: 'warn-border' },
-          h('div', { className: `${RF.CLS}-row__title` }, t(`degrade.kind.${degradations[0].kind ?? ''}`)),
-          h('div', { className: `${RF.CLS}-row__sub` }, String(degradations[0].message ?? '')),
-          h('div', { className: `${RF.CLS}-row__sub` }, t('flow.degrade.outputsLine', {
-            video: t(`degrade.video.${degrade.outputs?.video ?? 'none'}`),
-            storyboard: degrade.outputs?.storyboard === false
-              ? t('degrade.storyboard.no')
-              : t('degrade.storyboard.yes'),
-            pack: t(`degrade.pack.${degrade.outputs?.referencePack ?? 'none'}`),
-          })),
-          h('div', { className: `${RF.CLS}-row` },
-            h(RF.ui.Button, {
-              label: t('flow.degrade.rerun'),
-              variant: 'secondary',
-              onClick: () => props.state.runStage('tts'),
-            }),
-            h(RF.ui.Button, {
-              label: t('flow.degrade.accept'),
-              variant: 'secondary',
-              onClick: () => props.state.goFlow('stages'),
-            }))),
-
-      // ── 对话话术 ──
+        h('div', { className: `${RF.CLS}-row` }, legend.map(item => h('span', {
+          className: `${RF.CLS}-legend ${RF.CLS}-legend--${item.tone}`,
+        }, t(item.key))))),
       h(RF.ui.Card, null,
-        h(RF.ui.SectionLabel, null, t('flow.degrade.dialogLabel')),
-        notices.length === 0
-          ? h('div', { className: `${RF.CLS}-note` }, t('flow.degrade.noNotices'))
-          : h('div', null, notices.slice(0, 4).map((notice, index) => h('div', {
-            key: `notice-${index}`,
-            className: `${RF.CLS}-row__sub`,
-          }, `· ${String(notice)}`)))));
-  };
-
-  /** v6 · 00 引导总览。 */
-  var GUIDE_STEPS = [
-    { step: 'requirement', descKey: 'flow.guide.step.requirement', targetKey: 'flow.guide.target.intake', go: state => state.goFlow('intake') },
-    { step: 'run', descKey: 'flow.guide.step.run', targetKey: 'flow.guide.target.runstack', go: state => state.goFlow('runstack') },
-    { step: 'plan', descKey: 'flow.guide.step.plan', targetKey: 'flow.guide.target.plan', go: state => state.goFlow('plan') },
-    { step: 'generate', descKey: 'flow.guide.step.generate', targetKey: 'flow.guide.target.stages', go: state => state.goFlow('stages') },
-    { step: 'storyboard', descKey: 'flow.guide.step.storyboard', targetKey: 'flow.guide.target.shots', go: state => state.goTab('shots') },
-    { step: 'deliver', descKey: 'flow.guide.step.deliver', targetKey: 'flow.guide.target.output', go: state => state.goTab('output') },
-  ];
-
-  RF.flowGuide = function flowGuide(props) {
-    const t = props.t;
-    const currentStep = RF.FLOW_SCREEN_STEPS.guide ?? 'requirement';
-    const currentIndex = RF.STAGE_STEPS.indexOf(currentStep);
-    return h('div', null,
-      h(RF.ui.Card, null,
-        h('div', { className: `${RF.CLS}-row__title` }, t('flow.guide.heroTitle')),
-        h('div', { className: `${RF.CLS}-row__sub` }, t('flow.guide.heroSub'))),
-      RF.renderDualEntry({ t }),
-      h(RF.ui.SectionLabel, null, t('flow.guide.stepsLabel')),
-      GUIDE_STEPS.map((item, index) => h(RF.ui.Card, {
-        key: item.step,
-        state: index === currentIndex ? 'selected' : 'default',
-      },
         h('div', { className: `${RF.CLS}-row` },
           h('div', { className: `${RF.CLS}-row__main` },
-            h('div', { className: `${RF.CLS}-row__title` }, t(`stage.${item.step}`)),
-            h('div', { className: `${RF.CLS}-row__sub` }, t(item.descKey))),
-          h(RF.ui.Button, {
-            label: t('flow.guide.go'),
-            variant: 'secondary',
-            onClick: () => item.go(props.state),
-          })),
-        h('div', { className: `${RF.CLS}-note` }, t(item.targetKey)))));
+            h('div', { className: `${RF.CLS}-row__title` }, t('rf7.stages.currentTitle', { kind: kind === '' ? '-' : kind })),
+            h('div', { className: `${RF.CLS}-row__sub` }, t('rf7.stages.currentSub'))),
+          h(RF.ui.Pill, { label: kind === '' ? t('rf7.stages.stateUnset') : kind, tone: kind === '' ? 'queued' : 'running' })),
+        RF.r7Track(0.25),
+        h('div', { className: `${RF.CLS}-row` },
+          h('span', { className: `${RF.CLS}-row__sub` }, t('rf7.stages.metaGpu')),
+          h('span', { className: `${RF.CLS}-row__sub` }, t('rf7.stages.metaVram')),
+          h('span', { className: `${RF.CLS}-row__sub` }, t('rf7.stages.metaEta')))),
+      RF.r7SectionHead(t('rf7.stages.sectionQueue'), t('rf7.stages.sectionQueueSub')),
+      h(RF.ui.Card, null,
+        (state.queue ?? []).length === 0
+          ? h('div', { className: `${RF.CLS}-row__sub` }, t('rf7.stages.queueEmpty'))
+          : state.queue.map(item => h('div', { className: `${RF.CLS}-row` },
+            h('span', { className: `${RF.CLS}-shotstate__dot` }),
+            h('span', { className: `${RF.CLS}-row__main` }, item.title),
+            h('span', { className: `${RF.CLS}-row__sub` }, item.meta)))),
+      RF.r7SectionHead(t('rf7.stages.sectionPicker')),
+      h(RF.ui.Card, null, RF.STAGES.map(stageId => h('div', { className: `${RF.CLS}-row` },
+        RF.r7Checkbox(globalStages.includes(stageId)),
+        h('div', { className: `${RF.CLS}-row__main` },
+          h('div', { className: `${RF.CLS}-row__title` }, t(`stages.${stageId}`)),
+          h('div', { className: `${RF.CLS}-row__sub` }, t(`rf7.stages.desc.${stageId}`))),
+        h('span', { className: `${RF.CLS}-row__sub` }, globalStages.includes(stageId)
+          ? t('rf7.stages.stateEnabled')
+          : t('rf7.stages.stateDisabled'))))),
+      RF.r7Notice(t('rf7.stages.memMain'), t('rf7.stages.memSub')));
   };
 
-  RF.flowRunStack = function flowRunStack(props) {
-    const t = props.t;
-    const project = props.project ?? {};
-    const position = String(project.runPosition ?? props.state.pendingPosition ?? '');
-    const expanded = props.state.deviceExpanded === true;
-    const probe = props.state.probe ?? null;
-    const report = probe?.view?.report ?? {};
-    const items = Array.isArray(report.items) ? report.items : [];
-    const summary = items.length === 0
-      ? t('v6.runstack.devicePending')
-      : t('v6.runstack.deviceSummary', { count: items.length });
+  // ══════════════════════════════════════════════════════════════
+  // 08 分镜详情（ShotDetail）
+  // ══════════════════════════════════════════════════════════════
 
-    return h('div', null,
-      RF.renderDualEntry({ t }),
-      RF.flowRunMode(props),
-      h('div', { className: `${RF.CLS}-row` },
-        h('div', { className: `${RF.CLS}-row__main` },
-          h('div', { className: `${RF.CLS}-row__title` }, t('v6.runstack.deviceSection')),
-          h('div', { className: `${RF.CLS}-row__sub` }, position === 'cloud' ? t('v6.runstack.deviceCloudSkip') : summary)),
-        position !== 'cloud'
+  RF.flowShotDetail = function flowShotDetail(props) {
+    const t = props.t;
+    // 口径与分镜列表一致：显式选中的那一镜，没选过就取第一镜（画板 07 永远有一镜高亮）。
+    const shot = RF.currentShot(props.project, props.state.selectedShotId);
+
+    if (shot === null) {
+      return h('div', { className: `${RF.CLS}-stack` },
+        h(RF.ui.EmptyState, {
+          title: t('rf7.shotDetail.empty.title'),
+          hint: t('rf7.shotDetail.empty.hint'),
+          action: h(RF.ui.Button, {
+            label: t('rf7.shotDetail.empty.action'),
+            variant: 'primary',
+            onClick: () => props.state.goTab('shots'),
+          }),
+        }));
+    }
+
+    const references = Array.isArray(shot.references) ? shot.references : [];
+
+    return h('div', { className: `${RF.CLS}-stack` },
+      h(RF.ui.Card, null,
+        h('div', { className: `${RF.CLS}-row__title` }, t('rf7.shotDetail.headTitle', {
+          chapter: Number(shot.seq) || 1,
+          idx: Number(shot.idx) || 1,
+          label: shot.label,
+        })),
+        h('div', { className: `${RF.CLS}-row__sub` }, t('rf7.shotDetail.meta', {
+          duration: shot.duration ?? 0,
+          ratio: shot.aspectRatio === '' ? '-' : shot.aspectRatio,
+        }))),
+      RF.r7SectionHead(t('rf7.shotDetail.sectionReferences'), t('rf7.shotDetail.sectionReferencesSub')),
+      h(RF.ui.Card, null, h('div', { className: `${RF.CLS}-row` },
+        references.length === 0
+          ? h('span', { className: `${RF.CLS}-row__sub` }, t('rf7.shotDetail.noReferences'))
+          : references.map(reference => RF.r7Thumb(reference.label === '' ? reference.tag : reference.label, { size: 58 })),
+        h('div', { style: { flex: '1 1 auto' } }),
+        RF.r7PlayerBar(t('rf7.shotDetail.duration', { seconds: shot.duration ?? 0 })))),
+      RF.r7SectionHead(t('rf7.shotDetail.sectionScript')),
+      h(RF.ui.Card, null,
+        h('div', { className: `${RF.CLS}-row__title` }, t('rf7.shotDetail.scriptLens', { size: shot.shotSize === '' ? '-' : shot.shotSize })),
+        h('div', { className: `${RF.CLS}-row__sub` }, t('rf7.shotDetail.scriptMissing'))),
+      RF.r7SectionHead(t('rf7.shotDetail.sectionPrompt')),
+      h(RF.ui.Card, { tone: 'warn' },
+        h('div', { className: `${RF.CLS}-notice__main` }, t('rf7.shotDetail.promptMissing')),
+        h('div', { className: `${RF.CLS}-notice__sub` }, t('rf7.shotDetail.promptMissingSub'))));
+  };
+
+  // ══════════════════════════════════════════════════════════════
+  // 09 背景音乐（Music）
+  // ══════════════════════════════════════════════════════════════
+
+  RF.flowMusic = function flowMusic(props) {
+    const t = props.t;
+    const tracks = RF.musicAssets(props.project ?? {});
+
+    // ⚠️ 这一屏的三个动作**都接不上**（能力缺口，不是界面 bug）：
+    //   生成 —— 插件没有「生成音乐」的工具；
+    //   预览 —— 投影里没有音频文件路径，没有可播的 URL；
+    //   应用 —— `set_chapter_music` 要工作区相对路径，投影里没有。
+    // ⇒ 一律禁用 + 说清缺什么、给什么替代（见屏内 notice）。
+
+    return h('div', { className: `${RF.CLS}-stack` },
+      h(RF.ui.Card, null,
+        h('div', { className: `${RF.CLS}-row__title` }, t('rf7.music.generateTitle')),
+        RF.r7FieldBox(t('rf7.music.generatePlaceholder'), 'placeholder'),
+        h('div', { className: `${RF.CLS}-row` },
+          RF.r7ChipRow([
+            t('rf7.music.chipInstrumental'),
+            t('rf7.music.chipVocal'),
+            t('rf7.music.chipPiano'),
+            t('rf7.music.chipStrings'),
+          ], 0, undefined, t('rf7.music.chipsDisabled')),
+          h('div', { style: { flex: '1 1 auto' } }),
+          h(RF.ui.Button, {
+            label: t('rf7.music.actGenerate'),
+            variant: 'primary',
+            disabled: true,
+            title: t('rf7.music.actGenerateDisabled'),
+          }))),
+      RF.r7SectionHead(t('rf7.music.sectionLibrary'), t('rf7.music.sectionLibrarySub')),
+      tracks.length === 0
+        ? h(RF.ui.Card, { tone: 'warn' },
+          h('div', { className: `${RF.CLS}-notice__main` }, t('rf7.music.emptyTitle')),
+          h('div', { className: `${RF.CLS}-notice__sub` }, t('rf7.music.emptySub')))
+        : h('div', { className: `${RF.CLS}-stack` }, tracks.map(track => h(RF.ui.Card, null,
+          h('div', { className: `${RF.CLS}-row` },
+            h('div', { className: `${RF.CLS}-row__main` },
+              h('div', { className: `${RF.CLS}-row__title` }, track.name),
+              h('div', { className: `${RF.CLS}-row__sub` }, track.description)),
+            h(RF.ui.Pill, { label: t('rf7.music.stateApplied'), tone: 'done' })),
+          RF.r7PlayerBar('-'),
+          h('div', { className: `${RF.CLS}-row` },
+            h(RF.ui.Button, {
+              label: t('rf7.music.actPreview'),
+              variant: 'secondary',
+              disabled: true,
+              title: t('rf7.music.actPreviewDisabled'),
+            }),
+            h(RF.ui.Button, {
+              label: t('rf7.music.actApply'),
+              variant: 'secondary',
+              disabled: true,
+              title: t('rf7.music.actApplyDisabled'),
+            }))))),
+      RF.r7Notice(t('rf7.music.note'), ''));
+  };
+
+  // ══════════════════════════════════════════════════════════════
+  // 13 技能与工作流（Skills）—— 从旧版页签移过来的流程屏
+  // ══════════════════════════════════════════════════════════════
+
+  RF.flowSkills = function flowSkills(props) {
+    const t = props.t;
+    const skills = Array.isArray(props.project?.skills) ? props.project.skills : [];
+    const analysis = props.project?.workflowAnalysis ?? null;
+
+    return h('div', { className: `${RF.CLS}-stack` },
+      RF.r7SectionHead(t('rf7.skills.sectionInstalled'), t('rf7.skills.sectionInstalledSub', {
+        count: skills.length,
+      })),
+      h(RF.ui.Card, null, skills.length === 0
+        ? h(RF.ui.EmptyState, { title: t('rf7.skills.empty.title'), hint: t('rf7.skills.empty.hint') })
+        : skills.map(skill => h('div', { className: `${RF.CLS}-row` },
+          h('div', { className: `${RF.CLS}-row__main` },
+            h('div', { className: `${RF.CLS}-row__title` }, skill.name),
+            h('div', { className: `${RF.CLS}-row__sub` }, t(`rf7.skills.source.${skill.source ?? 'bundled'}`))),
+          h(RF.ui.Pill, { label: t('rf7.skills.stateReady'), tone: 'done' })))),
+      RF.r7SectionHead(t('rf7.skills.sectionIterate'), t('rf7.skills.sectionIterateSub')),
+      h(RF.ui.Card, null,
+        h('div', { className: `${RF.CLS}-row` },
+          h('span', { className: `${RF.CLS}-stepnum` }, '1'),
+          h('span', { className: `${RF.CLS}-row__sub` }, t('rf7.skills.step1'))),
+        h('div', { className: `${RF.CLS}-row` },
+          h('span', { className: `${RF.CLS}-stepnum` }, '2'),
+          h('span', { className: `${RF.CLS}-row__sub` }, t('rf7.skills.step2'))),
+        h('div', { className: `${RF.CLS}-dropzone` }, t('rf7.skills.dropHint')),
+        analysis === null
+          // 分析工作流：宿主没有暴露「分析工作流文件」的工具 ⇒ 禁用 + 说清替代。
           ? h(RF.ui.Button, {
-            label: expanded ? t('v6.runstack.collapse') : t('v6.runstack.expand'),
-            variant: 'secondary',
-            onClick: () => props.state.setDeviceExpanded(!expanded),
+            label: t('rf7.skills.actAnalyze'),
+            variant: 'primary',
+            disabled: true,
+            title: t('rf7.skills.actAnalyzeDisabled'),
           })
-          : null),
-      position !== 'cloud' && expanded ? RF.flowDevice(props) : null,
-      RF.renderAskStrip({
-        t,
-        messageKey: position === 'cloud' ? 'v6.runstack.askCloud' : 'v6.runstack.askLocal',
-      }));
+          : RF.r7Notice(String(analysis.summary ?? t('rf7.skills.analyzed')), '')),
+      RF.r7Notice(t('rf7.skills.note'), ''));
+  };
+
+  // ══════════════════════════════════════════════════════════════
+  // 18 素材选择器（Picker）—— 规范板
+  // ══════════════════════════════════════════════════════════════
+
+  RF.flowPicker = function flowPicker(props) {
+    const t = props.t;
+    const state = props.state;
+    const all = RF.assetsByCategory(props.project ?? {}, 'all');
+    const category = String(state.assetCategory ?? 'all');
+    const assets = category === 'all' ? all : all.filter(asset => String(asset?.category ?? '') === category);
+    const picked = Array.isArray(state.pickerSelection) ? state.pickerSelection : [];
+    const limit = RF.REFERENCE_LIMITS.images;
+
+    // 分类芯片（RF7 板 18）：全部 / 角色 / 场景 / 道具 / 服装。
+    const chipItems = [
+      { id: 'all', key: 'rf7.picker.chipAll' },
+      { id: 'character', key: 'rf7.picker.chipCharacter' },
+      { id: 'scene', key: 'rf7.picker.chipScene' },
+      { id: 'prop', key: 'rf7.picker.chipProp' },
+      { id: 'costume', key: 'rf7.picker.chipCostume' },
+    ];
+    const activeIndex = Math.max(0, chipItems.findIndex(item => item.id === category));
+
+    const grid = [];
+    for (let index = 0; index < assets.length; index += 3) {
+      const slice = assets.slice(index, index + 3);
+      grid.push(h('div', { className: `${RF.CLS}-grid ${RF.CLS}-grid--three` },
+        slice.map(asset => h('button', {
+          key: String(asset.id),
+          type: 'button',
+          className: `${RF.CLS}-pickeritem${picked.includes(String(asset.id)) ? ` ${RF.CLS}-pickeritem--on` : ''}`,
+          onClick: () => state.togglePicker(String(asset.id)),
+        }, RF.r7Thumb(asset.name, { size: 76, picked: picked.includes(String(asset.id)) })))));
+    }
+
+    return h('div', { className: `${RF.CLS}-stack` },
+      h(RF.ui.Card, null,
+        RF.r7FieldBox(t('rf7.picker.searchPlaceholder'), 'placeholder'),
+        RF.r7ChipRow(
+          chipItems.map(item => t(item.key)),
+          activeIndex,
+          index => state.setAssetCategory(chipItems[index]?.id ?? 'all')),
+        ...grid,
+        h('div', { className: `${RF.CLS}-row` },
+          picked.map(id => RF.r7Thumb(t('rf7.picker.pickedThumb'), { size: 40, picked: true })),
+          h('span', { className: `${RF.CLS}-row__sub` }, t('rf7.picker.pickedCount', {
+            count: picked.length,
+            limit,
+          })),
+          h('div', { style: { flex: '1 1 auto' } }),
+          h(RF.ui.Button, {
+            label: t('rf7.picker.actClear'),
+            variant: 'secondary',
+            onClick: () => state.clearPicker(),
+          }))),
+      RF.r7Notice(t('rf7.picker.note'), ''));
+  };
+
+  // ══════════════════════════════════════════════════════════════
+  // 17 降级与失败（Degraded）—— 规范板：五态分开说清代价与替代
+  // ══════════════════════════════════════════════════════════════
+
+  RF.flowDegraded = function flowDegraded(props) {
+    const t = props.t;
+    const state = props.state;
+    const project = props.project ?? {};
+    const view = state.probe?.view ?? null;
+    const degradations = Array.isArray(view?.degrade?.degradations) ? view.degrade.degradations : [];
+    const notices = Array.isArray(view?.degrade?.notices) ? view.degrade.notices : [];
+    const chapters = Array.isArray(project.chapters) ? project.chapters : [];
+    // 缺料 / 软降级：**实算**，不许写死数字（写死 = 面板在骗人）。
+    const missing = RF.shotsMissingReferences(project);
+    const noVoice = RF.charactersWithoutVoice(project);
+
+    const stateCard = (titleKey, metaKey, tone) => h(RF.ui.Card, { tone },
+      h('div', { className: `${RF.CLS}-notice__main` }, t(titleKey)),
+      h('div', { className: `${RF.CLS}-notice__sub` }, t(metaKey)));
+
+    const missingShots = missing
+      .map(shot => String(Number(shot.idx) || 0).padStart(2, '0'))
+      .join(' / ');
+
+    return h('div', { className: `${RF.CLS}-stack` },
+      RF.r7SectionHead(t('rf7.degraded.sectionBlocked'), t('rf7.degraded.sectionBlockedSub')),
+      degradations.length === 0
+        ? stateCard('rf7.degraded.noneTitle', 'rf7.degraded.noneSub', 'warn-border')
+        : degradations.map(item => h(RF.ui.Card, { tone: 'error' },
+          h('div', { className: `${RF.CLS}-notice__main` }, String(item.message ?? item.kind ?? '')),
+          h('div', { className: `${RF.CLS}-notice__sub` }, t('rf7.degraded.blockedHint')))),
+      RF.r7SectionHead(t('rf7.degraded.sectionWarning'), t('rf7.degraded.sectionWarningSub')),
+      notices.length === 0
+        ? stateCard('rf7.degraded.noWarningTitle', 'rf7.degraded.noWarningSub', 'warn-border')
+        : notices.map(item => h(RF.ui.Card, { tone: 'warn' },
+          h('div', { className: `${RF.CLS}-notice__main` }, String(item.message ?? item.kind ?? '')),
+          h('div', { className: `${RF.CLS}-notice__sub` }, t('rf7.degraded.warningHint')))),
+      // 缺料（画板 17 第三段）：缺的东西要点名。
+      RF.r7SectionHead(t('rf7.degraded.sectionMissing'), t('rf7.degraded.sectionMissingSub')),
+      missing.length === 0
+        ? stateCard('rf7.degraded.noMissingTitle', 'rf7.degraded.noMissingSub', 'warn-border')
+        : h(RF.ui.Card, { tone: 'warn' },
+          h('div', { className: `${RF.CLS}-notice__main` }, t('rf7.degraded.missingTitle', { count: missing.length })),
+          h('div', { className: `${RF.CLS}-notice__sub` }, t('rf7.degraded.missingSub', { shots: missingShots })),
+          h(RF.ui.Button, {
+            label: t('rf7.degraded.actFill'),
+            variant: 'secondary',
+            onClick: () => state.goTab('assets'),
+          })),
+      // 空态（画板 17 第四段）：**只有真的还没开始时**才说「没有章节」。
+      chapters.length === 0
+        ? h('div', { className: `${RF.CLS}-stack` },
+          RF.r7SectionHead(t('rf7.degraded.sectionEmpty'), t('rf7.degraded.sectionEmptySub')),
+          stateCard('rf7.degraded.emptyTitle', 'rf7.degraded.emptySub', 'warn-border'))
+        : null,
+      // 软降级（画板 17 第五张卡）：仍可跑，但要说清少什么。
+      noVoice.length === 0
+        ? null
+        : h(RF.ui.Card, { tone: 'warn' },
+          h('div', { className: `${RF.CLS}-notice__main` }, t('rf7.degraded.softTitle', { count: noVoice.length })),
+          h('div', { className: `${RF.CLS}-notice__sub` }, t('rf7.degraded.softSub'))));
   };
 })(RF);
 
 /* ── src/client/workbench/Workbench.js ───────────────────────────── */
 /* ─────────────────────────────────────────────────────────────────────────────
- * 右栏工作台主壳：Header / StageBar / Scroll（**唯一滚动容器**）/ Footer。
+ * 右栏工作台主壳（RF7 规格）：Header / StageRail / TabBar / Scroll / Footer。
  *
- * 骨架铁律（R7）：右栏 Tab 容器是 `overflow:hidden` —— 外层 `section` 必须
- * `height:100%` + `boxSizing:border-box` + `display:flex` + `flexDirection:column`，
- * 内层内容层必须 `flex:1; min-height:0; overflowY:auto`，否则内容超高时底栏被裁掉且滚不到。
+ * ## 骨架铁律（R7）
  *
- * 断点按**实测宽度**判（`ResizeObserver` 量容器宽度），不按窗口宽。
- * 组件里的 `useState` 只放交互态，业务数据只从宿主投影读（R1）。
+ * 右栏 Tab 容器是 `overflow:hidden` —— 外层 `section` 必须 `height:100%` +
+ * `boxSizing:border-box` + `display:flex` + `flexDirection:column`，
+ * 内层内容层必须 `flex:1; min-height:0; overflowY:auto`，
+ * 否则内容超高时底栏被裁掉且滚不到。
  *
- * ── 两层导航（2026-10-24）────────────────────────────────────────────
+ * ## RF7 的两层导航（评审稿 §6.3 / §6.4 · 画板索引 §八）
  *
- * - **项目视图**（默认）：7 个页签（设计稿 17 号板明写「右栏工作台 7 个页签」）。
- * - **流程屏**：设计稿 02 / 03 / 04 / 05 / 06 / 16 —— 它们的骨架里**没有页签条**
- *   （只有 Header / StageBar / Scroll / Footer），按用户操作流程串成一条链。
+ * - **项目视图**（默认）：固定 7 个页签 —— 枢纽 · 章节 · 素材 · 分镜 · 上下文 · 成片 · 日志；
+ * - **流程屏**：无页签条（只有 Header / StageRail / Scroll / Footer）——
+ *   RunGate · Settings · Intake · ProjectSettings · Stages · ShotDetail · Music · Skills；
+ * - **规范板**：降级与失败 · 素材选择器。
  *
- * 进入流程屏的入口：**StageBar 的 6 个步点**（点哪一步到那一屏）+ 流程屏自己的
- * 「继续」链（底栏按钮）。退出：StageBar 的后 3 步 + 面板头的返回按钮。
+ * 进入流程屏的入口：**Stage 轨的 6 个步点**（点哪一步到那一屏）+ 各屏自己的主按钮。
+ * 退出：面板头的返回按钮（回枢纽）。
+ *
+ * ## 冷启动（RF7 IA「首次进入」）
+ *
+ * 打开右栏且**没有章节** ⇒ 直接落 **RunGate（启动检查）**，
+ * Stage 轨高亮「运行 2/6」（需求步视为已过：用户已从对话或空项目进来）。
  * ─────────────────────────────────────────────────────────────────────────── */
 ;(function (RF) {
   'use strict';
 
-  /** 7 个页签 → 渲染函数。 */
+  /** 7 个页签 → 渲染函数（RF7 §6.4）。 */
   RF.TAB_RENDERERS = {
     hub: RF.tabHub,
     chapters: RF.tabChapters,
-    shots: RF.tabShots,
     assets: RF.tabAssets,
+    shots: RF.tabShots,
     context: RF.tabContext,
-    skills: RF.tabSkills,
     output: RF.tabOutput,
     log: RF.tabLog,
   };
 
-  /** 6 块流程屏 → 渲染函数（设计稿 02 / 03 / 04 / 05 / 06 / 16）。 */
+  /** 8 块流程屏 + 2 块规范板 → 渲染函数（RF7 画板索引 §八）。 */
   RF.FLOW_RENDERERS = {
-    guide: RF.flowGuide,
+    runGate: RF.flowRunGate,
+    settings: RF.flowSettings,
     intake: RF.flowIntake,
-    runstack: RF.flowRunStack,
-    runmode: RF.flowRunMode,
-    device: RF.flowDevice,
-    plan: RF.flowPlan,
+    projectSettings: RF.flowProjectSettings,
     stages: RF.flowStages,
+    shotDetail: RF.flowShotDetail,
+    music: RF.flowMusic,
+    skills: RF.flowSkills,
     degraded: RF.flowDegraded,
-  };
-
-  /**
-   * 对话输入截获块（§10.5）：把宿主钩子截到的用户原文摆在工作台最上面。
-   *
-   * 没有截到时也显示一行提示 —— 这个块是「输入会自己进来」的唯一可见证据，
-   * 平时空着等于功能不存在。
-   *
-   * @param {{ t: function, project: object }} props - 属性。
-   * @returns {object} React 元素。
-   */
-  RF.renderCapturedInput = function renderCapturedInput(props) {
-    const text = String(props.project?.input?.text ?? '').trim();
-    const empty = text === '';
-    return h('div', { className: `${RF.CLS}-captured` },
-      h('div', { className: `${RF.CLS}-captured__label` }, props.t('captured.label')),
-      h('div', {
-        className: `${RF.CLS}-captured__text${empty ? ` ${RF.CLS}-captured__text--empty` : ''}`,
-      }, empty ? props.t('captured.empty') : text));
+    picker: RF.flowPicker,
   };
 
   /**
@@ -4216,21 +6225,17 @@ window.__ModuleLoader__.load({
 
     const [activeTab, setActiveTab] = React.useState('hub');
     const [mode, setMode] = React.useState('tabs');
-    const [flowScreen, setFlowScreen] = React.useState('guide');
-    const [deviceExpanded, setDeviceExpanded] = React.useState(false);
+    const [flowScreen, setFlowScreen] = React.useState('runGate');
     const [selectedShotId, setSelectedShotId] = React.useState(null);
     const [assetCategory, setAssetCategory] = React.useState('all');
-    const [skillSource, setSkillSource] = React.useState('all');
-    const [selectedSkillName, setSelectedSkillName] = React.useState(null);
-    const [speed, setSpeed] = React.useState(1);
-    const [subtitles, setSubtitles] = React.useState(true);
-    const [voice, setVoice] = React.useState(true);
-    const [bgm, setBgm] = React.useState(false);
-    const [rollbackMode, setRollbackMode] = React.useState('single');
+    const [pickerSelection, setPickerSelection] = React.useState([]);
+    const [projectName, setProjectName] = React.useState('');
+    const [projectStyleIndex, setProjectStyleIndex] = React.useState(0);
     const [novelText, setNovelText] = React.useState('');
+    const [expandedContextKey, setExpandedContextKey] = React.useState('');
     const [pendingPosition, setPendingPosition] = React.useState('');
-    const [planHint, setPlanHint] = React.useState('');
     const [probe, setProbe] = React.useState(null);
+    const [capabilities, setCapabilities] = React.useState(null);
     const [probeLoading, setProbeLoading] = React.useState(false);
     const [width, setWidth] = React.useState(0);
 
@@ -4254,19 +6259,18 @@ window.__ModuleLoader__.load({
     const inFlow = mode === 'flow';
     const activeScreen = inFlow ? flowScreen : activeTab;
     const render = inFlow
-      ? (RF.FLOW_RENDERERS[flowScreen] ?? RF.flowIntake)
+      ? (RF.FLOW_RENDERERS[flowScreen] ?? RF.flowRunGate)
       : (RF.TAB_RENDERERS[activeTab] ?? RF.tabHub);
 
-    // 流程屏里，StageBar 高亮的是**这一屏所属的那一步**（设计稿 §2.1 全表）。
+    // 流程屏里，Stage 轨高亮的是**这一屏所属的那一步**（RF7 画板索引逐块给了）。
     const flowStepIndex = RF.STAGE_STEPS.indexOf(RF.FLOW_SCREEN_STEPS[flowScreen] ?? '');
     const currentIndex = inFlow ? (flowStepIndex >= 0 ? flowStepIndex : 0) : stage.current;
     const passedIndex = inFlow
       ? RF.STAGE_STEPS.map((_, index) => index).filter(index => index < currentIndex)
       : stage.passed;
 
-    // ── 探测数据（设备检查 / 降级矩阵两屏用）──
+    // ── 探测数据（启动检查 / 降级两屏用）──
     // ⚠️ 这里**不用** `useCallback`：客户端测试用的最小 hook 运行时没有它。
-    // `loadProbe` 只依赖模块级函数与两个稳定的 setter，所以依赖数组窄一点也安全。
     const loadProbe = (refresh) => {
       if (typeof fetch !== 'function') {
         setProbe({ view: null, error: '当前环境没有 fetch，读不到探测结果' });
@@ -4285,7 +6289,7 @@ window.__ModuleLoader__.load({
         });
     };
 
-    // 一进右栏就后台探测（不等用户跑到「运行栈」、更不等阶段跑完）。
+    // 一进右栏就后台探测（不等用户跑到「启动检查」、更不等阶段跑完）。
     const probeStartedRef = React.useRef(false);
     React.useEffect(() => {
       if (probeStartedRef.current) return;
@@ -4293,19 +6297,26 @@ window.__ModuleLoader__.load({
       loadProbe(false);
     }, []);
 
+    // 服务配置（只读路由）：给 RF7 的「服务配置」屏提供读数。
+    const capabilitiesStartedRef = React.useRef(false);
     React.useEffect(() => {
-      if (activeScreen === 'degraded') loadProbe(false);
-    }, [activeScreen]);
+      if (capabilitiesStartedRef.current) return;
+      capabilitiesStartedRef.current = true;
+      if (typeof fetch !== 'function') return;
+      fetch(RF.capabilitiesUrl())
+        .then(response => response.json())
+        .then(value => setCapabilities(value ?? null))
+        .catch(() => setCapabilities(null));
+    }, []);
 
+    // 冷启动：没有章节 ⇒ 直接落「启动检查」（RF7 IA「首次进入」）。
     const autoEntryRef = React.useRef(false);
     React.useEffect(() => {
       const chapters = Array.isArray(project.chapters) ? project.chapters : [];
       if (autoEntryRef.current || chapters.length > 0) return;
       autoEntryRef.current = true;
       setMode('flow');
-      // 首次（尚无章节）：先落运行栈（设计 03：选位置 + 设备检查），StageBar 高亮「运行」。
-      setFlowScreen('runstack');
-      setDeviceExpanded(true);
+      setFlowScreen('runGate');
       setPendingPosition(prev => (prev === '' ? 'local' : prev));
     }, [project.chapters]);
 
@@ -4326,10 +6337,6 @@ window.__ModuleLoader__.load({
       if (typeof screen !== 'string' || RF.FLOW_RENDERERS[screen] === undefined) return;
       setMode('flow');
       setFlowScreen(screen);
-      if (screen === 'runstack') {
-        const pos = String(project.runPosition ?? pendingPosition ?? '');
-        if (pos !== 'cloud') setDeviceExpanded(true);
-      }
     };
     const goTab = (tab) => {
       if (typeof tab !== 'string' || RF.TAB_RENDERERS[tab] === undefined) return;
@@ -4340,53 +6347,34 @@ window.__ModuleLoader__.load({
     const state = {
       selectedShotId,
       selectShot: setSelectedShotId,
-      // ⚠️ `reelforge.update_shot` 的必填参数是 `seq` + `idx`
-      // （`src/host/tools.js`：`required: ['seq', 'idx']`）——
-      // 只发 `{ duration }` 会被宿主拒收，改时长永远不生效。
-      // 所以这里要拿住「选中的是哪一章的第几镜」，由调用方把这一镜传进来。
-      setDuration: (shot, value) => RF.actions?.callTool?.(RF.TOOL_IDS.updateShot, {
-        seq: shot?.seq,
-        idx: shot?.idx,
-        duration: value,
-      }),
       assetCategory,
       setAssetCategory,
-      skillSource,
-      setSkillSource,
-      selectedSkillName,
-      selectSkill: setSelectedSkillName,
-      speed,
-      setSpeed,
-      subtitles,
-      voice,
-      bgm,
-      toggle: key => {
-        if (key === 'subtitles') setSubtitles(value => !value);
-        else if (key === 'voice') setVoice(value => !value);
-        else if (key === 'bgm') setBgm(value => !value);
+      pickerSelection,
+      togglePicker: (id) => {
+        setPickerSelection(prev => (prev.includes(id)
+          ? prev.filter(item => item !== id)
+          : [...prev, id]));
       },
-      rollbackMode,
-      setRollbackMode,
-      // ⚠️ 参数名必须是 `entryId`：`reelforge.rollback` 的 schema 是
-      // `entryId`（单条模式）+ `additionalProperties: false` —— 发成 `id`
-      // 会被宿主当成未知键**整条拒收**，回滚永远不生效。
-      rollback: (entry, force) => RF.actions?.callTool?.(RF.TOOL_IDS.rollback, {
-        entryId: entry.id,
-        mode: rollbackMode,
-        ...(force === true ? { force: true } : {}),
-      }),
+      clearPicker: () => setPickerSelection([]),
+      projectName,
+      setProjectName,
+      projectStyleIndex,
+      setProjectStyleIndex,
+      novelText,
+      setNovelText,
+      /** 上下文屏「查看」展开的键（空 = 都没展开）。 */
+      expandedContextKey,
+      toggleContextKey: (key) => {
+        setExpandedContextKey(prev => (prev === key ? '' : key));
+      },
+      pendingPosition,
       twoColumns,
       // ── 流程屏相关 ──
       goFlow,
       goTab,
-      novelText,
-      setNovelText,
-      pendingPosition,
-      planHint,
       probe: probe === null ? null : { ...probe, loading: probeLoading },
       reloadProbe: () => loadProbe(true),
-      deviceExpanded,
-      setDeviceExpanded,
+      capabilities,
       /**
        * 导入小说：走 `reelforge.import_novel`（`novel` 是必填）。
        */
@@ -4401,7 +6389,7 @@ window.__ModuleLoader__.load({
        * ⚠️ `reelforge.update_plan` 的 `kind` 与 `position` **都是必填** ——
        * 只发位置会被宿主整条拒收。所以：
        *   已经选过 kind → 直接改位置；
-       *   还没选 kind   → 先记住位置（客户端交互态），等「执行路径」选完 kind 一起写入。
+       *   还没选 kind   → 先记住位置（客户端交互态），等执行路径选完 kind 一起写入。
        */
       choosePosition: (position) => {
         const kind = project.plan?.kind;
@@ -4410,7 +6398,6 @@ window.__ModuleLoader__.load({
           return;
         }
         setPendingPosition(position);
-        setPlanHint('');
         if (position === 'local') loadProbe(false);
       },
       /**
@@ -4418,37 +6405,79 @@ window.__ModuleLoader__.load({
        */
       chooseKind: (kind) => {
         const position = pendingPosition !== '' ? pendingPosition : String(project.plan?.position ?? '');
-        if (position === '') {
-          setPlanHint(t('flow.plan.needPosition'));
-          return;
-        }
-        setPlanHint('');
+        if (position === '') return;
         RF.actions?.callTool?.(RF.TOOL_IDS.updatePlan, { kind, position });
       },
       /**
        * 跑一个阶段（`reelforge.run_stage`，触发类 ⇒ 宿主会弹授权）。
+       *
+       * `seq` 限定章节（宿主 schema 的可选参数；不填 = 全部章节）。
+       *
+       * @param {string} stage - 阶段。
+       * @param {number} [seq] - 限定章节。
+       * @returns {void}
        */
-      runStage: (stage) => {
-        RF.actions?.callTool?.(RF.TOOL_IDS.runStage, { stage });
+      runStage: (stage, seq) => {
+        const args = { stage };
+        if (seq !== undefined && seq !== null && Number.isFinite(Number(seq))) args.seq = Number(seq);
+        RF.actions?.callTool?.(RF.TOOL_IDS.runStage, args);
+      },
+      /**
+       * 重新生成一镜（`reelforge.regenerate_shot`，触发类 ⇒ 宿主会弹授权）。
+       *
+       * ⚠️ 参数名是 `seq` + `idx`（不是 `id`）：宿主 schema `required: ['seq','idx']`，
+       * 发成 `{ id }` 会被整条拒收。
+       */
+      regenerateShot: (shot) => {
+        if (shot === null || shot === undefined) return;
+        RF.actions?.callTool?.(RF.TOOL_IDS.regenerateShot, {
+          seq: Number(shot.seq) || 1,
+          idx: Number(shot.idx) || 1,
+        });
+      },
+      /**
+       * 回滚一条变更（`reelforge.rollback`）。
+       *
+       * ⚠️ **id 字段随模式变**：`single` 用 `entryId`、`batch` 用 `batchId`、
+       * `timepoint` 用 `at`；而且 schema 是 `additionalProperties:false` ——
+       * 发错字段名会被宿主当成未知键**整条拒收**（以前这里恒发 `entryId`，批模式必然失效）。
+       *
+       * @param {object} entry - 变更条目。
+       * @param {string} mode - 回滚模式。
+       * @param {boolean} [force] - 漂移时强制覆盖。
+       */
+      rollback: (entry, mode, force) => {
+        const kind = mode === 'batch' ? 'batch' : (mode === 'timepoint' ? 'timepoint' : 'single');
+        const params = { mode: kind };
+        if (kind === 'batch') params.batchId = String(entry?.batchId ?? entry?.batch ?? '');
+        else if (kind === 'timepoint') params.at = String(entry?.at ?? '');
+        else params.entryId = String(entry?.id ?? '');
+        if (force === true) params.force = true;
+        RF.actions?.callTool?.(RF.TOOL_IDS.rollback, params);
       },
     };
 
     // ── 按屏外壳（Header 三件套 + Footer 三件套）──
-    // owner 裁决「按屏变化」（Q1 底栏 / Q3 胶囊）：设计稿 17 块板的胶囊与底栏文案
-    // 每块都不同，以前实现是全局固定的一套。每屏长什么样在 `workbench/chrome.js`。
     const chrome = RF.tabChrome(activeScreen);
-    // 底栏动作**由屏上的数据决定**：没章时「生成第 1 章」不能是可点的按钮，
-    // 没有交付物时「交付物」也不能点了没反应 —— 都要禁用 + 说清缺什么。
+    // 外壳上下文：**交互态**（不在投影里的那部分）也要给外壳，
+    // 否则「正文还没写」这类判断只能看到空投影，底栏就会给出可点的死按钮。
+    const chromeContext = {
+      probe,
+      capabilities,
+      selectedShotId,
+      pickerSelection,
+      novelText,
+      projectName,
+    };
     const chromeAction = typeof chrome.footerAction === 'function'
-      ? chrome.footerAction(project)
+      ? chrome.footerAction(project, t, chromeContext)
       : (chrome.footerAction ?? {});
     const chromeTitle = chrome.titleKey === undefined ? '' : t(chrome.titleKey);
-    // 外壳契约：subtitle / capsule / footerLabel / footerValue **一律是函数**
-    // （静态文案在 chrome.js 里就包好了，渲染层不再判类型）。
-    // 第三个参数 `ctx` 带的是**屏外数据**（目前只有设备检查 / 降级矩阵的探测结果）。
-    const chromeContext = { probe };
     const chromeSubtitle = chrome.subtitle(project, t, chromeContext);
     const chromeCapsule = chrome.capsule(project, t, chromeContext);
+    const chromeCapsuleTone = typeof chrome.capsuleTone === 'function'
+      ? chrome.capsuleTone(project, t, chromeContext)
+      : 'neutral';
     const chromeLabel = chrome.footerLabel(project, t);
     const chromeValue = chrome.footerValue(project, t);
     const chromeDisabled = chromeAction.disabled === true || chromeAction.kind === 'none';
@@ -4478,13 +6507,17 @@ window.__ModuleLoader__.load({
         return;
       }
       if (action.kind === 'tool') {
-        const params = typeof action.params === 'function' ? action.params(project) : action.params;
-        RF.actions?.callTool?.(action.tool, params ?? {});
+        const raw = typeof action.params === 'function'
+          ? action.params(project, t, chromeContext)
+          : action.params;
+        // ⚠️ `params` 可以是**一组**：素材选择器要把不同分类分别绑到不同字段，
+        // 而宿主的 `bind_asset` 一次只吃一个字段 ⇒ 逐个发。
+        const list = Array.isArray(raw) ? raw : [raw];
+        for (const args of list) RF.actions?.callTool?.(action.tool, args ?? {});
         return;
       }
       if (action.kind === 'export') exportChangelog();
       if (action.kind === 'scroll') {
-        // 「交付物」按钮：滚到本页的交付物清单（设计稿 10 号板的主按钮）。
         const target = document.getElementById(action.target);
         if (target !== null && typeof target.scrollIntoView === 'function') {
           target.scrollIntoView({ block: 'start' });
@@ -4492,7 +6525,7 @@ window.__ModuleLoader__.load({
       }
     };
 
-    // StageBar 点哪一步 → 到那一屏（设计稿把 StageBar 定义成进度指示，这里加成可点）。
+    // Stage 轨点哪一步 → 到那一屏（设计稿把 Stage 轨定义成进度指示，这里加成可点）。
     const goStageStep = (step) => {
       const target = RF.STAGE_STEP_TARGETS[step];
       if (target === undefined) return;
@@ -4514,7 +6547,9 @@ window.__ModuleLoader__.load({
         h('div', { className: `${RF.CLS}-header__text` },
           h('div', { className: `${RF.CLS}-header__title` }, chromeTitle),
           h('div', { className: `${RF.CLS}-header__subtitle` }, chromeSubtitle)),
-        h('span', { className: `${RF.CLS}-header__status` }, chromeCapsule)),
+        h('span', {
+          className: `${RF.CLS}-header__status ${RF.CLS}-pill--${chromeCapsuleTone === 'accent' ? 'accent' : (chromeCapsuleTone === 'ok' ? 'ok' : (chromeCapsuleTone === 'warn' ? 'warn' : 'neutral'))}`,
+        }, chromeCapsule)),
       h('nav', { className: `${RF.CLS}-stagebar`, 'aria-label': t('title') },
         RF.STAGE_STEPS.map((step, index) => {
           const tone = index === currentIndex ? 'current' : passedIndex.indexOf(index) >= 0 ? 'passed' : 'upcoming';
@@ -4525,8 +6560,8 @@ window.__ModuleLoader__.load({
             title: t(`stage.go.${step}`),
             onClick: () => goStageStep(step),
           },
-          h('span', { className: `${RF.CLS}-stagebar__dot ${RF.CLS}-stagebar__dot--${tone}` }),
-          h('span', null, t(`stage.${step}`)));
+          h('span', { className: `${RF.CLS}-stagebar__dot` }),
+          h('span', { className: `${RF.CLS}-stagebar__label` }, t(`stage.${step}`)));
         }),
         h('span', { className: `${RF.CLS}-stagebar__count` }, t('stage.count', { current: currentIndex + 1 }))),
       inFlow

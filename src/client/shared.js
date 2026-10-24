@@ -69,6 +69,19 @@
   };
 
   /**
+   * 服务配置读数的宿主路由 URL（RF7 板 14「服务配置」）。
+   *
+   * `/api/reelforge.capabilities` 是**只读**的：它把插件 Config 归一化后的
+   * 可调值回给客户端（ComfyUI 地址 / 预算上限 / BGM / 字幕 / 目标时长）。
+   * ⚠️ 它**不提供写入通道** —— 改配置要改插件的 `config` 块（见 RF7 设置屏的说明）。
+   *
+   * @returns {string} 同源 URL。
+   */
+  RF.capabilitiesUrl = function capabilitiesUrl() {
+    return '/api/reelforge.capabilities';
+  };
+
+  /**
    * 会话指令的请求 id。
    *
    * 宿主 `SessionPromptRequest.requestId` 要求**客户端铸造**一个唯一身份
@@ -303,6 +316,118 @@
     return String(template).replace(/\{(\w+)\}/g, (whole, key) => (
       Object.prototype.hasOwnProperty.call(values, key) ? String(values[key]) : whole
     ));
+  };
+
+  /**
+   * 参考素材上限（`src/core/constants.js` 的 `REFERENCE_LIMITS` 镜像）。
+   *
+   * RF7 的素材选择器板要显示「参考图上限 9」—— 那是**后端硬上限**，
+   * 不是界面自己定的数。
+   *
+   * @type {{ images: number, audios: number, videos: number }}
+   */
+  RF.REFERENCE_LIMITS = Object.freeze({ images: 9, audios: 3, videos: 3 });
+
+  /**
+   * 按 id 找一镜。
+   *
+   * 投影里的镜头 id 是 `${seq}-${idx}`（见 `src/host/projection.js`）。
+   *
+   * @param {object} project - 投影视图。
+   * @param {string | null | undefined} shotId - 镜头 id。
+   * @returns {object | null} 镜头；找不到时 null。
+   */
+  RF.shotById = function shotById(project, shotId) {
+    if (typeof shotId !== 'string' || shotId === '') return null;
+    const shots = Array.isArray(project?.shots) ? project.shots : [];
+    return shots.find(shot => String(shot?.id ?? '') === shotId) ?? null;
+  };
+
+  /**
+   * **当前这一镜**：显式选中的那一镜；没选过就取第一镜。
+   *
+   * ## 为什么要有这个（实机抓出来的）
+   *
+   * 画板 07（分镜审查）里**永远有一镜是高亮选中态**，画板 08（分镜详情）就是
+   * 那一镜的展开。所以「当前镜」的口径必须**只有一处**：
+   * 列表页高亮哪一镜，详情屏就得展开哪一镜，外壳的副标题 / 胶囊也得说哪一镜。
+   *
+   * 之前列表页有兜底（取第一镜），详情屏与外壳却是严格选中 ⇒
+   * 用户在列表页看到第 1 镜高亮，点进详情却写着「还没选镜」（实机走查抓到的真缺陷）。
+   *
+   * @param {object} project - 投影视图。
+   * @param {string | null | undefined} shotId - 显式选中的镜头 id。
+   * @returns {object | null} 当前镜头；一镜都没有时 null。
+   */
+  RF.currentShot = function currentShot(project, shotId) {
+    const explicit = RF.shotById(project, shotId);
+    if (explicit !== null) return explicit;
+    const shots = Array.isArray(project?.shots) ? project.shots : [];
+    return shots.length === 0 ? null : shots[0];
+  };
+
+  /**
+   * 缺参考图的分镜（画板 17「缺料」态 / 画板 04「缺口警示」共用同一口径）。
+   *
+   * 投影里每一镜的 `references` 是**已解析出来的**参考素材
+   * （`src/host/projection.js` 走 `resolveRefs`）⇒ 空数组 = 这一镜没参考图，
+   * 而 video 阶段硬依赖 image ⇒ 这是**真缺料**，不是「还没写」。
+   *
+   * @param {object} project - 投影视图。
+   * @returns {Array<object>} 缺参考图的分镜。
+   */
+  RF.shotsMissingReferences = function shotsMissingReferences(project) {
+    const shots = Array.isArray(project?.shots) ? project.shots : [];
+    return shots.filter(shot => {
+      const references = Array.isArray(shot?.references) ? shot.references : [];
+      return references.length === 0;
+    });
+  };
+
+  /**
+   * 没有音色的角色（画板 17「软降级」态）。
+   *
+   * 判定：分类是 `character` 的资产，**没有**任何 `voice` 资产把 `parent_id`
+   * 指到它 ⇒ 这一角色没有音色（软降级：仍可跑，出片少一层人声质感）。
+   *
+   * @param {object} project - 投影视图。
+   * @returns {Array<object>} 没有音色的角色资产。
+   */
+  RF.charactersWithoutVoice = function charactersWithoutVoice(project) {
+    const assets = Array.isArray(project?.assets) ? project.assets : [];
+    const characters = assets.filter(asset => String(asset?.category ?? '') === 'character');
+    const voices = assets.filter(asset => String(asset?.category ?? '') === 'voice');
+    return characters.filter(character => {
+      const id = String(character?.id ?? '');
+      return !voices.some(voice => String(voice?.parent_id ?? '') === id);
+    });
+  };
+
+  /**
+   * 按分类筛资产。
+   *
+   * @param {object} project - 投影视图。
+   * @param {string} category - 分类；`'all'` = 全部。
+   * @returns {Array<object>} 资产数组。
+   */
+  RF.assetsByCategory = function assetsByCategory(project, category) {
+    const assets = Array.isArray(project?.assets) ? project.assets : [];
+    if (category === 'all' || category === undefined || category === '') return assets;
+    return assets.filter(asset => String(asset?.category ?? '') === category);
+  };
+
+  /**
+   * 音乐类资产（RF7 背景音乐板的「音乐库」）。
+   *
+   * ⚠️ 投影里的资产**没有文件路径**（只有 id / name / description / category），
+   * 而 `reelforge.set_chapter_music` 要的是工作区相对路径 ——
+   * ⇒ 这一屏能列条目，但「应用到章节」接不上，见 chrome 的 `music` 屏。
+   *
+   * @param {object} project - 投影视图。
+   * @returns {Array<object>} 音乐资产数组。
+   */
+  RF.musicAssets = function musicAssets(project) {
+    return RF.assetsByCategory(project, 'music');
   };
 
   /**

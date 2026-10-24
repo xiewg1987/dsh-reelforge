@@ -33,13 +33,21 @@
     'reelforge-storyboard',
   ];
 
-  /** 7 个页签（Tab **内部**的二级分区，不是 7 个宿主 Tab）。 */
+  /**
+   * 项目视图的 7 个页签（RF7 §6.4「Tab 条固定 7 项」）。
+   *
+   * ⚠️ 这是 `src/core/constants.js` 里 `WORKBENCH_TABS` 的**字面镜像**
+   * （F8 门禁逐项比对）—— 改一处必须改两处。
+   *
+   * 顺序 = 枢纽 · 章节 · 素材 · 分镜 · 上下文 · 成片 · 日志。
+   * 「技能」不在页签里（RF7 把它改成流程屏 `skills`）。
+   */
   RF.WORKBENCH_TABS = [
     { id: 'hub', labelKey: 'hub' },
-    { id: 'shots', labelKey: 'shots' },
+    { id: 'chapters', labelKey: 'chapters' },
     { id: 'assets', labelKey: 'assets' },
+    { id: 'shots', labelKey: 'shots' },
     { id: 'context', labelKey: 'context' },
-    { id: 'skills', labelKey: 'skills' },
     { id: 'output', labelKey: 'output' },
     { id: 'log', labelKey: 'log' },
   ];
@@ -48,31 +56,40 @@
   RF.STAGE_STEPS = ['requirement', 'run', 'plan', 'generate', 'storyboard', 'deliver'];
 
   /**
-   * 流程屏（设计稿 02 / 03 / 04 / 05 / 06 / 16）—— **项目视图之外**的独立屏。
+   * 流程屏（RF7 的 8 块流程屏形态画板）—— **项目视图之外**的独立屏。
    *
-   * 设计稿 17 号板自己写明右栏工作台是 **7 个页签**（项目视图）；
-   * 板 02–06 的骨架里**没有页签条**（只有 Header / StageBar / Scroll / Footer），
-   * 它们是按流程串起来的独立屏。⇒ 两层，不是 13 个页签。
+   * RF7 画板索引 §八：流程屏 = RunGate · Settings · Intake · ProjectSettings ·
+   * Stages · ShotDetail · Music · Skills；规范板 = Degraded · Picker。
    */
-  RF.FLOW_SCREENS = ['guide', 'intake', 'runstack', 'runmode', 'device', 'plan', 'stages', 'degraded'];
+  RF.FLOW_SCREENS = ['runGate', 'settings', 'intake', 'projectSettings', 'stages', 'shotDetail', 'music', 'skills'];
 
-  /** 每块流程屏归在 6 步进度条的哪一步（与设计稿 §2.1 全表一致）。 */
+  /** 规范板（规则层，不是主流程的一环）。 */
+  RF.SPEC_SCREENS = ['degraded', 'picker'];
+
+  /** 每块流程屏 / 规范板归在 6 步进度条的哪一步（与 RF7 画板索引逐块一致）。 */
   RF.FLOW_SCREEN_STEPS = {
-    guide: 'requirement',
+    runGate: 'run',
+    settings: 'run',
     intake: 'requirement',
-    runstack: 'run',
-    runmode: 'run',
-    device: 'run',
-    plan: 'plan',
+    projectSettings: 'requirement',
     stages: 'generate',
-    degraded: 'generate',
+    shotDetail: 'storyboard',
+    music: 'deliver',
+    skills: 'generate',
+    degraded: 'run',
+    picker: 'generate',
   };
 
-  /** 6 步进度条每一步点下去落到哪一屏。 */
+  /**
+   * 6 步进度条每一步点下去落到哪一屏。
+   *
+   * ⚠️ 「方案」这一步 RF7 没有对应画板（旧 Plan 板被撤了），
+   * 落**页签「章节」**（那块的副标题就是「先骨架 · 再逐章生成」）—— 待 owner 确认项。
+   */
   RF.STAGE_STEP_TARGETS = {
-    requirement: { kind: 'flow', screen: 'guide' },
-    run: { kind: 'flow', screen: 'runstack' },
-    plan: { kind: 'flow', screen: 'plan' },
+    requirement: { kind: 'flow', screen: 'intake' },
+    run: { kind: 'flow', screen: 'runGate' },
+    plan: { kind: 'tab', tab: 'chapters' },
     generate: { kind: 'flow', screen: 'stages' },
     storyboard: { kind: 'tab', tab: 'shots' },
     deliver: { kind: 'tab', tab: 'output' },
@@ -111,6 +128,25 @@
 
   /** 上下文三键；注入顺序即数组顺序。 */
   RF.CONTEXT_KEYS = ['bible', 'style', 'continuity'];
+
+  /**
+   * 注入标题固定三个，生成时拼进提示词，标题不能自创
+   * （`src/core/constants.js` 的 `CONTEXT_INJECTION_TITLES` 镜像，F8 门禁比对）。
+   */
+  RF.CONTEXT_INJECTION_TITLES = {
+    bible: '【人物圣经（一致性锚点，后续所有生成必须遵守）】',
+    style: '【风格指南（统一画风/光线/色调）】',
+    continuity: '【连续性记录】',
+  };
+
+  /**
+   * 上下文注入顺序（`src/core/constants.js` 的 `CONTEXT_INJECTION_ORDER` 镜像）。
+   *
+   * ⚠️ 注入的**顺序**是契约的一部分（bible → style → continuity），
+   * 界面上的「注入预览」必须按这个顺序显示 —— 所以顺序本身也要有客户端镜像，
+   * 不能在前端另写一份（F8 门禁比对）。
+   */
+  RF.CONTEXT_INJECTION_ORDER = ['bible', 'style', 'continuity'];
 
   /** 技能来源三档。 */
   RF.SKILL_SOURCES = ['bundled', 'installed', 'generated'];

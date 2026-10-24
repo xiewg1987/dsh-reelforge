@@ -250,61 +250,113 @@ export const STAGE_TO_STEP = Object.freeze({
 });
 
 /**
- * 流程屏（设计稿 02 / 03 / 04 / 05 / 06 / 16）—— **项目视图之外**的独立屏。
+ * 项目视图的 7 个页签（RF7 §6.4「Tab 条固定 7 项」）。
  *
- * ## 为什么是「两层」而不是 13 个页签
+ * 顺序 = 评审稿 §6.4 与画板索引 §八给的顺序：
+ * **枢纽 · 章节 · 素材 · 分镜 · 上下文 · 成片 · 日志**。
  *
- * 设计稿 17 号板自己写明：「对应 §10.2 右栏工作台 **7 个页签**：章节 / 分镜 / 资产 / 上下文 / 技能 / 成片 / 日志」
- * —— 那 7 个是**项目视图**（板 01 / 07 / 08 / 09 / 10 / 12 / 13）。
- * 而板 02–06 的公共骨架只有 4 条（Header / StageBar / Scroll / Footer），**没有页签条** ——
- * 它们是**独立屏**，按用户操作流程串成一条链（导入 → 运行位置 → 设备检查 → 执行路径 → 执行阶段）。
- * 板 16 是跨流程规范板（降级矩阵）。
+ * ⚠️ 与旧版（v4/v6）的差别有两处，都是 RF7 改的：
+ *   1. **「章节」进 Tab**（旧版没有，章节是 v6 的引导屏）；
+ *   2. **「技能」出 Tab**（旧版在 Tab 里，RF7 把「技能与工作流」改成**流程屏**）。
  *
- * ⇒ 13 个页签在 326–547px 的右栏放不下；而设计稿本来就是两层。两层并存才是按画板做。
+ * 「技能」是 `FLOW_SCREENS.skills`，不是页签。
  */
-export const FLOW_SCREENS = Object.freeze([
-  'guide',     // 00 引导总览（v6）
-  'intake',    // 02 小说导入与自动拆章
-  'runstack',  // 03 运行栈（v6：运行位置 + 本机探测）
-  'runmode',   // 03 运行位置（兼容旧链）
-  'device',    // 04 本地档设备检查（兼容旧链）
-  'plan',      // 05 执行路径（kind × 位置矩阵）
-  'stages',    // 06 四阶段勾选
-  'degraded',  // 16 降级矩阵
+export const WORKBENCH_TABS = Object.freeze([
+  Object.freeze({ id: 'hub', labelKey: 'hub' }),
+  Object.freeze({ id: 'chapters', labelKey: 'chapters' }),
+  Object.freeze({ id: 'assets', labelKey: 'assets' }),
+  Object.freeze({ id: 'shots', labelKey: 'shots' }),
+  Object.freeze({ id: 'context', labelKey: 'context' }),
+  Object.freeze({ id: 'output', labelKey: 'output' }),
+  Object.freeze({ id: 'log', labelKey: 'log' }),
 ]);
 
 /**
- * 每块流程屏归在 6 步进度条的哪一步 —— **与设计稿逐块一致**（§2.1 全表）。
+ * 流程屏（RF7 的 8 块「流程屏」形态画板）—— **项目视图之外**的独立屏。
  *
- * 03 / 04 都落在「运行」步（04 是 03 的下一跳，不是新的一步）；
- * 06 / 16 都落在「生成」步。
+ * ## 为什么是「两层」而不是 15 个页签
+ *
+ * RF7 画板索引 §八把 18 块板分成三类：
+ *
+ * - **流程屏**（无 Tab 条）：一次性动作或跨步决策 ——
+ *   RunGate · Intake · Stages · ShotDetail · Music · Skills · Settings · ProjectSettings；
+ * - **Tab 屏**（固定 7 项 Tab）：Hub · Chapters · Assets · Storyboard · Context · Output · Log；
+ * - **规范板**：ChatRows · Degraded · Picker。
+ *
+ * 流程屏的骨架只有 4 条（Header / StageRail / Scroll / Footer），**没有页签条** ——
+ * 它们按用户操作流程串成一条链，不是并排的分类。
+ */
+export const FLOW_SCREENS = Object.freeze([
+  'runGate',         // 01 启动检查（环境门 · 冷启动首屏）
+  'settings',        // 14 服务配置（ComfyUI / LLM / 运行时 / 生成维护）
+  'intake',          // 02 新建项目（小说 → 自动拆章）
+  'projectSettings', // 15 项目设置（成片规格 / 字幕 / 声音 / 危险操作）
+  'stages',          // 06 生成执行（四阶段进度 + 勾选）
+  'shotDetail',      // 08 分镜详情（单镜展开）
+  'music',           // 09 背景音乐（生成 / 试听 / 应用）
+  'skills',          // 13 技能与工作流（**从旧版页签移到这里**）
+]);
+
+/**
+ * 规范板（RF7 画板索引 §八第三类）—— **不是主流程的一环**，是规则层。
+ *
+ * - `degraded`：失败与降级（阻塞 / 警告 / 缺料 / 空态 / 软降级五态）；
+ * - `picker`：素材选择器（右栏内嵌弹窗形态）。
+ *
+ * 它们仍然可以被导航到（RunGate 的「查看失败清单」、素材卡的「选择参考图」），
+ * 所以也进 `FLOW_SCREEN_STEPS` / `STAGE_STEP_TARGETS` 的体系。
+ */
+export const SPEC_SCREENS = Object.freeze([
+  'degraded',
+  'picker',
+]);
+
+/**
+ * 每块流程屏 / 规范板归在 6 步进度条的哪一步 —— **与 RF7 画板索引逐块一致**。
+ *
+ * 需求 1/6：Intake · ProjectSettings（· Chapters 既是 Tab 也是需求步的骨架页）
+ * 运行 2/6：RunGate · Settings
+ * 生成 4/6：Stages · Skills（· Assets / Context / Log 是 Tab）
+ * 分镜 5/6：ShotDetail
+ * 交付 6/6：Music
  */
 export const FLOW_SCREEN_STEPS = Object.freeze({
-  guide: 'requirement',
+  runGate: 'run',
+  settings: 'run',
   intake: 'requirement',
-  runstack: 'run',
-  runmode: 'run',
-  device: 'run',
-  plan: 'plan',
+  projectSettings: 'requirement',
   stages: 'generate',
-  degraded: 'generate',
+  shotDetail: 'storyboard',
+  music: 'deliver',
+  skills: 'generate',
+  degraded: 'run',
+  picker: 'generate',
 });
 
 /**
  * 6 步进度条每一步点下去落到哪一屏。
  *
- * - 前 3 步（需求 / 运行 / 方案）落**流程屏**（导入 / 运行位置 / 执行路径）；
- * - 后 3 步（生成 / 分镜 / 交付）里，生成落流程屏「执行阶段」，
- *   分镜 / 交付落**项目视图页签**（板 09 / 10）。
+ * - 需求 → 流程屏「新建项目」；
+ * - 运行 → 流程屏「启动检查」（环境门，冷启动首屏）；
+ * - 方案 → **页签「章节」**（见下方说明）；
+ * - 生成 → 流程屏「生成执行」；
+ * - 分镜 → 页签「分镜」（列表；单镜详情从列表进去）；
+ * - 交付 → 页签「成片」。
  *
- * 设计稿把 StageBar 定义成**进度指示**（§2.1「结构不变，只有当前步高亮位置 + 计数随画板变」）。
- * 做成可点是**加法**（结构没变），换来「点哪一步都能到那一屏」——
- * 否则 02 / 03 / 04 / 05 / 06 这几块屏在右栏里**无处可去**。
+ * ## ⚠️ 「方案」这一步没有自己的画板
+ *
+ * RF7 的 18 块板里**没有 Plan 板**（旧的 v4 05 号板「执行路径」被 RF7 撤掉了：
+ * 执行位置 local/cloud 并进 RunGate 屏，执行 kind 由工具 `reelforge.update_plan` 写）。
+ * 但 6 步轨里「方案」这一步还在（画板索引 §八明写 6 步）——
+ * ⇒ 这一步落到**页签「章节」**：那块的副标题就是「先骨架 · 再逐章生成」，
+ * 是 RF7 里唯一还承担「方案 / 骨架规划」职责的画板。
+ *
+ * 这是**按画板推出来的落点，不是设计稿明写的**，属待 owner 确认项。
  */
 export const STAGE_STEP_TARGETS = Object.freeze({
-  requirement: Object.freeze({ kind: 'flow', screen: 'guide' }),
-  run: Object.freeze({ kind: 'flow', screen: 'runstack' }),
-  plan: Object.freeze({ kind: 'flow', screen: 'plan' }),
+  requirement: Object.freeze({ kind: 'flow', screen: 'intake' }),
+  run: Object.freeze({ kind: 'flow', screen: 'runGate' }),
+  plan: Object.freeze({ kind: 'tab', tab: 'chapters' }),
   generate: Object.freeze({ kind: 'flow', screen: 'stages' }),
   storyboard: Object.freeze({ kind: 'tab', tab: 'shots' }),
   deliver: Object.freeze({ kind: 'tab', tab: 'output' }),

@@ -1,764 +1,663 @@
 /* ─────────────────────────────────────────────────────────────────────────────
- * 流程屏（设计稿 02 / 03 / 04 / 05 / 06 / 16）。
+ * 流程屏（RF7 画板索引 §八「流程屏」8 块）+ 两块规范板。
  *
- * ## 为什么是「独立屏」而不是页签
+ * 启动检查 01 · 服务配置 14 · 新建项目 02 · 项目设置 15
+ * 生成执行 06 · 分镜详情 08 · 背景音乐 09 · 技能与工作流 13
+ * 规范板：降级与失败 17 · 素材选择器 18
  *
- * 设计稿 17 号板自己写明：右栏工作台是 **7 个页签**（章节 / 分镜 / 资产 / 上下文 /
- * 技能 / 成片 / 日志）—— 那是**项目视图**。
- * 板 02–06 的公共骨架只有 4 条（Header / StageBar / Scroll / Footer），**没有页签条**，
- * 它们按用户操作流程串成一条链：导入 → 运行位置 → 设备检查 → 执行路径 → 执行阶段。
- * 板 16 是跨流程规范板（降级矩阵）。
+ * 排版照 `design/_tools/build-rf7.mjs` 里对应的 `boardXxx()`。
  *
- * ⇒ **两层并存**：项目视图（7 页签）+ 流程屏（这 6 块）。13 个页签在 326–547px 的右栏放不下。
+ * ## 数据纪律
  *
- * ## 三条纪律
- *
- * 1. **没有写入口的控件一律禁用 + 说清缺什么** —— 不许留「点了没反应」的按钮。
- * 2. **不编数据**：没有的字段显示「未接入 / 未设置」，不拿样例值冒充真实值。
- * 3. 业务数据只从宿主投影读（R1）；组件里的 `useState` 只放交互态。
+ * 1. **探测结果**走独立只读路由（`/api/reelforge.probe`），不进 wire view；
+ * 2. **服务配置**走 `/api/reelforge.capabilities`（**只读**，插件没有写配置的通道）；
+ * 3. 数据没有就**说清没有**（RF7 §6.7），不编内容。
  * ─────────────────────────────────────────────────────────────────────────── */
 ;(function (RF) {
   'use strict';
 
   /**
-   * 设备检查的 9 行（设计稿 04 号板的行序）。
+   * 启动检查的 7 行清单（RF7 板 01）。
    *
-   * 「GPU」不是独立探测项 —— 型号是 `vram` 探测的副产品（`nvidia-smi` 一次问两件事），
-   * 所以那一行从 `vram` 的 `gpuName` 取。
+   * `probeId` = 对应宿主探测项 id（`src/core/probe.js` 的 `PROBE_IDS`）；
+   * `null` = 这一行**没有对应的探测项**（Agent 运行时是宿主自己，不是被探测的对象）。
    *
-   * @typedef {object} DeviceRow
-   * @property {string} id 探测项 id（`gpu` 是从 `vram` 派生的行）。
-   * @property {string} labelKey 行名词条。
-   * @property {string} methodKey 探测方式词条。
-   * @property {function} extra 补充值（由探测项算出）。
+   * @type {Array<{ probeId: string | null, label: string }>}
    */
-
-  /** @type {DeviceRow[]} */
-  var DEVICE_ROWS = [
-    {
-      id: 'comfy',
-      labelKey: 'flow.device.row.comfy',
-      methodKey: 'flow.device.method.comfy',
-      extra: function (item) { return String(item?.value ?? ''); },
-    },
-    {
-      id: 'ckVersion',
-      labelKey: 'flow.device.row.ckVersion',
-      methodKey: 'flow.device.method.ckVersion',
-      extra: function () { return '≥ 0.2.36'; },
-    },
-    {
-      id: 'vram',
-      labelKey: 'flow.device.row.vram',
-      methodKey: 'flow.device.method.vram',
-      extra: function () { return '门槛 8 GB'; },
-    },
-    {
-      id: 'gpu',
-      labelKey: 'flow.device.row.gpu',
-      methodKey: 'flow.device.method.gpu',
-      extra: function (item) { return String(item?.source ?? ''); },
-    },
-    {
-      id: 'ffmpeg',
-      labelKey: 'flow.device.row.ffmpeg',
-      methodKey: 'flow.device.method.ffmpeg',
-      extra: function () { return '在 PATH'; },
-    },
-    {
-      id: 'encoders',
-      labelKey: 'flow.device.row.encoders',
-      methodKey: 'flow.device.method.encoders',
-      extra: function (item) {
-        const list = Array.isArray(item?.value) ? item.value : [];
-        return list.join(' / ');
-      },
-    },
-    {
-      id: 'disk',
-      labelKey: 'flow.device.row.disk',
-      methodKey: 'flow.device.method.disk',
-      extra: function (item) {
-        const value = Number(item?.value);
-        return Number.isFinite(value) ? `${value} GB` : '';
-      },
-    },
-    {
-      id: 'llm',
-      labelKey: 'flow.device.row.llm',
-      methodKey: 'flow.device.method.llm',
-      extra: function () { return '阶段一可用'; },
-    },
-    {
-      id: 'provider',
-      labelKey: 'flow.device.row.provider',
-      methodKey: 'flow.device.method.provider',
-      extra: function (item, view) {
-        const specs = view?.specs ?? {};
-        return `${specs.total ?? 0} 套 · 本地 ${specs.local ?? 0} / 云端 ${specs.cloud ?? 0}`;
-      },
-    },
+  const RUN_GATE_ROWS = [
+    { probeId: 'comfy', label: 'rf7.runGate.checkComfy' },
+    { probeId: 'llm', label: 'rf7.runGate.checkLlm' },
+    { probeId: null, label: 'rf7.runGate.checkAgent' },
+    { probeId: 'ffmpeg', label: 'rf7.runGate.checkFfmpeg' },
+    { probeId: 'disk', label: 'rf7.runGate.checkDisk' },
+    { probeId: 'vram', label: 'rf7.runGate.checkVram' },
+    { probeId: 'provider', label: 'rf7.runGate.checkCloud' },
   ];
 
   /**
-   * 找探测项。
-   * @param {object} report 探测报告。
-   * @param {string} id 探测项 id。
-   * @returns {object | undefined} 探测项。
+   * 探测项状态 → 展示词条键 + 色调。
+   *
+   * @param {string} status - 机器状态（ok / warn / failed）。
+   * @returns {{ key: string, tone: string }} 展示信息。
    */
-  function itemOf(report, id) {
-    const items = Array.isArray(report?.items) ? report.items : [];
-    return items.find(item => item?.id === id);
+  function probeState(status) {
+    const raw = String(status ?? '');
+    if (raw === 'ok') return { key: 'rf7.runGate.pass', tone: 'ok' };
+    if (raw === 'warn') return { key: 'rf7.runGate.warn', tone: 'warn' };
+    if (raw === 'failed') return { key: 'rf7.runGate.fail', tone: 'error' };
+    return { key: 'rf7.runGate.unconfigured', tone: 'muted' };
   }
 
   /**
-   * 探测项的状态色（done / failed / queued）。
-   * @param {object | undefined} item 探测项。
-   * @returns {string} 色调。
+   * 探测项 → 按 id 索引。
+   *
+   * @param {object} state - 屏状态。
+   * @returns {Map<string, object>} id → 探测项。
    */
-  function itemTone(item) {
-    const status = String(item?.status ?? '');
-    if (status === 'ok') return 'done';
-    if (status === 'failed') return 'failed';
-    if (status === 'warn') return 'queued';
-    return 'queued';
+  function probeIndex(state) {
+    const items = Array.isArray(state?.probe?.view?.report?.items)
+      ? state.probe.view.report.items
+      : [];
+    return new Map(items.map(item => [String(item?.id ?? ''), item]));
   }
 
-  /**
-   * 探测结论的文案（状态点旁边的字）。
-   * @param {object | undefined} item 探测项。
-   * @returns {string} 结论。
-   */
-  function itemVerdict(item) {
-    const status = String(item?.status ?? '');
-    if (status === 'ok') return RF.locale?.zh?.['flow.device.ok'] ?? '已通过';
-    if (status === 'warn') return String(item?.message ?? '');
-    return String(item?.message ?? '');
-  }
+  // ══════════════════════════════════════════════════════════════
+  // 01 启动检查（RunGate）—— 环境门，冷启动首屏
+  // ══════════════════════════════════════════════════════════════
 
-  /**
-   * 02 · 小说导入与自动拆章。
-   * @param {{ t: function, project: object, state: object }} props - 属性。
-   * @returns {object} React 元素。
-   */
-  RF.flowIntake = function flowIntake(props) {
+  RF.flowRunGate = function flowRunGate(props) {
     const t = props.t;
-    const project = props.project ?? {};
-    const intake = project.intake ?? {};
-    const settings = project.settings ?? {};
-    const chapters = Array.isArray(project.chapters) ? project.chapters : [];
-    const headings = Array.isArray(intake.headings) ? intake.headings : [];
-    const fallbackChars = Number(intake.fallbackChars) || 0;
-    const text = String(props.state.novelText ?? '');
+    const state = props.state;
+    const index = probeIndex(state);
+    const items = Array.isArray(state.probe?.view?.report?.items)
+      ? state.probe.view.report.items
+      : [];
+    const position = String(props.project?.runPosition ?? state.pendingPosition ?? '');
 
-    return h('div', null,
-      RF.renderDualEntry({ t }),
-      RF.renderChatSync({ t, project }),
-      // ── 来源卡 ──
-      h(RF.ui.Card, null,
-        h(RF.ui.SectionLabel, null, t('flow.intake.sourceLabel')),
-        h(RF.ui.MetaRow, { label: t('flow.intake.chars'), value: String(intake.chars ?? 0) }),
-        headings.length === 0
-          ? h('div', { className: `${RF.CLS}-note` }, t('flow.intake.noHeadings'))
-          : h('div', null, headings.slice(0, 5).map(heading => h('div', {
-            key: `heading-${heading.seq}`,
-            className: `${RF.CLS}-row`,
-          },
-          h('span', { className: `${RF.CLS}-row__title` }, heading.title ?? '')))),
-        h('div', { className: `${RF.CLS}-note` }, t('flow.intake.fallbackRule', {
-          count: headings.length,
-          fallback: fallbackChars,
-        }))),
+    const count = status => items.filter(item => String(item?.status ?? '') === status).length;
+    const passed = count('ok');
+    const warned = count('warn');
+    const failed = count('failed');
+    const unconfigured = items.length - passed - warned - failed;
 
-      // ── 导入入口（正文 + 导入按钮）──
-      h(RF.ui.Card, null,
-        h(RF.ui.SectionLabel, null, t('flow.intake.importLabel')),
-        h('textarea', {
-          className: `${RF.CLS}-input ${RF.CLS}-textarea`,
-          value: text,
-          placeholder: t('flow.intake.importPlaceholder'),
-          onChange: event => props.state.setNovelText(event?.target?.value ?? ''),
-        }),
-        h('div', { className: `${RF.CLS}-row` },
-          h(RF.ui.Button, {
-            label: t('flow.intake.importAction'),
-            variant: 'primary',
-            disabled: text.trim() === '',
-            title: text.trim() === '' ? t('flow.intake.importDisabled') : undefined,
-            onClick: () => props.state.importNovel(),
-          })),
-        h('div', { className: `${RF.CLS}-note` }, t('flow.intake.safetyNote'))),
-
-      // ── 自动拆章预览卡 ──
-      h(RF.ui.Card, null,
-        h(RF.ui.SectionLabel, null, t('flow.intake.previewLabel')),
-        chapters.length === 0
-          ? h('div', { className: `${RF.CLS}-note` }, t('flow.intake.previewEmpty'))
-          : h('div', null, chapters.map(chapter => h('div', {
-            key: chapter.id ?? chapter.title,
-            className: `${RF.CLS}-row`,
-          },
-          h('div', { className: `${RF.CLS}-row__main` },
-            h('div', { className: `${RF.CLS}-row__title` }, chapter.title ?? ''),
-            h('div', { className: `${RF.CLS}-row__sub` },
-              `${chapter.shotCount ?? 0} ${t('unit.shot')} · ${RF.formatDuration(chapter.durationSec ?? 0)}`))))),
-        h('div', { className: `${RF.CLS}-note` }, t('flow.intake.previewRule'))),
-
-      // ── 项目设置卡（只读 + 说清为什么改不了）──
-      h(RF.ui.Card, null,
-        h(RF.ui.SectionLabel, null, t('flow.intake.settingsLabel')),
-        h(RF.ui.MetaRow, {
-          label: t('flow.intake.setting.aspectRatio'),
-          value: settings.aspectRatio === '' ? t('flow.intake.unset') : settings.aspectRatio,
-        }),
-        h(RF.ui.MetaRow, {
-          label: t('flow.intake.setting.resolution'),
-          value: settings.resolution === '' ? t('flow.intake.unset') : settings.resolution,
-        }),
-        h(RF.ui.MetaRow, {
-          label: t('flow.intake.setting.targetDuration'),
-          value: settings.targetDuration === null || settings.targetDuration === undefined
-            ? t('flow.intake.durationUnlimited')
-            : `${settings.targetDuration}s`,
-        }),
-        h(RF.ui.MetaRow, {
-          label: t('flow.intake.setting.bgm'),
-          value: settings.enableBgm === true ? t('common.on') : t('common.off'),
-        }),
-        h('div', { className: `${RF.CLS}-note ${RF.CLS}-note--warn` }, t('flow.intake.settingsReadonly'))),
-
-      // ── 待确认卡 ──
-      h(RF.ui.Card, null,
-        h(RF.ui.SectionLabel, null, t('flow.intake.pendingLabel')),
-        h('div', { className: `${RF.CLS}-note` }, t('flow.intake.pendingEmpty'))));
-  };
-
-  /**
-   * 03 · 运行位置选择。
-   * @param {{ t: function, project: object, state: object }} props - 属性。
-   * @returns {object} React 元素。
-   */
-  RF.flowRunMode = function flowRunMode(props) {
-    const t = props.t;
-    const project = props.project ?? {};
-    const plan = project.plan ?? null;
-    const current = String(project.runPosition ?? '');
-    const pending = String(props.state.pendingPosition ?? '');
-    const provider = String(project.provider ?? '');
-    const clouds = RF.CLOUD_PROVIDERS;
-
-    const positionCard = (position, title, subtitle, pros, cons) => {
-      const selected = (current !== '' ? current : pending) === position;
-      return h(RF.ui.Card, {
-        key: position,
-        state: selected ? 'selected' : 'default',
-        onClick: () => props.state.choosePosition(position),
-      },
-      h(RF.ui.Pill, { label: position.toUpperCase(), tone: selected ? 'running' : 'queued' }),
-      h('div', { className: `${RF.CLS}-row__title` }, t(title)),
-      h('div', { className: `${RF.CLS}-row__sub` }, t(subtitle)),
-      h('div', null, pros.map(pro => h('div', { key: `pro-${pro}`, className: `${RF.CLS}-row__sub` },
-        `· ${t(pro)}`))),
-      h('div', null, cons.map(con => h('div', { key: `con-${con}`, className: `${RF.CLS}-note ${RF.CLS}-note--warn` },
-        `· ${t(con)}`))),
-      position === 'local'
-        ? h('div', { className: `${RF.CLS}-row` }, h(RF.ui.Button, {
-          label: t('flow.runmode.deviceCheck'),
-          variant: 'secondary',
-            onClick: event => {
-            if (event?.stopPropagation) event.stopPropagation();
-            props.state.setDeviceExpanded(true);
-            props.state.reloadProbe();
-          },
-        }))
-        : h('div', { className: `${RF.CLS}-row__sub` }, t('flow.runmode.providersAvailable', { count: clouds.length })));
-    };
-
-    return h('div', null,
-      h(RF.ui.SectionLabel, null, t('flow.runmode.sectionLabel')),
-      h('div', { className: `${RF.CLS}-note` }, t('flow.runmode.sectionNote')),
-      h('div', { className: `${RF.CLS}-grid${props.state.twoColumns ? ` ${RF.CLS}-grid--two` : ''}` },
-        positionCard(
-          'local',
-          'flow.runmode.localTitle',
-          'flow.runmode.localSubtitle',
-          ['flow.runmode.local.pro1', 'flow.runmode.local.pro2', 'flow.runmode.local.pro3'],
-          ['flow.runmode.local.con1', 'flow.runmode.local.con2', 'flow.runmode.local.con3'],
-        ),
-        positionCard(
-          'cloud',
-          'flow.runmode.cloudTitle',
-          'flow.runmode.cloudSubtitle',
-          ['flow.runmode.cloud.pro1', 'flow.runmode.cloud.pro2', 'flow.runmode.cloud.pro3'],
-          ['flow.runmode.cloud.con1', 'flow.runmode.cloud.con2', 'flow.runmode.cloud.con3'],
-        )),
-
-      // ── 云端 provider 三选一（当前配置值是唯一事实源）──
-      h(RF.ui.Card, null,
-        h(RF.ui.SectionLabel, null, t('flow.runmode.providerLabel')),
-        h('div', { className: `${RF.CLS}-row` }, clouds.map(item => h(RF.ui.Pill, {
-          key: item,
-          label: RF.labelOf('provider', item, t),
-          tone: provider === item ? 'done' : 'queued',
-        }))),
-        h('div', { className: `${RF.CLS}-note ${RF.CLS}-note--warn` }, t('flow.runmode.providerReadonly'))),
-
-      // ── 影响对照表四行 ──
-      h(RF.ui.Card, null,
-        h(RF.ui.SectionLabel, null, t('flow.runmode.compareLabel')),
-        h(RF.ui.MetaRow, { label: t('flow.runmode.compare.kinds'), value: t('flow.runmode.compare.kindsValue') }),
-        h(RF.ui.MetaRow, { label: t('flow.runmode.compare.diff'), value: t('flow.runmode.compare.diffValue') }),
-        h(RF.ui.MetaRow, { label: t('flow.runmode.compare.cost'), value: t('flow.runmode.compare.costValue') }),
-        h(RF.ui.MetaRow, { label: t('flow.runmode.compare.limit'), value: t('flow.runmode.compare.limitValue') })),
-
-      h(RF.ui.Card, null,
-        h('div', { className: `${RF.CLS}-row__sub` }, t('flow.runmode.switchable'))),
-      h('div', { className: `${RF.CLS}-note` }, t('flow.runmode.footerHint')));
-  };
-
-  /**
-   * 04 · 本地档设备检查。
-   * @param {{ t: function, project: object, state: object }} props - 属性。
-   * @returns {object} React 元素。
-   */
-  RF.flowDevice = function flowDevice(props) {
-    const t = props.t;
-    const probe = props.state.probe ?? null;
-
-    if (probe === null) {
-      return h('div', null, h(RF.ui.EmptyState, { title: t('flow.device.loading'), hint: t('empty.hint') }));
-    }
-    if (probe.error !== undefined && probe.error !== null && probe.error !== '') {
-      return h('div', null, h(RF.ui.EmptyState, {
-        title: t('flow.device.failed'),
-        hint: String(probe.error),
-        tone: 'error',
-      }), h(RF.ui.Button, {
-        label: t('flow.device.retry'),
-        variant: 'secondary',
-        onClick: () => props.state.reloadProbe(),
-      }));
+    // 7 行清单（设计稿固定 7 行）+ 探测到但没被这 7 行覆盖的项（不许藏起来）。
+    const rows = RUN_GATE_ROWS.map(row => {
+      const item = row.probeId === null ? undefined : index.get(row.probeId);
+      const state_ = item === undefined ? probeState('') : probeState(item.status);
+      return RF.r7KvRow(
+        t(row.label),
+        item === undefined ? t('rf7.runGate.agentValue') : String(item.message ?? ''),
+        t(state_.key),
+        state_.tone);
+    });
+    const covered = new Set(RUN_GATE_ROWS.map(row => row.probeId).filter(Boolean));
+    for (const item of items) {
+      const id = String(item?.id ?? '');
+      if (covered.has(id)) continue;
+      const state_ = probeState(item.status);
+      rows.push(RF.r7KvRow(
+        t(`rf7.runGate.check.${id}`),
+        String(item.message ?? ''),
+        t(state_.key),
+        state_.tone));
     }
 
-    const view = probe.view ?? {};
-    const report = view.report ?? {};
-    const items = Array.isArray(report.items) ? report.items : [];
-    const blockers = Array.isArray(report.blockers) ? report.blockers : [];
-    const warnings = Array.isArray(report.warnings) ? report.warnings : [];
-    const vram = itemOf(report, 'vram');
-    const vramGb = Number(vram?.value);
-    const vramOk = Number.isFinite(vramGb) && vramGb >= 8;
+    const positionCard = (key, titleKey, subKey, facts, value) => h(RF.ui.Card, {
+      state: position === value ? 'selected' : 'default',
+      onClick: () => state.choosePosition(value),
+    },
+    h('div', { className: `${RF.CLS}-row` },
+      RF.r7Radio(position === value),
+      h('span', { className: `${RF.CLS}-row__title` }, t(titleKey))),
+    h('div', { className: `${RF.CLS}-row__sub` }, t(subKey)),
+    ...facts.map(fact => h('div', { className: `${RF.CLS}-row__sub` }, t(fact.key, fact.params))));
 
-    // 设计稿 9 行之外的探测项：**失败才显示**（成功的那条没有信息量）。
-    const extraFailures = items.filter(item => (
-      !DEVICE_ROWS.some(row => row.id === item?.id) && String(item?.status ?? '') === 'failed'
-    ));
-
-    return h('div', null,
-      // ── 检测状态条 ──
+    return h('div', { className: `${RF.CLS}-stack` },
       h(RF.ui.Card, null,
         h('div', { className: `${RF.CLS}-row` },
           h('div', { className: `${RF.CLS}-row__main` },
-            h('div', { className: `${RF.CLS}-row__title` }, t('flow.device.done', {
-              count: items.length,
-              seconds: ((Number(view.at) || 0) > 0 ? ((Date.now() - Number(view.at)) / 1000).toFixed(1) : '0.0'),
-            })),
-            h('div', { className: `${RF.CLS}-row__sub` }, t('flow.device.footnote'))),
+            h('div', { className: `${RF.CLS}-row__title` }, t('rf7.runGate.summaryTitle')),
+            h('div', { className: `${RF.CLS}-row__sub` }, t('rf7.runGate.summaryMeta', {
+              total: items.length,
+              passed,
+              warned,
+              unconfigured,
+            }))),
           h(RF.ui.Button, {
-            label: t('flow.device.recheck'),
+            label: t('rf7.runGate.actRerun'),
             variant: 'secondary',
-            disabled: probe.loading === true,
-            onClick: () => props.state.reloadProbe(),
-          }))),
-
-      // ── 9 行探测表 ──
-      h(RF.ui.SectionLabel, null, t('flow.device.tableLabel')),
-      h(RF.ui.Card, null,
-        DEVICE_ROWS.map(row => {
-          const item = row.id === 'gpu' ? vram : itemOf(report, row.id);
-          return h('div', { key: row.id, className: `${RF.CLS}-row` },
-            h('div', { className: `${RF.CLS}-row__main` },
-              h('div', { className: `${RF.CLS}-row__title` }, t(row.labelKey)),
-              h('div', { className: `${RF.CLS}-row__sub` }, t(row.methodKey))),
-            h(RF.ui.Pill, {
-              label: itemVerdict(item),
-              tone: itemTone(item),
-            }));
+            onClick: () => state.reloadProbe(),
+          })),
+        RF.r7Track(items.length === 0 ? 0 : passed / items.length)),
+      RF.r7SectionHead(t('rf7.runGate.sectionPosition'), t('rf7.runGate.sectionPositionSub')),
+      h('div', { className: `${RF.CLS}-grid ${RF.CLS}-grid--two` },
+        positionCard('local', 'rf7.runGate.localTitle', 'rf7.runGate.localSub', [
+          { key: 'rf7.runGate.localFact1' },
+          { key: 'rf7.runGate.localFact2' },
+        ], 'local'),
+        positionCard('cloud', 'rf7.runGate.cloudTitle', 'rf7.runGate.cloudSub', [
+          { key: 'rf7.runGate.cloudFact1' },
+          { key: 'rf7.runGate.cloudFact2' },
+        ], 'cloud')),
+      RF.r7SectionHead(t('rf7.runGate.sectionChecks')),
+      h(RF.ui.Card, null, ...rows),
+      RF.r7Notice(t('rf7.runGate.noticeMain'), t('rf7.runGate.noticeSub')),
+      // ── 屏间入口 ──
+      // 「服务配置」与 RunGate 同源（IC SettingsPage.jsx）；「查看失败清单」是规范板
+      // 「降级与失败」的入口。RF7 画板没画屏间入口，这里按画板语义补，待 owner 复核。
+      h('div', { className: `${RF.CLS}-row` },
+        h(RF.ui.Button, {
+          label: t('rf7.runGate.actSettings'),
+          variant: 'secondary',
+          onClick: () => state.goFlow('settings'),
         }),
-        extraFailures.map(item => h('div', { key: `extra-${item.id}`, className: `${RF.CLS}-row` },
-          h('div', { className: `${RF.CLS}-row__main` },
-            h('div', { className: `${RF.CLS}-row__title` }, t('flow.device.row.videoBackend')),
-            h('div', { className: `${RF.CLS}-row__sub` }, t('flow.device.method.videoBackend'))),
-          h(RF.ui.Pill, { label: String(item.message ?? ''), tone: 'failed' }))),
-        h('div', { className: `${RF.CLS}-row__sub` }, t('flow.device.tableNote'))),
-
-      // ── 结论卡 ──
-      blockers.length > 0
-        // 板 04 号板：结论卡是**红底**（ERROR-SURF），不是普通卡面。
-        ? h(RF.ui.Card, { tone: 'error' },
-          h('div', { className: `${RF.CLS}-row__title ${RF.CLS}-note--error` }, t('flow.device.conclusionTitle')),
-          blockers.map(blocker => h('div', {
-            key: `blocker-${blocker.id}`,
-            className: `${RF.CLS}-row__sub`,
-          }, `· ${String(blocker.message ?? '')}`)),
-          h('div', { className: `${RF.CLS}-row` },
-            h(RF.ui.Button, {
-              label: t('flow.device.toCloud'),
-              variant: 'primary',
-              onClick: () => props.state.choosePosition('cloud'),
-            }),
-            h(RF.ui.Button, {
-              label: t('flow.device.onlyImage'),
-              variant: 'secondary',
-              onClick: () => props.state.runStage('image'),
-            })))
-        : h(RF.ui.Card, null,
-          h('div', { className: `${RF.CLS}-row__title` }, t('flow.device.allOk')),
-          warnings.map(warning => h('div', {
-            key: `warn-${warning.id}`,
-            className: `${RF.CLS}-note ${RF.CLS}-note--warn`,
-          }, `· ${String(warning.message ?? '')}`))),
-
-      // ── 本地仍可完成 ──
-      h(RF.ui.Card, null,
-        h('div', { className: `${RF.CLS}-row__sub` }, t('flow.device.localStillLabel')),
-        h('div', { className: `${RF.CLS}-row` },
-          h(RF.ui.Pill, { label: t('flow.device.localStill.storyboard'), tone: 'queued' }),
-          h(RF.ui.Pill, { label: t('flow.device.localStill.references'), tone: 'queued' }),
-          h(RF.ui.Pill, { label: t('flow.device.localStill.compose'), tone: 'queued' })),
-        h('div', { className: `${RF.CLS}-note` }, t('flow.device.bottomNote'))),
-
-      vramOk
-        ? null
-        : h('div', { className: `${RF.CLS}-note ${RF.CLS}-note--warn` }, t('flow.device.vramHint', {
-          have: Number.isFinite(vramGb) ? vramGb : 0,
-          need: 8,
+        h(RF.ui.Button, {
+          label: t('rf7.runGate.actFailures'),
+          variant: 'secondary',
+          onClick: () => state.goFlow('degraded'),
         })));
   };
 
-  /**
-   * 05 · 执行路径（kind × 位置矩阵）。
-   * @param {{ t: function, project: object, state: object }} props - 属性。
-   * @returns {object} React 元素。
-   */
-  RF.flowPlan = function flowPlan(props) {
+  // ══════════════════════════════════════════════════════════════
+  // 14 服务配置（Settings）—— 只读屏
+  // ══════════════════════════════════════════════════════════════
+
+  RF.flowSettings = function flowSettings(props) {
     const t = props.t;
-    const project = props.project ?? {};
-    const plan = project.plan ?? null;
-    const matrix = Array.isArray(project.planMatrix) ? project.planMatrix : [];
-    const position = String(props.state.pendingPosition ?? (plan?.position ?? ''));
+    const capabilities = props.state.capabilities ?? {};
+    const comfy = String(capabilities.comfyBaseUrl ?? '');
+    const budget = Number(capabilities.budgetLimitCny ?? 0);
+    const stages = Array.isArray(capabilities.stages) ? capabilities.stages : [];
 
-    /** 矩阵里 kind 的分组（设计稿：图像 = t2i/i2i，视频 = r2v/tts/music）。 */
-    var GROUPS = [
-      { key: 'image', kinds: ['t2i', 'i2i'], label: 'flow.plan.group.image' },
-      { key: 'video', kinds: ['r2v', 'tts', 'music'], label: 'flow.plan.group.video' },
-    ];
+    const field = (labelKey, value, kind) => h('div', { className: `${RF.CLS}-field` },
+      h('span', { className: `${RF.CLS}-field__label` }, t(labelKey)),
+      RF.r7FieldBox(value === '' ? t('rf7.settings.unset') : value, kind));
 
-    const cell = (group, where) => {
-      const rows = matrix.filter(row => group.kinds.includes(String(row?.kind ?? '')));
-      const brief = where === 'local'
-        ? rows.map(row => row?.local).find(Boolean)
-        : rows.map(row => row?.cloud).find(Boolean);
-      const selected = plan !== null
-        && String(plan.position ?? '') === where
-        && group.kinds.includes(String(plan.kind ?? ''));
-      return h(RF.ui.Card, {
-        key: `${group.key}-${where}`,
-        state: selected ? 'selected' : 'default',
-        onClick: () => props.state.choosePosition(where),
-      },
-      h('div', { className: `${RF.CLS}-row__title` }, t(group.label)),
-      h('div', { className: `${RF.CLS}-row__sub` }, t(where === 'local' ? 'flow.plan.localSub' : 'flow.plan.cloudSub')),
-      h('div', { className: `${RF.CLS}-row__sub` }, t('flow.plan.specCount', { count: rows.length })),
-      brief
-        ? h('div', { className: `${RF.CLS}-row__sub` }, brief.sourceFile ?? '')
-        : h('div', { className: `${RF.CLS}-note ${RF.CLS}-note--warn` }, t('flow.plan.noSpec')),
-      where === 'cloud'
-        ? h('div', { className: `${RF.CLS}-row__sub` }, t('flow.plan.billed'))
-        : null);
-    };
-
-    /**
-     * 规格 id（拿不到就说「这一档没有规格」，不编）。
-     * @param {object | null | undefined} brief 规格摘要。
-     * @returns {string} 规格 id。
-     */
-    const specIdOf = (brief) => {
-      const id = String(brief?.id ?? '');
-      return id === '' ? t('flow.plan.noSpec') : id;
-    };
-
-    return h('div', null,
-      h(RF.ui.SectionLabel, null, t('flow.plan.axisLabel')),
-      h('div', { className: `${RF.CLS}-grid${props.state.twoColumns ? ` ${RF.CLS}-grid--two` : ''}` },
-        cell(GROUPS[0], 'local'),
-        cell(GROUPS[0], 'cloud'),
-        cell(GROUPS[1], 'local'),
-        cell(GROUPS[1], 'cloud')),
-
-      // ── kind → 规格映射 ──
+    return h('div', { className: `${RF.CLS}-stack` },
+      RF.r7SectionHead(t('rf7.settings.sectionComfy'), t('rf7.settings.sectionComfySub')),
       h(RF.ui.Card, null,
-        h(RF.ui.SectionLabel, null, t('flow.plan.mappingLabel')),
-        matrix.map(row => h('div', {
-          key: String(row?.kind ?? ''),
-          className: `${RF.CLS}-row`,
-          onClick: () => props.state.chooseKind(String(row?.kind ?? '')),
-        },
-        h('div', { className: `${RF.CLS}-row__main` },
-          h('div', { className: `${RF.CLS}-row__title` }, String(row?.kind ?? '')),
-          // 板 05 号板：「t2i → 文生图 · local_sdxl_t2i / cloud_h3_t2i」
-          // —— 同一 kind 的**两套 sourceFile**，不是两档能力（少一列就讲不清这件事）。
-          h('div', { className: `${RF.CLS}-row__sub` },
-            `${t(`flow.plan.kind.${row?.kind ?? ''}`)} · `
-            + `${t('flow.plan.spec.local')} ${specIdOf(row?.local)} / `
-            + `${t('flow.plan.spec.cloud')} ${specIdOf(row?.cloud)}`)),
-        h(RF.ui.Pill, {
-          label: plan !== null && String(plan.kind ?? '') === String(row?.kind ?? '') ? t('flow.plan.current') : '',
-          tone: plan !== null && String(plan.kind ?? '') === String(row?.kind ?? '') ? 'running' : 'queued',
-        }))),
-        h('div', { className: `${RF.CLS}-note` }, t('flow.plan.mappingNote'))),
-
-      // ── 辅助评分（没有评分器 ⇒ 明说，不编数字）──
+        field('rf7.settings.labelAddress', comfy, 'value'),
+        h('div', { className: `${RF.CLS}-row` },
+          h(RF.ui.Button, {
+            label: t('rf7.settings.actTest'),
+            variant: 'secondary',
+            onClick: () => props.state.reloadProbe(),
+          }),
+          h('span', { className: `${RF.CLS}-row__sub` }, t('rf7.settings.testHint')))),
+      RF.r7SectionHead(t('rf7.settings.sectionLlm'), t('rf7.settings.sectionLlmSub')),
       h(RF.ui.Card, null,
-        h(RF.ui.SectionLabel, null, t('flow.plan.scoreLabel')),
-        h('div', { className: `${RF.CLS}-note ${RF.CLS}-note--warn` }, t('flow.plan.scoreMissing')),
-        h('div', { className: `${RF.CLS}-note` }, t('flow.plan.bottomNote'))));
+        field('rf7.settings.labelBaseUrl', '', 'placeholder'),
+        field('rf7.settings.labelModel', '', 'placeholder'),
+        field('rf7.settings.labelApiKey', '', 'masked'),
+        RF.r7Notice(t('rf7.settings.llmNotice'), t('rf7.settings.llmNoticeSub'))),
+      RF.r7SectionHead(t('rf7.settings.sectionRuntime'), t('rf7.settings.sectionRuntimeSub')),
+      h(RF.ui.Card, null,
+        // 运行时切换 = 改插件配置 ⇒ 这一屏是只读的 ⇒ 芯片行禁用 + 说清。
+        RF.r7ChipRow(
+          [t('rf7.settings.runtimeBuiltin'), t('rf7.settings.runtimeClaudeCode'), t('rf7.settings.runtimeCodex'), t('rf7.settings.runtimeGemini'), t('rf7.settings.runtimeCustom')],
+          0,
+          undefined,
+          t('rf7.settings.runtimeDisabled'))),
+      RF.r7SectionHead(t('rf7.settings.sectionMaintenance')),
+      h(RF.ui.Card, null,
+        RF.r7KvRow(t('rf7.settings.rowFree'), t('rf7.settings.valueFree'), t('rf7.settings.stateAdjustable'), 'muted'),
+        RF.r7KvRow(t('rf7.settings.rowTimeout'), t('rf7.settings.valueTimeout'), '', 'muted'),
+        RF.r7KvRow(t('rf7.settings.rowCloudKey'), t('rf7.settings.valueCloudKey'), t('rf7.settings.stateNotLoggedIn'), 'warn')),
+      RF.r7Notice(
+        t('rf7.settings.readonlyTitle'),
+        t('rf7.settings.readonlySub', { budget: RF.formatMoney(budget), stages: stages.length })));
   };
 
-  /**
-   * 06 · 四阶段勾选。
-   * @param {{ t: function, project: object, state: object }} props - 属性。
-   * @returns {object} React 元素。
-   */
+  // ══════════════════════════════════════════════════════════════
+  // 02 新建项目（Intake）
+  // ══════════════════════════════════════════════════════════════
+
+  RF.flowIntake = function flowIntake(props) {
+    const t = props.t;
+    const state = props.state;
+    const project = props.project ?? {};
+    const intake = project.intake ?? {};
+    const headings = Array.isArray(intake.headings) ? intake.headings : [];
+
+    return h('div', { className: `${RF.CLS}-stack` },
+      h(RF.ui.Card, null,
+        h('div', { className: `${RF.CLS}-field` },
+          h('span', { className: `${RF.CLS}-field__label` }, t('rf7.intake.labelName')),
+          h('input', {
+            className: `${RF.CLS}-input`,
+            value: state.projectName ?? '',
+            placeholder: t('rf7.intake.namePlaceholder'),
+            onChange: (event) => state.setProjectName(event?.target?.value ?? ''),
+          })),
+        h('span', { className: `${RF.CLS}-field__label` }, t('rf7.intake.labelStyle')),
+        RF.r7ChipRow([
+          t('rf7.intake.styleRealistic'),
+          t('rf7.intake.styleAnime'),
+          t('rf7.intake.styleComic'),
+          t('rf7.intake.style3d'),
+          t('rf7.intake.styleSuspense'),
+        ], state.projectStyleIndex ?? 0, index => state.setProjectStyleIndex(index))),
+      h(RF.ui.Card, null,
+        h('textarea', {
+          className: `${RF.CLS}-textarea ${RF.CLS}-input--focus`,
+          value: state.novelText ?? '',
+          placeholder: t('rf7.intake.textPlaceholder'),
+          onChange: (event) => state.setNovelText(event?.target?.value ?? ''),
+        }),
+        h('div', { className: `${RF.CLS}-row__sub` }, t('rf7.intake.textHint'))),
+      h(RF.ui.Card, { className: `${RF.CLS}-settingsbar` },
+        RF.r7Stat(t('rf7.intake.specResolution'), String(project.settings?.resolution ?? '') || t('rf7.settings.unset'), ''),
+        h('div', { className: `${RF.CLS}-divider` }),
+        RF.r7Stat(t('rf7.intake.specAspect'), String(project.settings?.aspectRatio ?? '') || t('rf7.settings.unset'), ''),
+        h('div', { className: `${RF.CLS}-divider` }),
+        RF.r7Stat(t('rf7.intake.specMusic'), project.settings?.enableBgm === true ? t('rf7.intake.on') : t('rf7.intake.off'), '')),
+      RF.r7SectionHead(t('rf7.intake.sectionReferences'), t('rf7.intake.sectionReferencesSub')),
+      h(RF.ui.Card, null,
+        h('div', { className: `${RF.CLS}-row` },
+          RF.r7Thumb(t('rf7.intake.refThumb'), { size: 48 }),
+          h('div', { className: `${RF.CLS}-row__main` },
+            h('div', { className: `${RF.CLS}-row__title` }, t('rf7.intake.refName')),
+            h('div', { className: `${RF.CLS}-row__sub` }, t('rf7.intake.refUse'))),
+          // 移除参考图没有对应工具 ⇒ 禁用 + 说清。
+          h(RF.ui.Button, {
+            label: t('rf7.intake.actRemove'),
+            variant: 'secondary',
+            disabled: true,
+            title: t('rf7.intake.actRemoveDisabled'),
+          })),
+        h('div', { className: `${RF.CLS}-dropzone` }, t('rf7.intake.actAddReference'))),
+      RF.r7SectionHead(t('rf7.intake.sectionChapters'), t('rf7.intake.sectionChaptersSub', {
+        count: headings.length,
+        chars: Number(intake.chars ?? 0),
+      })),
+      h('div', { className: `${RF.CLS}-stack` }, headings.length === 0
+        ? [h(RF.ui.EmptyState, { title: t('rf7.intake.noChapters'), hint: t('rf7.intake.noChaptersHint') })]
+        : headings.slice(0, 4).map(heading => h(RF.ui.Card, null,
+          h('div', { className: `${RF.CLS}-row` },
+            h('span', { className: `${RF.CLS}-row__sub` }, String(heading.seq ?? 0).padStart(2, '0')),
+            h('div', { className: `${RF.CLS}-row__main` },
+              h('div', { className: `${RF.CLS}-row__title` }, heading.title),
+              h('div', { className: `${RF.CLS}-row__sub` }, t('rf7.intake.chapterMeta'))),
+            // 逐章导入：宿主只有「整本 import_novel」这一个导入工具，
+            // 没有「只导入这一章」⇒ 禁用并指向底栏的「创建并打开」。
+            h(RF.ui.Button, {
+              label: t('rf7.intake.actImport'),
+              variant: 'secondary',
+              disabled: true,
+              title: t('rf7.intake.actImportDisabled'),
+            }))))),
+      RF.r7ChatSync({ t, project }));
+  };
+
+  // ══════════════════════════════════════════════════════════════
+  // 15 项目设置（ProjectSettings）—— 只读屏
+  // ══════════════════════════════════════════════════════════════
+
+  RF.flowProjectSettings = function flowProjectSettings(props) {
+    const t = props.t;
+    const settings = props.project?.settings ?? {};
+
+    return h('div', { className: `${RF.CLS}-stack` },
+      RF.r7SectionHead(t('rf7.projectSettings.sectionSpec')),
+      h(RF.ui.Card, null, h('div', { className: `${RF.CLS}-grid ${RF.CLS}-grid--two` },
+        RF.r7Stat(t('rf7.projectSettings.rowResolution'), String(settings.resolution ?? '') || t('rf7.settings.unset'), ''),
+        RF.r7Stat(t('rf7.projectSettings.rowAspect'), String(settings.aspectRatio ?? '') || t('rf7.settings.unset'), ''),
+        RF.r7Stat(t('rf7.projectSettings.rowStyle'), t('rf7.projectSettings.styleDefault'), ''))),
+      RF.r7SectionHead(t('rf7.projectSettings.sectionSubtitles')),
+      h(RF.ui.Card, null,
+        RF.r7KvRow(t('rf7.projectSettings.rowAutoSub'), settings.enableSubtitles === true ? t('rf7.intake.on') : t('rf7.intake.off'), '', 'muted'),
+        RF.r7KvRow(t('rf7.projectSettings.rowPosition'), t('rf7.projectSettings.bottomCenter'), '', 'muted'),
+        RF.r7KvRow(t('rf7.projectSettings.rowHideName'), t('rf7.intake.on'), '', 'muted'),
+        h('div', { className: `${RF.CLS}-notice__sub` }, t('rf7.projectSettings.subtitleNote'))),
+      RF.r7SectionHead(t('rf7.projectSettings.sectionSound')),
+      h(RF.ui.Card, null,
+        RF.r7KvRow(t('rf7.projectSettings.rowBgm'), settings.enableBgm === true ? t('rf7.intake.on') : t('rf7.intake.off'), '', 'muted'),
+        RF.r7KvRow(t('rf7.projectSettings.rowVoice'), t('rf7.projectSettings.voiceH3'), '', 'muted')),
+      RF.r7SectionHead(t('rf7.projectSettings.sectionDanger')),
+      h(RF.ui.Card, { tone: 'error' },
+        h('div', { className: `${RF.CLS}-notice__main` }, t('rf7.projectSettings.dangerText')),
+        // 危险操作（删项目 / 清空）插件**没有对应工具** ⇒ 禁用 + 说清替代。
+        h(RF.ui.Button, {
+          label: t('rf7.projectSettings.dangerAction'),
+          variant: 'danger',
+          disabled: true,
+          title: t('rf7.projectSettings.dangerDisabled'),
+        })));
+  };
+
+  // ══════════════════════════════════════════════════════════════
+  // 06 生成执行（Stages）
+  // ══════════════════════════════════════════════════════════════
+
   RF.flowStages = function flowStages(props) {
     const t = props.t;
+    const state = props.state;
     const project = props.project ?? {};
-    const stages = project.stages ?? {};
-    const global = Array.isArray(stages.global) ? stages.global : [];
-    const byChapter = Array.isArray(stages.byChapter) ? stages.byChapter : [];
-    const chapters = Array.isArray(project.chapters) ? project.chapters : [];
+    const stageData = project.stages ?? {};
+    const globalStages = Array.isArray(stageData.global) ? stageData.global : [];
+    const kind = String(project.plan?.kind ?? '');
 
-    return h('div', null,
-      // ── 四张全局阶段卡 ──
-      RF.STAGES.map((stage, index) => {
-        const enabled = global.includes(stage);
-        // 板 06 号板：阶段卡选中态 = 蓝描边 **+ 左侧 4px 蓝条**（`accent`）。
-        return h(RF.ui.Card, { key: stage, state: enabled ? 'selected' : 'default', accent: true },
-          h('div', { className: `${RF.CLS}-row` },
-            h('div', { className: `${RF.CLS}-row__main` },
-              h('div', { className: `${RF.CLS}-row__title` }, stage),
-              h('div', { className: `${RF.CLS}-row__sub` }, t(`flow.stages.${stage}.sub`)),
-              h('div', { className: `${RF.CLS}-note` }, t(`flow.stages.${stage}.hint`))),
-            h(RF.ui.Pill, { label: `STAGE ${index + 1}`, tone: enabled ? 'running' : 'queued' })));
-        }),
-      h('div', { className: `${RF.CLS}-note ${RF.CLS}-note--warn` }, t('flow.stages.readonly')),
+    const legend = [
+      { key: 'rf7.stages.legendLlm', tone: 'ok' },
+      { key: 'rf7.stages.legendImage', tone: 'accent' },
+      { key: 'rf7.stages.legendTts', tone: 'muted' },
+      { key: 'rf7.stages.legendVideo', tone: 'muted' },
+    ];
 
-      // ── 显存门槛提示条 ──
-      // 板 06 号板：这条是**黄底**（WARN-SURF），不是普通卡面。
-      h(RF.ui.Card, { tone: 'warn' },
-        h('div', { className: `${RF.CLS}-row__title ${RF.CLS}-note--warn` }, t('flow.stages.vramTitle')),
-        h('div', { className: `${RF.CLS}-note` }, t('flow.stages.vramNote'))),
-
-      // ── 按章勾选 ──
+    return h('div', { className: `${RF.CLS}-stack` },
       h(RF.ui.Card, null,
-        h(RF.ui.SectionLabel, null, t('flow.stages.byChapterLabel')),
-        byChapter.length === 0
-          ? h('div', { className: `${RF.CLS}-note` }, t('flow.stages.noChapter'))
-          : byChapter.map(row => {
-            const chapter = chapters.find(item => Number(item?.id) === Number(row?.seq));
-            const list = Array.isArray(row?.stages) ? row.stages : [];
-            return h('div', { key: String(row?.seq ?? ''), className: `${RF.CLS}-row` },
-              h('div', { className: `${RF.CLS}-row__main` },
-                h('div', { className: `${RF.CLS}-row__title` },
-                  t('flow.stages.chapterRow', {
-                    seq: row?.seq ?? '',
-                    name: chapter?.title ?? '',
-                  })),
-                h('div', { className: `${RF.CLS}-row__sub` },
-                  list.length === 0
-                    ? t('flow.stages.chapterPending')
-                    : list.map(stage => t(`stages.${stage}`)).join(' · '))));
-          }),
-        h('div', { className: `${RF.CLS}-note` }, t('flow.stages.bottomNote'))));
-  };
-
-  /**
-   * 16 · 降级矩阵。
-   * @param {{ t: function, project: object, state: object }} props - 属性。
-   * @returns {object} React 元素。
-   */
-  RF.flowDegraded = function flowDegraded(props) {
-    const t = props.t;
-    const probe = props.state.probe ?? null;
-
-    if (probe === null) {
-      return h('div', null, h(RF.ui.EmptyState, { title: t('flow.degrade.loading'), hint: t('empty.hint') }));
-    }
-    if (probe.error !== undefined && probe.error !== null && probe.error !== '') {
-      return h('div', null, h(RF.ui.EmptyState, {
-        title: t('flow.degrade.failed'),
-        hint: String(probe.error),
-        tone: 'error',
-      }), h(RF.ui.Button, {
-        label: t('flow.device.retry'),
-        variant: 'secondary',
-        onClick: () => props.state.reloadProbe(),
-      }));
-    }
-
-    const degrade = probe.view?.degrade ?? {};
-    const rows = Array.isArray(degrade.matrix) ? degrade.matrix : [];
-    const degradations = Array.isArray(degrade.degradations) ? degrade.degradations : [];
-    const notices = Array.isArray(degrade.notices) ? degrade.notices : [];
-
-    /**
-     * 产出形态 → 胶囊色调。
-     *
-     * 板 16 号板明写「每格用 10-11px 文字，绿 #3FB950 / 黄 #D29922 / 红 #F85149」：
-     * 绿=有、红=无、**黄=降级但仍交付**。中间那档（静帧成片 / 部分镜 /
-     * 静音成片 / 无声成片 / 占位帧）原来落在「排队」的灰色上，
-     * 看不出是降级 —— 现在落到黄。
-     *
-     * @param {string} form 形态（`none` / `text_card` / `placeholder` / `silent` / `full` / `partial`）。
-     * @returns {string} 色调。
-     */
-    const formTone = (form) => {
-      if (form === 'none') return 'failed';
-      if (form === 'full') return 'done';
-      return 'warn';
-    };
-
-    return h('div', null,
-      // ── 降级矩阵表（板 16 号板：缺失项 × 成片 / 分镜表 / 参考图，7 行 3 列值）──
-      // ⚠️ 三列值**都要显示** —— 只显示成片那一列，
-      // 「分镜表还在、参考图没了」这种关键事实就说不出来了。
-      h(RF.ui.Card, null,
-        h('div', { className: `${RF.CLS}-matrix` },
-          h('div', { className: `${RF.CLS}-matrix__head` }, t('flow.degrade.missingItem')),
-          h('div', { className: `${RF.CLS}-matrix__head` }, t('flow.degrade.colVideo')),
-          h('div', { className: `${RF.CLS}-matrix__head` }, t('flow.degrade.colStoryboard')),
-          h('div', { className: `${RF.CLS}-matrix__head` }, t('flow.degrade.colPack'))),
-        rows.map(row => h('div', { key: String(row?.kind ?? ''), className: `${RF.CLS}-matrix` },
-          h('div', { className: `${RF.CLS}-row__title` }, t(`degrade.kind.${row?.kind ?? ''}`)),
-          h(RF.ui.Pill, {
-            label: t(`degrade.video.${row?.video ?? 'none'}`),
-            tone: formTone(String(row?.video ?? 'none')),
-          }),
-          h(RF.ui.Pill, {
-            label: row?.storyboard === false ? t('degrade.storyboard.no') : t('degrade.storyboard.yes'),
-            tone: row?.storyboard === false ? 'failed' : 'done',
-          }),
-          h(RF.ui.Pill, {
-            label: t(`degrade.pack.${row?.referencePack ?? 'none'}`),
-            tone: formTone(String(row?.referencePack ?? 'none')),
+        h('div', { className: `${RF.CLS}-segments` },
+          RF.STAGES.map(stageId => h('span', {
+            key: stageId,
+            className: `${RF.CLS}-segment ${globalStages.includes(stageId)
+              ? `${RF.CLS}-segment--on`
+              : `${RF.CLS}-segment--off`}`,
           }))),
-        h('div', { className: `${RF.CLS}-note` }, t('flow.degrade.matrixNote'))),
-
-      // ── 一次真实降级 ──
-      // 板 16 号板：这张卡是**普通面 + 黄描边**（WARN-SURF 用在描边上）。
-      degradations.length === 0
-        ? h(RF.ui.Card, null,
-          h('div', { className: `${RF.CLS}-row__title` }, t('flow.degrade.noneTitle')),
-          h('div', { className: `${RF.CLS}-note` }, t('flow.degrade.noneBody')))
-        : h(RF.ui.Card, { tone: 'warn-border' },
-          h('div', { className: `${RF.CLS}-row__title` }, t(`degrade.kind.${degradations[0].kind ?? ''}`)),
-          h('div', { className: `${RF.CLS}-row__sub` }, String(degradations[0].message ?? '')),
-          h('div', { className: `${RF.CLS}-row__sub` }, t('flow.degrade.outputsLine', {
-            video: t(`degrade.video.${degrade.outputs?.video ?? 'none'}`),
-            storyboard: degrade.outputs?.storyboard === false
-              ? t('degrade.storyboard.no')
-              : t('degrade.storyboard.yes'),
-            pack: t(`degrade.pack.${degrade.outputs?.referencePack ?? 'none'}`),
-          })),
-          h('div', { className: `${RF.CLS}-row` },
-            h(RF.ui.Button, {
-              label: t('flow.degrade.rerun'),
-              variant: 'secondary',
-              onClick: () => props.state.runStage('tts'),
-            }),
-            h(RF.ui.Button, {
-              label: t('flow.degrade.accept'),
-              variant: 'secondary',
-              onClick: () => props.state.goFlow('stages'),
-            }))),
-
-      // ── 对话话术 ──
+        h('div', { className: `${RF.CLS}-row` }, legend.map(item => h('span', {
+          className: `${RF.CLS}-legend ${RF.CLS}-legend--${item.tone}`,
+        }, t(item.key))))),
       h(RF.ui.Card, null,
-        h(RF.ui.SectionLabel, null, t('flow.degrade.dialogLabel')),
-        notices.length === 0
-          ? h('div', { className: `${RF.CLS}-note` }, t('flow.degrade.noNotices'))
-          : h('div', null, notices.slice(0, 4).map((notice, index) => h('div', {
-            key: `notice-${index}`,
-            className: `${RF.CLS}-row__sub`,
-          }, `· ${String(notice)}`)))));
-  };
-
-  /** v6 · 00 引导总览。 */
-  var GUIDE_STEPS = [
-    { step: 'requirement', descKey: 'flow.guide.step.requirement', targetKey: 'flow.guide.target.intake', go: state => state.goFlow('intake') },
-    { step: 'run', descKey: 'flow.guide.step.run', targetKey: 'flow.guide.target.runstack', go: state => state.goFlow('runstack') },
-    { step: 'plan', descKey: 'flow.guide.step.plan', targetKey: 'flow.guide.target.plan', go: state => state.goFlow('plan') },
-    { step: 'generate', descKey: 'flow.guide.step.generate', targetKey: 'flow.guide.target.stages', go: state => state.goFlow('stages') },
-    { step: 'storyboard', descKey: 'flow.guide.step.storyboard', targetKey: 'flow.guide.target.shots', go: state => state.goTab('shots') },
-    { step: 'deliver', descKey: 'flow.guide.step.deliver', targetKey: 'flow.guide.target.output', go: state => state.goTab('output') },
-  ];
-
-  RF.flowGuide = function flowGuide(props) {
-    const t = props.t;
-    const currentStep = RF.FLOW_SCREEN_STEPS.guide ?? 'requirement';
-    const currentIndex = RF.STAGE_STEPS.indexOf(currentStep);
-    return h('div', null,
-      h(RF.ui.Card, null,
-        h('div', { className: `${RF.CLS}-row__title` }, t('flow.guide.heroTitle')),
-        h('div', { className: `${RF.CLS}-row__sub` }, t('flow.guide.heroSub'))),
-      RF.renderDualEntry({ t }),
-      h(RF.ui.SectionLabel, null, t('flow.guide.stepsLabel')),
-      GUIDE_STEPS.map((item, index) => h(RF.ui.Card, {
-        key: item.step,
-        state: index === currentIndex ? 'selected' : 'default',
-      },
         h('div', { className: `${RF.CLS}-row` },
           h('div', { className: `${RF.CLS}-row__main` },
-            h('div', { className: `${RF.CLS}-row__title` }, t(`stage.${item.step}`)),
-            h('div', { className: `${RF.CLS}-row__sub` }, t(item.descKey))),
-          h(RF.ui.Button, {
-            label: t('flow.guide.go'),
-            variant: 'secondary',
-            onClick: () => item.go(props.state),
-          })),
-        h('div', { className: `${RF.CLS}-note` }, t(item.targetKey)))));
+            h('div', { className: `${RF.CLS}-row__title` }, t('rf7.stages.currentTitle', { kind: kind === '' ? '-' : kind })),
+            h('div', { className: `${RF.CLS}-row__sub` }, t('rf7.stages.currentSub'))),
+          h(RF.ui.Pill, { label: kind === '' ? t('rf7.stages.stateUnset') : kind, tone: kind === '' ? 'queued' : 'running' })),
+        RF.r7Track(0.25),
+        h('div', { className: `${RF.CLS}-row` },
+          h('span', { className: `${RF.CLS}-row__sub` }, t('rf7.stages.metaGpu')),
+          h('span', { className: `${RF.CLS}-row__sub` }, t('rf7.stages.metaVram')),
+          h('span', { className: `${RF.CLS}-row__sub` }, t('rf7.stages.metaEta')))),
+      RF.r7SectionHead(t('rf7.stages.sectionQueue'), t('rf7.stages.sectionQueueSub')),
+      h(RF.ui.Card, null,
+        (state.queue ?? []).length === 0
+          ? h('div', { className: `${RF.CLS}-row__sub` }, t('rf7.stages.queueEmpty'))
+          : state.queue.map(item => h('div', { className: `${RF.CLS}-row` },
+            h('span', { className: `${RF.CLS}-shotstate__dot` }),
+            h('span', { className: `${RF.CLS}-row__main` }, item.title),
+            h('span', { className: `${RF.CLS}-row__sub` }, item.meta)))),
+      RF.r7SectionHead(t('rf7.stages.sectionPicker')),
+      h(RF.ui.Card, null, RF.STAGES.map(stageId => h('div', { className: `${RF.CLS}-row` },
+        RF.r7Checkbox(globalStages.includes(stageId)),
+        h('div', { className: `${RF.CLS}-row__main` },
+          h('div', { className: `${RF.CLS}-row__title` }, t(`stages.${stageId}`)),
+          h('div', { className: `${RF.CLS}-row__sub` }, t(`rf7.stages.desc.${stageId}`))),
+        h('span', { className: `${RF.CLS}-row__sub` }, globalStages.includes(stageId)
+          ? t('rf7.stages.stateEnabled')
+          : t('rf7.stages.stateDisabled'))))),
+      RF.r7Notice(t('rf7.stages.memMain'), t('rf7.stages.memSub')));
   };
 
-  RF.flowRunStack = function flowRunStack(props) {
-    const t = props.t;
-    const project = props.project ?? {};
-    const position = String(project.runPosition ?? props.state.pendingPosition ?? '');
-    const expanded = props.state.deviceExpanded === true;
-    const probe = props.state.probe ?? null;
-    const report = probe?.view?.report ?? {};
-    const items = Array.isArray(report.items) ? report.items : [];
-    const summary = items.length === 0
-      ? t('v6.runstack.devicePending')
-      : t('v6.runstack.deviceSummary', { count: items.length });
+  // ══════════════════════════════════════════════════════════════
+  // 08 分镜详情（ShotDetail）
+  // ══════════════════════════════════════════════════════════════
 
-    return h('div', null,
-      RF.renderDualEntry({ t }),
-      RF.flowRunMode(props),
-      h('div', { className: `${RF.CLS}-row` },
-        h('div', { className: `${RF.CLS}-row__main` },
-          h('div', { className: `${RF.CLS}-row__title` }, t('v6.runstack.deviceSection')),
-          h('div', { className: `${RF.CLS}-row__sub` }, position === 'cloud' ? t('v6.runstack.deviceCloudSkip') : summary)),
-        position !== 'cloud'
+  RF.flowShotDetail = function flowShotDetail(props) {
+    const t = props.t;
+    // 口径与分镜列表一致：显式选中的那一镜，没选过就取第一镜（画板 07 永远有一镜高亮）。
+    const shot = RF.currentShot(props.project, props.state.selectedShotId);
+
+    if (shot === null) {
+      return h('div', { className: `${RF.CLS}-stack` },
+        h(RF.ui.EmptyState, {
+          title: t('rf7.shotDetail.empty.title'),
+          hint: t('rf7.shotDetail.empty.hint'),
+          action: h(RF.ui.Button, {
+            label: t('rf7.shotDetail.empty.action'),
+            variant: 'primary',
+            onClick: () => props.state.goTab('shots'),
+          }),
+        }));
+    }
+
+    const references = Array.isArray(shot.references) ? shot.references : [];
+
+    return h('div', { className: `${RF.CLS}-stack` },
+      h(RF.ui.Card, null,
+        h('div', { className: `${RF.CLS}-row__title` }, t('rf7.shotDetail.headTitle', {
+          chapter: Number(shot.seq) || 1,
+          idx: Number(shot.idx) || 1,
+          label: shot.label,
+        })),
+        h('div', { className: `${RF.CLS}-row__sub` }, t('rf7.shotDetail.meta', {
+          duration: shot.duration ?? 0,
+          ratio: shot.aspectRatio === '' ? '-' : shot.aspectRatio,
+        }))),
+      RF.r7SectionHead(t('rf7.shotDetail.sectionReferences'), t('rf7.shotDetail.sectionReferencesSub')),
+      h(RF.ui.Card, null, h('div', { className: `${RF.CLS}-row` },
+        references.length === 0
+          ? h('span', { className: `${RF.CLS}-row__sub` }, t('rf7.shotDetail.noReferences'))
+          : references.map(reference => RF.r7Thumb(reference.label === '' ? reference.tag : reference.label, { size: 58 })),
+        h('div', { style: { flex: '1 1 auto' } }),
+        RF.r7PlayerBar(t('rf7.shotDetail.duration', { seconds: shot.duration ?? 0 })))),
+      RF.r7SectionHead(t('rf7.shotDetail.sectionScript')),
+      h(RF.ui.Card, null,
+        h('div', { className: `${RF.CLS}-row__title` }, t('rf7.shotDetail.scriptLens', { size: shot.shotSize === '' ? '-' : shot.shotSize })),
+        h('div', { className: `${RF.CLS}-row__sub` }, t('rf7.shotDetail.scriptMissing'))),
+      RF.r7SectionHead(t('rf7.shotDetail.sectionPrompt')),
+      h(RF.ui.Card, { tone: 'warn' },
+        h('div', { className: `${RF.CLS}-notice__main` }, t('rf7.shotDetail.promptMissing')),
+        h('div', { className: `${RF.CLS}-notice__sub` }, t('rf7.shotDetail.promptMissingSub'))));
+  };
+
+  // ══════════════════════════════════════════════════════════════
+  // 09 背景音乐（Music）
+  // ══════════════════════════════════════════════════════════════
+
+  RF.flowMusic = function flowMusic(props) {
+    const t = props.t;
+    const tracks = RF.musicAssets(props.project ?? {});
+
+    // ⚠️ 这一屏的三个动作**都接不上**（能力缺口，不是界面 bug）：
+    //   生成 —— 插件没有「生成音乐」的工具；
+    //   预览 —— 投影里没有音频文件路径，没有可播的 URL；
+    //   应用 —— `set_chapter_music` 要工作区相对路径，投影里没有。
+    // ⇒ 一律禁用 + 说清缺什么、给什么替代（见屏内 notice）。
+
+    return h('div', { className: `${RF.CLS}-stack` },
+      h(RF.ui.Card, null,
+        h('div', { className: `${RF.CLS}-row__title` }, t('rf7.music.generateTitle')),
+        RF.r7FieldBox(t('rf7.music.generatePlaceholder'), 'placeholder'),
+        h('div', { className: `${RF.CLS}-row` },
+          RF.r7ChipRow([
+            t('rf7.music.chipInstrumental'),
+            t('rf7.music.chipVocal'),
+            t('rf7.music.chipPiano'),
+            t('rf7.music.chipStrings'),
+          ], 0, undefined, t('rf7.music.chipsDisabled')),
+          h('div', { style: { flex: '1 1 auto' } }),
+          h(RF.ui.Button, {
+            label: t('rf7.music.actGenerate'),
+            variant: 'primary',
+            disabled: true,
+            title: t('rf7.music.actGenerateDisabled'),
+          }))),
+      RF.r7SectionHead(t('rf7.music.sectionLibrary'), t('rf7.music.sectionLibrarySub')),
+      tracks.length === 0
+        ? h(RF.ui.Card, { tone: 'warn' },
+          h('div', { className: `${RF.CLS}-notice__main` }, t('rf7.music.emptyTitle')),
+          h('div', { className: `${RF.CLS}-notice__sub` }, t('rf7.music.emptySub')))
+        : h('div', { className: `${RF.CLS}-stack` }, tracks.map(track => h(RF.ui.Card, null,
+          h('div', { className: `${RF.CLS}-row` },
+            h('div', { className: `${RF.CLS}-row__main` },
+              h('div', { className: `${RF.CLS}-row__title` }, track.name),
+              h('div', { className: `${RF.CLS}-row__sub` }, track.description)),
+            h(RF.ui.Pill, { label: t('rf7.music.stateApplied'), tone: 'done' })),
+          RF.r7PlayerBar('-'),
+          h('div', { className: `${RF.CLS}-row` },
+            h(RF.ui.Button, {
+              label: t('rf7.music.actPreview'),
+              variant: 'secondary',
+              disabled: true,
+              title: t('rf7.music.actPreviewDisabled'),
+            }),
+            h(RF.ui.Button, {
+              label: t('rf7.music.actApply'),
+              variant: 'secondary',
+              disabled: true,
+              title: t('rf7.music.actApplyDisabled'),
+            }))))),
+      RF.r7Notice(t('rf7.music.note'), ''));
+  };
+
+  // ══════════════════════════════════════════════════════════════
+  // 13 技能与工作流（Skills）—— 从旧版页签移过来的流程屏
+  // ══════════════════════════════════════════════════════════════
+
+  RF.flowSkills = function flowSkills(props) {
+    const t = props.t;
+    const skills = Array.isArray(props.project?.skills) ? props.project.skills : [];
+    const analysis = props.project?.workflowAnalysis ?? null;
+
+    return h('div', { className: `${RF.CLS}-stack` },
+      RF.r7SectionHead(t('rf7.skills.sectionInstalled'), t('rf7.skills.sectionInstalledSub', {
+        count: skills.length,
+      })),
+      h(RF.ui.Card, null, skills.length === 0
+        ? h(RF.ui.EmptyState, { title: t('rf7.skills.empty.title'), hint: t('rf7.skills.empty.hint') })
+        : skills.map(skill => h('div', { className: `${RF.CLS}-row` },
+          h('div', { className: `${RF.CLS}-row__main` },
+            h('div', { className: `${RF.CLS}-row__title` }, skill.name),
+            h('div', { className: `${RF.CLS}-row__sub` }, t(`rf7.skills.source.${skill.source ?? 'bundled'}`))),
+          h(RF.ui.Pill, { label: t('rf7.skills.stateReady'), tone: 'done' })))),
+      RF.r7SectionHead(t('rf7.skills.sectionIterate'), t('rf7.skills.sectionIterateSub')),
+      h(RF.ui.Card, null,
+        h('div', { className: `${RF.CLS}-row` },
+          h('span', { className: `${RF.CLS}-stepnum` }, '1'),
+          h('span', { className: `${RF.CLS}-row__sub` }, t('rf7.skills.step1'))),
+        h('div', { className: `${RF.CLS}-row` },
+          h('span', { className: `${RF.CLS}-stepnum` }, '2'),
+          h('span', { className: `${RF.CLS}-row__sub` }, t('rf7.skills.step2'))),
+        h('div', { className: `${RF.CLS}-dropzone` }, t('rf7.skills.dropHint')),
+        analysis === null
+          // 分析工作流：宿主没有暴露「分析工作流文件」的工具 ⇒ 禁用 + 说清替代。
           ? h(RF.ui.Button, {
-            label: expanded ? t('v6.runstack.collapse') : t('v6.runstack.expand'),
-            variant: 'secondary',
-            onClick: () => props.state.setDeviceExpanded(!expanded),
+            label: t('rf7.skills.actAnalyze'),
+            variant: 'primary',
+            disabled: true,
+            title: t('rf7.skills.actAnalyzeDisabled'),
           })
-          : null),
-      position !== 'cloud' && expanded ? RF.flowDevice(props) : null,
-      RF.renderAskStrip({
-        t,
-        messageKey: position === 'cloud' ? 'v6.runstack.askCloud' : 'v6.runstack.askLocal',
-      }));
+          : RF.r7Notice(String(analysis.summary ?? t('rf7.skills.analyzed')), '')),
+      RF.r7Notice(t('rf7.skills.note'), ''));
+  };
+
+  // ══════════════════════════════════════════════════════════════
+  // 18 素材选择器（Picker）—— 规范板
+  // ══════════════════════════════════════════════════════════════
+
+  RF.flowPicker = function flowPicker(props) {
+    const t = props.t;
+    const state = props.state;
+    const all = RF.assetsByCategory(props.project ?? {}, 'all');
+    const category = String(state.assetCategory ?? 'all');
+    const assets = category === 'all' ? all : all.filter(asset => String(asset?.category ?? '') === category);
+    const picked = Array.isArray(state.pickerSelection) ? state.pickerSelection : [];
+    const limit = RF.REFERENCE_LIMITS.images;
+
+    // 分类芯片（RF7 板 18）：全部 / 角色 / 场景 / 道具 / 服装。
+    const chipItems = [
+      { id: 'all', key: 'rf7.picker.chipAll' },
+      { id: 'character', key: 'rf7.picker.chipCharacter' },
+      { id: 'scene', key: 'rf7.picker.chipScene' },
+      { id: 'prop', key: 'rf7.picker.chipProp' },
+      { id: 'costume', key: 'rf7.picker.chipCostume' },
+    ];
+    const activeIndex = Math.max(0, chipItems.findIndex(item => item.id === category));
+
+    const grid = [];
+    for (let index = 0; index < assets.length; index += 3) {
+      const slice = assets.slice(index, index + 3);
+      grid.push(h('div', { className: `${RF.CLS}-grid ${RF.CLS}-grid--three` },
+        slice.map(asset => h('button', {
+          key: String(asset.id),
+          type: 'button',
+          className: `${RF.CLS}-pickeritem${picked.includes(String(asset.id)) ? ` ${RF.CLS}-pickeritem--on` : ''}`,
+          onClick: () => state.togglePicker(String(asset.id)),
+        }, RF.r7Thumb(asset.name, { size: 76, picked: picked.includes(String(asset.id)) })))));
+    }
+
+    return h('div', { className: `${RF.CLS}-stack` },
+      h(RF.ui.Card, null,
+        RF.r7FieldBox(t('rf7.picker.searchPlaceholder'), 'placeholder'),
+        RF.r7ChipRow(
+          chipItems.map(item => t(item.key)),
+          activeIndex,
+          index => state.setAssetCategory(chipItems[index]?.id ?? 'all')),
+        ...grid,
+        h('div', { className: `${RF.CLS}-row` },
+          picked.map(id => RF.r7Thumb(t('rf7.picker.pickedThumb'), { size: 40, picked: true })),
+          h('span', { className: `${RF.CLS}-row__sub` }, t('rf7.picker.pickedCount', {
+            count: picked.length,
+            limit,
+          })),
+          h('div', { style: { flex: '1 1 auto' } }),
+          h(RF.ui.Button, {
+            label: t('rf7.picker.actClear'),
+            variant: 'secondary',
+            onClick: () => state.clearPicker(),
+          }))),
+      RF.r7Notice(t('rf7.picker.note'), ''));
+  };
+
+  // ══════════════════════════════════════════════════════════════
+  // 17 降级与失败（Degraded）—— 规范板：五态分开说清代价与替代
+  // ══════════════════════════════════════════════════════════════
+
+  RF.flowDegraded = function flowDegraded(props) {
+    const t = props.t;
+    const state = props.state;
+    const project = props.project ?? {};
+    const view = state.probe?.view ?? null;
+    const degradations = Array.isArray(view?.degrade?.degradations) ? view.degrade.degradations : [];
+    const notices = Array.isArray(view?.degrade?.notices) ? view.degrade.notices : [];
+    const chapters = Array.isArray(project.chapters) ? project.chapters : [];
+    // 缺料 / 软降级：**实算**，不许写死数字（写死 = 面板在骗人）。
+    const missing = RF.shotsMissingReferences(project);
+    const noVoice = RF.charactersWithoutVoice(project);
+
+    const stateCard = (titleKey, metaKey, tone) => h(RF.ui.Card, { tone },
+      h('div', { className: `${RF.CLS}-notice__main` }, t(titleKey)),
+      h('div', { className: `${RF.CLS}-notice__sub` }, t(metaKey)));
+
+    const missingShots = missing
+      .map(shot => String(Number(shot.idx) || 0).padStart(2, '0'))
+      .join(' / ');
+
+    return h('div', { className: `${RF.CLS}-stack` },
+      RF.r7SectionHead(t('rf7.degraded.sectionBlocked'), t('rf7.degraded.sectionBlockedSub')),
+      degradations.length === 0
+        ? stateCard('rf7.degraded.noneTitle', 'rf7.degraded.noneSub', 'warn-border')
+        : degradations.map(item => h(RF.ui.Card, { tone: 'error' },
+          h('div', { className: `${RF.CLS}-notice__main` }, String(item.message ?? item.kind ?? '')),
+          h('div', { className: `${RF.CLS}-notice__sub` }, t('rf7.degraded.blockedHint')))),
+      RF.r7SectionHead(t('rf7.degraded.sectionWarning'), t('rf7.degraded.sectionWarningSub')),
+      notices.length === 0
+        ? stateCard('rf7.degraded.noWarningTitle', 'rf7.degraded.noWarningSub', 'warn-border')
+        : notices.map(item => h(RF.ui.Card, { tone: 'warn' },
+          h('div', { className: `${RF.CLS}-notice__main` }, String(item.message ?? item.kind ?? '')),
+          h('div', { className: `${RF.CLS}-notice__sub` }, t('rf7.degraded.warningHint')))),
+      // 缺料（画板 17 第三段）：缺的东西要点名。
+      RF.r7SectionHead(t('rf7.degraded.sectionMissing'), t('rf7.degraded.sectionMissingSub')),
+      missing.length === 0
+        ? stateCard('rf7.degraded.noMissingTitle', 'rf7.degraded.noMissingSub', 'warn-border')
+        : h(RF.ui.Card, { tone: 'warn' },
+          h('div', { className: `${RF.CLS}-notice__main` }, t('rf7.degraded.missingTitle', { count: missing.length })),
+          h('div', { className: `${RF.CLS}-notice__sub` }, t('rf7.degraded.missingSub', { shots: missingShots })),
+          h(RF.ui.Button, {
+            label: t('rf7.degraded.actFill'),
+            variant: 'secondary',
+            onClick: () => state.goTab('assets'),
+          })),
+      // 空态（画板 17 第四段）：**只有真的还没开始时**才说「没有章节」。
+      chapters.length === 0
+        ? h('div', { className: `${RF.CLS}-stack` },
+          RF.r7SectionHead(t('rf7.degraded.sectionEmpty'), t('rf7.degraded.sectionEmptySub')),
+          stateCard('rf7.degraded.emptyTitle', 'rf7.degraded.emptySub', 'warn-border'))
+        : null,
+      // 软降级（画板 17 第五张卡）：仍可跑，但要说清少什么。
+      noVoice.length === 0
+        ? null
+        : h(RF.ui.Card, { tone: 'warn' },
+          h('div', { className: `${RF.CLS}-notice__main` }, t('rf7.degraded.softTitle', { count: noVoice.length })),
+          h('div', { className: `${RF.CLS}-notice__sub` }, t('rf7.degraded.softSub'))));
   };
 })(RF);
