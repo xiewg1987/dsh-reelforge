@@ -67,8 +67,19 @@ jobs:
         run: npm run build:client
 
       # 8 ─ 全量单测
+      #    ⚠️ **测试目录不入库**（owner 决定：测试是本地的验证资产，见 .gitignore 的
+      #    `src/**/__tests__/`）⇒ 干净 clone 上没有测试文件，这一步**无法执行**
+      #    —— 不是「测试失败」，是「没有测试可跑」。
+      #    单测与覆盖率由本地那条命令守着：`npm test` / `npm run verify:coverage`。
       - name: Unit tests
-        run: npm test
+        shell: bash
+        run: |
+          if compgen -G "src/*/__tests__/*.test.js" > /dev/null \
+             || compgen -G "src/*/*/__tests__/*.test.js" > /dev/null; then
+            npm test
+          else
+            echo "::notice::仓库内没有测试文件（src/**/__tests__/ 已 gitignore）—— 跳过单测；本地跑 npm test。"
+          fi
 
       # 9 ─ 打包清单预演：确认要发布的东西不多不少（清单作为产物上传，便于人工核对）
       #    统一用 shell: bash，让两套 runner 的重定向字节行为完全一致。
@@ -82,6 +93,8 @@ jobs:
       # 10 ─ 覆盖率
       #    scripts/verify-coverage.mjs 由另一位 worker 在写，可能还不存在 →
       #    做**存在性判断**：有就跑带阈值校验的脚本，没有就退回带覆盖率的 node --test。
+      #    ⚠️ 测试目录不入库 ⇒ 干净 clone 上采不到覆盖率数据 ⇒ 脚本自己判「跳过」
+      #    （退出码 0，不染红流水线）。覆盖率门槛由本地 `npm run verify:coverage` 守着。
       - name: Coverage
         shell: bash
         run: |

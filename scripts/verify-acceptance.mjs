@@ -84,6 +84,21 @@ export const STATUS = {
   MANUAL: '实机待补',
   LIVE: '实机通过',
   NA: 'N/A',
+  /**
+   * 本地待核：**自动化证据所在的测试文件不在仓库里**，CI 无法核对。
+   *
+   * ⚠️ 为什么单独一档，而不是判「证据缺失」：
+   *   owner 决定「测试是本地验证资产，不进 Git」（见 `.gitignore` 里 `src` 各层的
+   *   `__tests__` 目录规则）。
+   *   于是干净 clone 上**看不到测试文件** —— 这不是「证据造假」，也不是「测试没写」，
+   *   而是「这条证据在这个环境里核不了」。判成「证据缺失」会让 CI 永远红，
+   *   也会掩盖真正该红的东西（命令失败 / 实机证据缺失 / 静态扫描不通过）。
+   *
+   *   所以：判 LOCAL 的项**不计入缺口**（退出码不受影响），但在报告里**单列数量与清单**，
+   *   不隐瞒。⚠️ 前提是**只**对「测试文件整体不在仓库」这一种原因生效 ——
+   *   只要仓库里还有测试文件，缺文件仍然是硬缺口。
+   */
+  LOCAL: '本地待核',
 };
 
 /**
@@ -641,6 +656,28 @@ export function expandGlob(pattern) {
   return found.sort();
 }
 
+/**
+ * 仓库里**一个测试文件都没有**吗？
+ *
+ * ## 为什么要有这个判断
+ *
+ * owner 决定「测试是本地的验证资产，不随仓库上传」（`.gitignore` 里 `src` 各层的
+ * `__tests__` 目录规则）。
+ * 干净 clone 上因此看不到任何测试文件 —— 那些「自动化证据」在这个环境里**核不了**。
+ *
+ * ⚠️ 只在**整个仓库一个测试文件都没有**时才成立：
+ *    只要仓库里还有测试文件，缺某个文件仍然是硬缺口（可能是有人误删了）。
+ *
+ * @returns {boolean} true = 测试目录整体不在仓库里。
+ */
+let testsAbsentCache = null;
+function testsAbsent() {
+  if (testsAbsentCache === null) {
+    testsAbsentCache = expandGlob('src/**/__tests__/*.test.js').length === 0;
+  }
+  return testsAbsentCache;
+}
+
 /** 每个测试文件只跑一次，结果缓存复用。 */
 const testCache = new Map();
 
@@ -698,7 +735,13 @@ export function resolveEvidence(descriptor) {
   if (descriptor.files?.length) {
     const found = descriptor.files.flatMap(expandGlob);
     if (!found.length) {
-      checks.push({ ok: false, detail: `测试文件不存在：${descriptor.files.join('、')}` });
+      checks.push({
+        ok: false,
+        // ⚠️ `absent` = 「这条证据只是因为测试文件不在仓库里才核不了」，
+        //    与「测试跑了但没通过」是**两回事**（后者没有 absent 标记）。
+        absent: testsAbsent(),
+        detail: `测试文件不存在：${descriptor.files.join('、')}`,
+      });
     } else {
       const keywords = descriptor.names ?? [];
       const hits = [];
@@ -795,9 +838,12 @@ export function resolveEvidence(descriptor) {
   const badChecks = checks.filter((c) => !c.ok);
   const requireAll = descriptor.requireAll === true;
   const passed = requireAll ? badChecks.length === 0 : okChecks.length > 0;
+  // ⚠️ **只因为「测试文件不在仓库」而核不了** ⇒ 记「本地待核」，不是「证据缺失」。
+  //    其它任何失败原因（命令挂了 / 扫描不通过 / 测试跑了但没过）照旧判硬缺口。
+  const onlyAbsent = badChecks.length > 0 && badChecks.every((c) => c.absent === true);
 
   return {
-    status: passed ? STATUS.PASS : STATUS.MISSING,
+    status: passed ? STATUS.PASS : (onlyAbsent ? STATUS.LOCAL : STATUS.MISSING),
     evidence: okChecks.map((c) => c.detail).join('；') || '—',
     problems: badChecks.map((c) => c.detail),
   };
@@ -843,10 +889,16 @@ export function resolveLiveEvidence(descriptor) {
 
   const evidence = [`实机原始记录 ${descriptor.file}（${mustContain.length} 项事实全部命中）`];
   const problems = [];
+  let autoAbsent = false;
 
   if (descriptor.files?.length) {
     const auto = resolveEvidence({ files: descriptor.files, names: descriptor.names });
-    if (auto.status !== STATUS.PASS) {
+    if (auto.status === STATUS.LOCAL) {
+      // ⚠️ 实机证据**成立**，叠的自动化回归只是因为测试文件不在仓库里跑不了 ⇒
+      //    记「本地待核」，不是「证据缺失」（理由同 STATUS.LOCAL 的说明）。
+      autoAbsent = true;
+      problems.push(...auto.problems);
+    } else if (auto.status !== STATUS.PASS) {
       problems.push(...auto.problems);
     } else {
       evidence.push(auto.evidence);
@@ -854,7 +906,11 @@ export function resolveLiveEvidence(descriptor) {
   }
 
   if (problems.length) {
-    return { status: STATUS.MISSING, evidence: '—', problems };
+    return {
+      status: autoAbsent ? STATUS.LOCAL : STATUS.MISSING,
+      evidence: autoAbsent ? '—' : '—',
+      problems,
+    };
   }
   return { status: STATUS.LIVE, evidence: evidence.join('；'), problems: [] };
 }
@@ -948,11 +1004,17 @@ export function runAcceptance() {
       status = verdict.status;
       evidence = verdict.evidence;
       note = [row.note, ...verdict.problems].filter(Boolean).join('；');
+      if (status === STATUS.LOCAL) {
+        note = `实机证据成立；自动化回归因测试目录未入库核不了（本地跑 npm test 核对）—— ${note}`;
+      }
     } else {
       const verdict = resolveEvidence(row);
       status = verdict.status;
       evidence = verdict.evidence;
       note = [row.note, ...verdict.problems].filter(Boolean).join('；');
+      if (status === STATUS.LOCAL) {
+        note = `测试目录未入库（owner 决定：测试是本地验证资产）—— 本地跑 npm test 核对；${note}`;
+      }
     }
 
     return {
@@ -967,8 +1029,18 @@ export function runAcceptance() {
     };
   });
 
-  const counts = { [STATUS.PASS]: 0, [STATUS.MISSING]: 0, [STATUS.CLAIMED]: 0, [STATUS.MANUAL]: 0, [STATUS.LIVE]: 0, [STATUS.NA]: 0 };
+  const counts = {
+    [STATUS.PASS]: 0,
+    [STATUS.MISSING]: 0,
+    [STATUS.CLAIMED]: 0,
+    [STATUS.MANUAL]: 0,
+    [STATUS.LIVE]: 0,
+    [STATUS.NA]: 0,
+    [STATUS.LOCAL]: 0,
+  };
   for (const item of items) counts[item.status] = (counts[item.status] ?? 0) + 1;
+  // ⚠️ 「本地待核」**不计入缺口**（见 STATUS.LOCAL 的说明）——
+  //    但它会在报告里单列，不隐瞒。
   const gaps = counts[STATUS.MISSING] + counts[STATUS.CLAIMED];
 
   return { items, counts, gaps, ok: gaps === 0, total: items.length };
@@ -1030,6 +1102,7 @@ export function renderAcceptanceReport(result) {
     `- ${STATUS.CLAIMED}：**${result.counts[STATUS.CLAIMED]}**`,
     `- ${STATUS.MANUAL}：**${result.counts[STATUS.MANUAL]}**`,
     `- ${STATUS.NA}：**${result.counts[STATUS.NA]}**`,
+    `- ${STATUS.LOCAL}：**${result.counts[STATUS.LOCAL]}**（测试目录未入库 ⇒ 这条自动化证据在本环境核不了，不计入缺口）`,
     `- 缺口（${STATUS.MISSING} + ${STATUS.CLAIMED}）：**${result.gaps}** → 退出码 ${result.gaps ? 1 : 0}`,
   ];
 
@@ -1037,6 +1110,17 @@ export function renderAcceptanceReport(result) {
   const gapBlock = gaps.length
     ? ['', '### 缺口明细', '', ...gaps.map((i) => `- **${i.task} ${i.id}** ${i.descShort} —— ${i.note}`)]
     : ['', '### 缺口明细', '', '无。'];
+
+  // ⚠️ 「本地待核」单列一节：**不隐瞒**，但也不算缺口。
+  const local = result.items.filter((i) => i.status === STATUS.LOCAL);
+  const localBlock = local.length
+    ? [
+      '',
+      '### 本地待核明细（测试目录未入库，此环境核不了）',
+      '',
+      ...local.map((i) => `- **${i.task} ${i.id}** ${i.descShort} —— ${i.note}`),
+    ]
+    : [];
 
   return [
     `# 验收判定（116 条）`,
@@ -1046,6 +1130,7 @@ export function renderAcceptanceReport(result) {
     renderTable(['任务', 'A编号', '验收项摘要', '状态', '证据来源', '备注'], rows),
     ...summary,
     ...gapBlock,
+    ...localBlock,
     '',
   ].join('\n');
 }

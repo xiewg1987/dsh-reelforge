@@ -133,10 +133,52 @@ export function missingFromCoverage(rows) {
 }
 
 /**
+ * 仓库里**一个测试文件都没有**吗？
+ *
+ * ## 为什么要有这个判断
+ *
+ * owner 决定「测试是本地的验证资产，不随仓库上传」（`.gitignore` 里 `src` 各层的
+ * `__tests__` 目录规则）。
+ * 干净 clone 上因此没有任何测试 ⇒ `node --test --experimental-test-coverage` 采集不到
+ * 任何覆盖率数据 ⇒ 门禁文件全部「未进表 = 0%」⇒ **判红，但红得没有意义**
+ * （不是代码没被覆盖，是这个环境里根本没有覆盖率数据可采）。
+ *
+ * ⚠️ 只在**整个仓库一个测试文件都没有**时才跳过：
+ *    只要仓库里还有测试文件，缺覆盖就是硬缺口。
+ *
+ * @returns {boolean} true = 测试目录整体不在仓库里。
+ */
+export function testsAbsent() {
+  const stack = [path.join(ROOT, 'src')];
+  while (stack.length) {
+    const dir = stack.pop();
+    let entries;
+    try {
+      entries = readdirSync(dir, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      if (entry.name === '__tests__') {
+        const found = readdirSync(path.join(dir, entry.name));
+        if (found.some((f) => f.endsWith('.test.js'))) return false;
+      }
+      stack.push(path.join(dir, entry.name));
+    }
+  }
+  return true;
+}
+
+/**
  * 跑覆盖率门槛判定。
- * @returns {{ gates: object[], missing: string[], ok: boolean, testCode: number, rows: Map }}
+ * @returns {{ gates: object[], missing: string[], ok: boolean, testCode: number, rows: Map, skipped: boolean }}
  */
 export function runCoverage() {
+  // ⚠️ 测试目录不在仓库里 ⇒ 本环境采不到覆盖率 ⇒ 跳过（不是判红）。
+  if (testsAbsent()) {
+    return { gates: [], missing: [], ok: true, testCode: 0, rows: new Map(), skipped: true };
+  }
   const { code, text } = runCoverageCommand();
   const rows = parseCoverageTable(text);
   const missing = missingFromCoverage(rows);
@@ -170,6 +212,20 @@ export function runCoverage() {
  * @returns {string}
  */
 export function renderCoverageReport(result) {
+  if (result.skipped) {
+    return [
+      '# 覆盖率门槛',
+      '',
+      '> **本次跳过：仓库里没有测试文件。**',
+      '',
+      '- owner 决定「测试是本地的验证资产，不随仓库上传」（`.gitignore` 的 `src/**/__tests__/`），',
+      '  干净 clone 上没有测试 ⇒ 采不到任何覆盖率数据 ⇒ 门禁**无法执行**（不是「不达标」）。',
+      '- 本地有测试时（`src/**/__tests__/` 在本地存在），`npm run verify:coverage` 照常判定并给门槛结论。',
+      '- 换句话说：**CI 这次不核对覆盖率，判红判绿都不代表代码覆盖率** —— 覆盖率由本地那条命令守着。',
+      '',
+    ].join('\n');
+  }
+
   const rows = result.gates.map((g) => [
     `\`${g.file}\``,
     `${g.line.toFixed(2)}${g.present ? '' : '（未进表，按 0% 计）'}`,
