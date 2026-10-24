@@ -106,8 +106,8 @@ GitHub **包含** `design/`（RF7 设计真源 + 18 板暗/亮出稿）与 `docs
 本包尚未发布到 npm，从**本地路径**装载：
 
 ```powershell
-cd D:\ScriptProject\deepseek-harness
-pnpm dsh plugin --profile web add file:D:/ScriptProject/dsh-reelforge
+cd D:\Code\WebCode\deepseek-harness
+pnpm dsh plugin --profile web add file:D:/Code/WebCode/dsh-reelforge
 pnpm dsh web
 ```
 
@@ -254,8 +254,8 @@ npm run acceptance         # 重新生成交付报告（连跑两次逐文件 SH
 ```powershell
 # 1. 同步源码到 profile（pnpm 的 file: 依赖是拷贝，改源码不会自动生效）
 # 2. 重启宿主（boot 时会快照 client.js，不重启浏览器拿到的是旧产物）
-cd D:\ScriptProject\deepseek-harness
-pnpm dsh plugin --profile web add file:D:/ScriptProject/dsh-reelforge
+cd D:\Code\WebCode\deepseek-harness
+pnpm dsh plugin --profile web add file:D:/Code/WebCode/dsh-reelforge
 pnpm dsh web
 ```
 

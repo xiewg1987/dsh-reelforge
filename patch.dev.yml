@@ -1,5 +1,5 @@
 # Host 源码联调（**不加载 client 半**）：
-#   cd D:\ScriptProject\deepseek-harness
+#   cd D:\Code\WebCode\deepseek-harness
 #   pnpm dsh web --patch ../dsh-reelforge/patch.dev.yml
 #
 # 与 cordis.patch.yml 的区别：那一行写**裸包名**（`@local/reelforge`），
@@ -10,8 +10,8 @@
 # patch 形式挂不上 client half，右栏不会出现「ReelForge 工作台」Tab。
 #
 # 要跑完整 UI（Host + Client）请用 cordis.patch.yml 走 plugin add：
-#   cd D:\ScriptProject\deepseek-harness
-#   pnpm dsh plugin --profile web add file:D:/ScriptProject/dsh-reelforge
+#   cd D:\Code\WebCode\deepseek-harness
+#   pnpm dsh plugin --profile web add file:D:/Code/WebCode/dsh-reelforge
 
 - insert:
     - id: reelforge
