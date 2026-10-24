@@ -103,7 +103,15 @@ function walk(dir, skip = ['node_modules', '__tests__', '.git']) {
   const builtins = new Set(builtinModules);
   const files = [
     path.join(ROOT, 'index.js'),
-    ...walk(path.join(ROOT, 'src')).filter((file) => file.endsWith('.js') && !file.endsWith('.test.js')),
+    // ⚠️ `.jsx` 也要扫：客户端片段里的 JSX 是**源码**形态，
+    // 一旦有人往里写了 `import`，它同样是「装进 profile 后才炸」的相对路径。
+    ...walk(path.join(ROOT, 'src')).filter((file) => {
+      if (!file.endsWith('.js') && !file.endsWith('.jsx')) return false;
+      if (file.endsWith('.test.js')) return false;
+      const rel = path.relative(path.join(ROOT, 'src'), file).split(path.sep).join('/');
+      if (rel.startsWith('client/ui/') || rel.startsWith('client/generated/')) return false;
+      return true;
+    }),
   ];
   const importRe = /(?:^|\n)\s*(?:import|export)[\s\S]*?from\s*['"]([^'"]+)['"]/g;
   const dynamicRe = /import\(\s*['"]([^'"]+)['"]\s*\)/g;
@@ -280,20 +288,43 @@ function walk(dir, skip = ['node_modules', '__tests__', '.git']) {
     }
   };
 
-  /** 假 React：只需要 createElement 与 hooks 占位。 */
+  /** 假 React：createElement + hooks + Radix 需要的 createContext / forwardRef。 */
   const React = {
     createElement(type, props, ...children) {
       return { type, props, children };
+    },
+    Fragment: 'Fragment',
+    forwardRef(render) {
+      return render;
+    },
+    createContext(defaultValue) {
+      return {
+        Provider({ children }) {
+          return children;
+        },
+        Consumer: null,
+        _defaultValue: defaultValue,
+      };
+    },
+    useContext(ctx) {
+      return ctx?._defaultValue;
     },
     useState(initial) {
       return [typeof initial === 'function' ? initial() : initial, () => undefined];
     },
     useEffect() {},
+    useLayoutEffect() {},
     useMemo(fn) {
       return fn();
     },
     useCallback(fn) {
       return fn;
+    },
+    useRef(initial) {
+      return { current: initial };
+    },
+    useId() {
+      return 'mock-react-id';
     },
     useSyncExternalStore(subscribe, getSnapshot) {
       return getSnapshot();

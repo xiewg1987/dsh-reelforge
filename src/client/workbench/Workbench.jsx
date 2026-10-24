@@ -400,64 +400,90 @@
       else goTab(target.tab);
     };
 
-    return h('section', { className: `${RF.CLS}-root`, ref: shellRef },
-      h('header', { className: `${RF.CLS}-header` },
-        inFlow
-          ? h('button', {
-            type: 'button',
-            className: `${RF.CLS}-header__logo ${RF.CLS}-header__logo--button`,
-            title: t('flow.backToWorkbench'),
-            'aria-label': t('flow.backToWorkbench'),
-            onClick: () => goTab('hub'),
-          })
-          : h('div', { className: `${RF.CLS}-header__logo`, 'aria-hidden': true }),
-        h('div', { className: `${RF.CLS}-header__text` },
-          h('div', { className: `${RF.CLS}-header__title` }, chromeTitle),
-          h('div', { className: `${RF.CLS}-header__subtitle` }, chromeSubtitle)),
-        h('span', {
-          className: `${RF.CLS}-header__status ${RF.CLS}-pill--${chromeCapsuleTone === 'accent' ? 'accent' : (chromeCapsuleTone === 'ok' ? 'ok' : (chromeCapsuleTone === 'warn' ? 'warn' : 'neutral'))}`,
-        }, chromeCapsule)),
-      h('nav', { className: `${RF.CLS}-stagebar`, 'aria-label': t('title') },
-        RF.STAGE_STEPS.map((step, index) => {
-          const tone = index === currentIndex ? 'current' : passedIndex.indexOf(index) >= 0 ? 'passed' : 'upcoming';
-          return h('button', {
-            key: step,
-            type: 'button',
-            className: `${RF.CLS}-stagebar__step ${RF.CLS}-stagebar__step--${tone}`,
-            title: t(`stage.go.${step}`),
-            onClick: () => goStageStep(step),
-          },
-          h('span', { className: `${RF.CLS}-stagebar__dot` }),
-          h('span', { className: `${RF.CLS}-stagebar__label` }, t(`stage.${step}`)));
-        }),
-        h('span', { className: `${RF.CLS}-stagebar__count` }, t('stage.count', { current: currentIndex + 1 }))),
-      inFlow
-        ? null
-        : h('div', { className: `${RF.CLS}-tabs`, role: 'tablist' },
-          RF.WORKBENCH_TABS.map(tab => h('button', {
-            key: tab.id,
-            type: 'button',
-            role: 'tab',
-            'aria-selected': tab.id === activeTab ? 'true' : 'false',
-            className: `${RF.CLS}-tabs__item${tab.id === activeTab ? ` ${RF.CLS}-tabs__item--active` : ''}`,
-            onClick: () => goTab(tab.id),
-          }, t(`tab.${tab.labelKey}`)))),
-      h('div', { className: `${RF.CLS}-scroll` },
-        render({ t, project, state, width }),
-        // 底栏主按钮暂不可用时，**说清缺什么、给什么替代**（不静默做成死按钮）。
-        chromeDisabled && chromeHintKey !== undefined
-          ? h('div', { className: `${RF.CLS}-note ${RF.CLS}-note--warn` }, t(chromeHintKey))
-          : null),
-      h('footer', { className: `${RF.CLS}-footer` },
-        h('div', { className: `${RF.CLS}-footer__text` },
-          h('div', { className: `${RF.CLS}-footer__label` }, chromeLabel),
-          h('div', { className: `${RF.CLS}-footer__value` }, chromeValue)),
-        h(RF.ui.Button, {
-          label: t(chromeAction.key),
-          variant: 'primary',
-          disabled: chromeDisabled,
-          title: chromeDisabled && chromeHintKey !== undefined ? t(chromeHintKey) : undefined,
-          onClick: () => runChromeAction(),
-        })));
+    const capsuleTone = chromeCapsuleTone === 'accent'
+      ? 'accent'
+      : (chromeCapsuleTone === 'ok' ? 'ok' : (chromeCapsuleTone === 'warn' ? 'warn' : 'neutral'));
+
+    return (
+      <section className={RF.tw.root} ref={shellRef}>
+        <header className={RF.tw.header}>
+          {inFlow
+            ? (
+              <button
+                type="button"
+                className={RF.cn(RF.tw.headerLogo, RF.tw.headerLogoBtn)}
+                title={t('flow.backToWorkbench')}
+                aria-label={t('flow.backToWorkbench')}
+                onClick={() => goTab('hub')}
+              />
+            )
+            : (
+              <div className={RF.tw.headerLogo} aria-hidden />
+            )}
+          <div className={RF.tw.headerText}>
+            <div className={RF.tw.headerTitle}>{chromeTitle}</div>
+            <div className={RF.tw.headerSubtitle}>{chromeSubtitle}</div>
+          </div>
+          <RF.ui.Pill label={chromeCapsule} tone={capsuleTone} />
+        </header>
+        <nav className={RF.tw.stagebar} aria-label={t('title')}>
+          {RF.STAGE_STEPS.map((step, index) => {
+            const tone = index === currentIndex ? 'current' : passedIndex.indexOf(index) >= 0 ? 'passed' : 'upcoming';
+            return (
+              <button
+                key={step}
+                type="button"
+                className={RF.cn(RF.tw.stageStep, RF.stageStepClass(tone))}
+                title={t(`stage.go.${step}`)}
+                onClick={() => goStageStep(step)}
+              >
+                <span className={RF.cn('stage-dot', RF.tw.stageDot)} />
+                <span className="stage-label">{t(`stage.${step}`)}</span>
+              </button>
+            );
+          })}
+          <span className={RF.tw.stageCount}>{t('stage.count', { current: currentIndex + 1 })}</span>
+        </nav>
+        {inFlow
+          ? null
+          : (
+            <div className={RF.tw.tabs} role="tablist">
+              {RF.WORKBENCH_TABS.map(tab => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={tab.id === activeTab ? 'true' : 'false'}
+                  className={RF.cn(RF.tw.tabItem, tab.id === activeTab && RF.tw.tabItemActive)}
+                  onClick={() => goTab(tab.id)}
+                >
+                  {t(`tab.${tab.labelKey}`)}
+                </button>
+              ))}
+            </div>
+          )}
+        <div className={RF.tw.scroll}>
+          {render({ t, project, state, width })}
+          {chromeDisabled && chromeHintKey !== undefined
+            ? (
+              <div className={RF.tw.noteWarn}>{t(chromeHintKey)}</div>
+            )
+            : null}
+        </div>
+        <footer className={RF.tw.footer}>
+          <div className={RF.tw.footerText}>
+            <div className={RF.tw.footerLabel}>{chromeLabel}</div>
+            <div className={RF.tw.footerValue}>{chromeValue}</div>
+          </div>
+          <RF.ui.Button
+            label={t(chromeAction.key)}
+            variant="primary"
+            disabled={chromeDisabled}
+            title={chromeDisabled && chromeHintKey !== undefined ? t(chromeHintKey) : undefined}
+            onClick={() => runChromeAction()}
+          />
+        </footer>
+      </section>
+    );
   };
 })(RF);

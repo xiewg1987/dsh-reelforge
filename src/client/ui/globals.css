@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  .rf-root {
+    --radius: 10px;
+    --rf-bg: color-mix(in srgb, var(--dsw-alias-bg-base) 96%, var(--dsw-alias-label-primary) 4%);
+    --rf-surface: var(--dsw-alias-bg-base);
+    --rf-surface-2: color-mix(in srgb, var(--dsw-alias-bg-base) 94%, var(--dsw-alias-label-primary) 6%);
+    --rf-surface-3: color-mix(in srgb, var(--dsw-alias-bg-base) 90%, var(--dsw-alias-label-primary) 10%);
+    --rf-line: var(--dsw-alias-border-l2);
+    --rf-text-1: var(--dsw-alias-label-primary);
+    --rf-text-2: var(--dsw-alias-label-secondary);
+    --rf-text-3: var(--dsw-alias-label-tertiary);
+    --rf-accent: var(--dsw-alias-brand-primary-new-colorprimary-new-color);
+    --rf-accent-dim: color-mix(in srgb, var(--rf-accent) 14%, var(--rf-surface));
+    --rf-ok: var(--dsw-alias-state-success-primary);
+    --rf-warn: var(--dsw-alias-state-warn-label);
+    --rf-error: var(--dsw-alias-state-error-primary);
+    --rf-on-accent: var(--dsw-alias-toast-label);
+    --rf-accent-hover: color-mix(in srgb, var(--rf-accent) 86%, var(--dsw-alias-label-primary));
+    --background: var(--rf-bg);
+    --foreground: var(--rf-text-1);
+    --card: var(--rf-surface);
+    --card-foreground: var(--rf-text-1);
+    --popover: var(--rf-surface);
+    --popover-foreground: var(--rf-text-1);
+    --primary: var(--rf-accent);
+    --primary-foreground: var(--rf-on-accent);
+    --secondary: var(--rf-surface-3);
+    --secondary-foreground: var(--rf-text-1);
+    --muted: var(--rf-surface-2);
+    --muted-foreground: var(--rf-text-2);
+    --accent: var(--rf-accent-dim);
+    --accent-foreground: var(--rf-text-1);
+    --destructive: var(--rf-error);
+    --destructive-foreground: var(--rf-on-accent);
+    --border: var(--rf-line);
+    --input: var(--rf-line);
+    --ring: var(--rf-accent);
+  }
+
+  body[data-ds-dark-theme] .rf-root {
+    --rf-bg: var(--dsw-alias-bg-base);
+    --rf-surface: var(--dsw-alias-bg-layer-1);
+    --rf-surface-2: color-mix(in srgb, var(--dsw-alias-bg-layer-1) 22%, var(--dsw-alias-bg-base));
+    --rf-surface-3: var(--dsw-alias-bg-layer-3);
+  }
+}

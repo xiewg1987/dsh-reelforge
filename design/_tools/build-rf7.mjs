@@ -310,9 +310,9 @@ function card(kids, { name = 'RF/Card', h = null, stroke = 'rf-line', fill = 'rf
 }
 
 function radio(selected) {
-  const kids = [];
-  if (selected) kids.push(R('Radio-dot', { w: 7, h: 7, r: 4, fill: 'rf-accent' }));
-  return F('RF/Radio', { w: 16, h: 16, r: 8, fill: 'rf-surface', stroke: selected ? 'rf-accent' : 'rf-line', sw: 1.5, lay: 'h', main: 'center', cross: 'center' }, kids);
+  const kids = [E('Radio-ring', { w: 16, h: 16, fill: 'none', stroke: selected ? 'rf-accent' : 'rf-line', sw: 1.5 })];
+  if (selected) kids.push(E('Radio-dot', { w: 7, h: 7, fill: 'rf-accent' }));
+  return F('RF/Radio', { w: 16, h: 16, fill: 'none', lay: 'h', main: 'center', cross: 'center' }, kids);
 }
 
 function chatSync(text) {

@@ -6,12 +6,11 @@
  * 包名，`@local/reelforge` 是工作区外的第三方包，会直接抛错；而改用 tsdown 本身需要
  * 新增 npm 依赖并给 `package.json` 加脚本，两者都被本任务禁止。
  *
- * 所以退回任务书钦定的**纯 JS + `React.createElement`** 路线。为了既不写一个巨型
- * `client.js`、也不自己造一套 TS/JSX/CSS 构建系统，这里只做一件事：
- * **把 `src/client/**` 下的 plain-JS 片段按固定顺序拼进 `client.js`**。
+ * 所以走**单文件拼装**路线：`src/client/**` 下的片段按固定顺序拼进 `client.js`。
  *
- * - 没有转译、没有打包、没有第三方依赖、没有分片、没有 externals。
  * - 片段是普通函数体，只用 `RF` 命名空间与闭包里的 `React` / `h`。
+ * - **`.jsx` 片段先经 TypeScript 转译**（JSX → `React.createElement` 调用），
+ *   `.js` 片段原样拼进去（详见 `compile.mjs`）。
  * - 产物是**确定性的**：同一份源码永远得到同一份 `client.js`（`node --test` 会比对）。
  *
  * 用法：node src/client/build-client.mjs
@@ -21,43 +20,56 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { buildUiArtifacts } from './build-ui.mjs';
+import { fragmentSource, typeScriptVersion } from './compile.mjs';
+
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, '..', '..');
 
-/** 片段顺序：常量 → 文案 → 共享 → 组件 → 纯函数 → 按屏外壳 → 样式 → RF7 零件 → 页签 → 流程屏 → 主壳 → 消息行 → 快捷键 → 入口。 */
+/**
+ * 片段顺序：常量 → 文案 → 共享 → UI 包 → 纯函数 → 按屏外壳 → 样式 → 页签 → 流程屏 → 主壳 → 消息行 → 快捷键 → 入口。
+ *
+ * ⚠️ **顺序是正确性约束**：片段之间靠全局 `RF` 命名空间串联（后面的片段用前面的片段
+ * 声明的东西），改顺序会让 `RF.ui` 在定义之前就被读到 ⇒ 运行时 `undefined`。
+ */
 export const FRAGMENTS = [
   'manifest.js',
   'locale.js',
   'shared.js',
-  'components.js',
+  join('generated', 'tailwind-styles.js'),
+  join('generated', 'ui-shadcn.js'),
   join('workbench', 'stageSteps.js'),
   join('workbench', 'breakpoints.js'),
   join('workbench', 'chrome.js'),
-  join('workbench', 'styles.js'),
-  join('workbench', 'rf7.js'),
-  join('workbench', 'tabs.js'),
-  join('workbench', 'flow.js'),
-  join('workbench', 'Workbench.js'),
-  join('chatRows', 'index.js'),
+  join('workbench', 'tabs.jsx'),
+  join('workbench', 'flow.jsx'),
+  join('workbench', 'Workbench.jsx'),
+  join('chatRows', 'index.jsx'),
   'chatEvents.js',
   join('shortcuts.js'),
-  'entry.js',
+  'entry.jsx',
 ];
 
 /**
- * 读一个片段。
+ * 读一个片段的**最终形态**源码。
+ *
+ * ⚠️ `.jsx` ⇒ 经 TypeScript 转译；`.js` ⇒ 原样。
+ * 走的是 `compile.mjs` 的同一个函数 —— 构建与测试共用一条路径，
+ * 不会出现「测试里能跑、构建出来是坏的」。
+ *
  * @param {string} relativePath - 相对 `src/client` 的路径。
- * @returns {string} 片段源码。
+ * @returns {string} 可直接执行的 JavaScript。
  */
 function readFragment(relativePath) {
-  return readFileSync(join(here, relativePath), 'utf8').replace(/\r\n/g, '\n');
+  return fragmentSource(relativePath);
 }
 
 /**
  * 组装 `client.js`。
  * @returns {string} 产物文本。
  */
-export function buildClient() {
+export async function buildClient() {
+  await buildUiArtifacts();
   const parts = FRAGMENTS.map(relativePath => {
     const source = readFragment(relativePath);
     return `/* ── src/client/${relativePath.split('\\').join('/')} ───────────────────────────── */\n${source.trim()}\n`;
@@ -107,7 +119,7 @@ const isDirectRun = (() => {
 
 if (isDirectRun) {
   const target = join(root, 'client.js');
-  const output = buildClient();
+  const output = await buildClient();
   // ⚠️ **内容没变就不要重写**：重写会改 mtime，而 mtime 进 tarball ——
   // `npm pack` 的 `shasum` / `integrity` 就每次都变，交付报告每次出假 diff。
   // 幂等写入同时让「产物与源码一致」的判定更可信（mtime 不动 ⇒ git diff 干净）。
@@ -123,4 +135,5 @@ if (isDirectRun) {
   } else {
     process.stdout.write(`client.js unchanged: ${relative(root, target)} (${output.length} bytes)\n`);
   }
+  process.stdout.write(`typescript ${typeScriptVersion()}\n`);
 }

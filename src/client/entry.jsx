@@ -33,7 +33,7 @@
    */
   RF.WorkbenchTitle = function WorkbenchTitle(props) {
     const t = typeof props.t === 'function' ? props.t : (key) => key;
-    return h('span', null, t('title'));
+    return <span>{t('title')}</span>;
   };
 
   /**
@@ -312,7 +312,7 @@
     const tag = document.createElement('style');
     tag.dataset.plugin = RF.TAB_TYPE_ID;
     tag.dataset.pluginCss = `${RF.TAB_TYPE_ID}/workbench.css`;
-    tag.textContent = RF.STYLES;
+    tag.textContent = RF.TAILWIND_STYLES ?? RF.STYLES ?? '';
     document.head.appendChild(tag);
     return () => {
       tag.remove();
