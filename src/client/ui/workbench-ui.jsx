@@ -1,3 +1,4 @@
+import { Card } from './components/ui/card.jsx';
 import { cn } from './lib/utils.js';
 
 /**
@@ -162,14 +163,14 @@ export function attachWorkbenchUi(RF) {
       ? 'bg-[var(--rf-ok)]'
       : (tone === 'accent' ? 'bg-primary' : 'bg-border');
     return (
-      <RF.ui.Card className="gap-1.5 p-3">
+      <Card {...RF.workbenchCard({ className: 'gap-1.5 p-3' })}>
         <div className="text-[10px] text-muted-foreground">{id}</div>
         <div className="text-xs font-semibold text-foreground">{size}</div>
         <div className="flex items-center gap-1.5">
           <span className={cn('h-1.5 w-1.5 shrink-0 rounded-full', dotClass)} />
           <span className="text-[10px] text-muted-foreground">{state}</span>
         </div>
-      </RF.ui.Card>
+      </Card>
     );
   };
 
@@ -190,6 +191,26 @@ export function attachWorkbenchUi(RF) {
     }
     return (
       <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">{message}</div>
+    );
+  };
+
+  RF.ui.EmptyState = function EmptyState(props) {
+    const isError = props.tone === 'error';
+    return (
+      <div
+        className={cn(
+          'rounded-lg border border-dashed p-4 text-center',
+          isError ? 'border-destructive' : 'border-border',
+        )}
+      >
+        <div className="text-xs font-medium text-foreground">{props.title}</div>
+        {props.hint === undefined ? null : (
+          <div className="mt-1 text-[11px] text-muted-foreground">{props.hint}</div>
+        )}
+        {props.action === undefined || props.action === null ? null : (
+          <div className="mt-3 flex justify-center">{props.action}</div>
+        )}
+      </div>
     );
   };
 

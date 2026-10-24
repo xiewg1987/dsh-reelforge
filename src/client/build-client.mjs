@@ -27,7 +27,8 @@ const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, '..', '..');
 
 /**
- * 片段顺序：常量 → 文案 → 共享 → UI 包 → 纯函数 → 按屏外壳 → 样式 → 页签 → 流程屏 → 主壳 → 消息行 → 快捷键 → 入口。
+ * 片段顺序：常量 → 文案 → 共享 → 样式(Tailwind) → UI 包(shadcn) → 阶段 → 断点 → 按屏外壳 →
+ * 页签 → 流程屏 → 主壳 → 消息行 → 会话事件 → 快捷键 → 入口。
  *
  * ⚠️ **顺序是正确性约束**：片段之间靠全局 `RF` 命名空间串联（后面的片段用前面的片段
  * 声明的东西），改顺序会让 `RF.ui` 在定义之前就被读到 ⇒ 运行时 `undefined`。
@@ -87,6 +88,17 @@ export async function buildClient() {
     '    var RF = {};',
     '',
     parts.join('\n'),
+    '',
+    '    // shadcn 原语：页签/流程 JSX 编译成 h(Button, …)，与 RF.Button 同一引用。',
+    '    var Button = RF.Button;',
+    '    var Input = RF.Input;',
+    '    var Label = RF.Label;',
+    '    var Card = RF.Card;',
+    '    var Badge = RF.Badge;',
+    '    var Progress = RF.Progress;',
+    '    var Alert = RF.Alert;',
+    '    var AlertDescription = RF.AlertDescription;',
+    '    var cn = RF.cn;',
     '',
     '    // ⚠️ `inject` 不能少：宿主把模块导出当对象插件传给 Loader，',
     '    // 不声明宿主服务，客户端整条 fiber 会失败（cordis 的 inject 守卫）。',

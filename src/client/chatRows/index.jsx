@@ -109,10 +109,12 @@
                   {`${chapter.shotCount ?? 0} ${RF.chatRows.t('unit.shot')} · ${RF.formatDuration(chapter.durationSec ?? 0)}`}
                 </div>
               </div>
-              <RF.ui.Pill
-                label={RF.labelOf('chapter.status', chapter.status, RF.chatRows.t)}
-                tone={chapter.tone ?? 'queued'}
-              />
+              <Badge
+                variant="outline"
+                className={RF.cn('rounded-md px-2.5 py-1 text-[10px] font-normal', RF.statusToneClass(chapter.tone ?? 'queued'))}
+              >
+                {RF.labelOf('chapter.status', chapter.status, RF.chatRows.t)}
+              </Badge>
             </div>
           ))}
         </div>
@@ -144,10 +146,12 @@
                   {`${RF.formatDuration(shot.duration ?? 0)} · ${shot.dialogue ?? ''}`}
                 </div>
               </div>
-              <RF.ui.Pill
-                label={RF.labelOf('shot.status', shot.status, RF.chatRows.t)}
-                tone={shot.tone ?? 'queued'}
-              />
+              <Badge
+                variant="outline"
+                className={RF.cn('rounded-md px-2.5 py-1 text-[10px] font-normal', RF.statusToneClass(shot.tone ?? 'queued'))}
+              >
+                {RF.labelOf('shot.status', shot.status, RF.chatRows.t)}
+              </Badge>
             </div>
           ))}
         </div>
@@ -180,14 +184,21 @@
             </div>
           </div>
           <div className={RF.tw.row}>
-            {candidates.map(candidate => (
-              <RF.ui.Button
-                key={`${candidate.kind}-${candidate.position}`}
-                label={candidate.label ?? `${candidate.kind} · ${candidate.position}`}
-                variant={candidate.kind === data.kind && candidate.position === data.position ? 'primary' : 'secondary'}
-                onClick={() => patch(candidate.kind, candidate.position)}
-              />
-            ))}
+            {candidates.map(candidate => {
+              const selected = candidate.kind === data.kind && candidate.position === data.position;
+              return (
+                <Button
+                  key={`${candidate.kind}-${candidate.position}`}
+                  type="button"
+                  variant={selected ? 'default' : 'secondary'}
+                  size={selected ? 'lg' : 'sm'}
+                  className={selected ? 'h-10 font-semibold' : 'h-7 text-[10px]'}
+                  onClick={() => patch(candidate.kind, candidate.position)}
+                >
+                  {candidate.label ?? `${candidate.kind} · ${candidate.position}`}
+                </Button>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -215,10 +226,12 @@
                 <div className={RF.tw.rowTitle}>{asset.name ?? ''}</div>
                 <div className={RF.tw.rowSub}>{asset.description ?? ''}</div>
               </div>
-              <RF.ui.Pill
-                label={RF.labelOf('asset.category', asset.category, RF.chatRows.t)}
-                tone="queued"
-              />
+              <Badge
+                variant="outline"
+                className={RF.cn('rounded-md px-2.5 py-1 text-[10px] font-normal', RF.statusToneClass('queued'))}
+              >
+                {RF.labelOf('asset.category', asset.category, RF.chatRows.t)}
+              </Badge>
             </div>
           ))}
         </div>
@@ -268,7 +281,9 @@
                         </a>
                       )
                       : (
-                        <RF.ui.Button label={RF.chatRows.t('common.download')} variant="secondary" />
+                        <Button type="button" variant="secondary" size="sm" className="h-7 text-[10px]">
+                          {RF.chatRows.t('common.download')}
+                        </Button>
                       )}
                   </div>
                 ))}
@@ -318,16 +333,20 @@
         <div className={RF.tw.chatrowBody}>
           <div className={RF.tw.row}>
             {modes.map(mode => (
-              <RF.ui.Button
+              <Button
                 key={mode}
-                label={RF.chatRows.t(`log.${mode}`)}
+                type="button"
                 variant="secondary"
+                size="sm"
+                className="h-7 text-[10px]"
                 onClick={() => {
                   const args = rollbackArgs(mode);
                   if (args === null) return;
                   RF.actions?.callTool?.(RF.TOOL_IDS.rollback, args);
                 }}
-              />
+              >
+                {RF.chatRows.t(`log.${mode}`)}
+              </Button>
             ))}
           </div>
           {entries.map(entry => (
@@ -337,7 +356,9 @@
                 <div className={RF.tw.rowTitle}>{entry.summary ?? ''}</div>
               </div>
               {entry.drifted === true ? (
-                <RF.ui.Pill label={RF.chatRows.t('log.drifted')} tone="failed" />
+                <Badge variant="outline" className={RF.cn('rounded-md px-2.5 py-1 text-[10px] font-normal', RF.statusToneClass('failed'))}>
+                  {RF.chatRows.t('log.drifted')}
+                </Badge>
               ) : null}
             </div>
           ))}

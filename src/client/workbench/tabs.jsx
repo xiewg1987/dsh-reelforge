@@ -9,7 +9,7 @@
  * 纪律：
  *   1. 数据只从宿主投影读（R1）；交互态走 `props.state`；
  *   2. **数据没有就说清楚没有**，不编内容（RF7 §6.7「失败不许静默降质」）；
- *   3. 排版用 `workbench/rf7.js` 的零件，样式只写 class 名。
+ *   3. shadcn 用 `<Button>` / `<Card>` / `<Badge>`；复合件用 `RF.ui.*`（`workbench-ui.jsx`）；类名走 Tailwind / `RF.tw`。
  * ─────────────────────────────────────────────────────────────────────────── */
 ;(function (RF) {
   'use strict';
@@ -71,11 +71,7 @@
             title={t('rf7.hub.empty.title')}
             hint={t('rf7.hub.empty.hint')}
             action={(
-              <RF.ui.Button
-                label={t('rf7.hub.empty.action')}
-                variant="primary"
-                onClick={() => props.state.goFlow('intake')}
-              />
+              <Button type="button" variant="default" size="lg" className="h-10 font-semibold" onClick={() => props.state.goFlow('intake')} >{t('rf7.hub.empty.action')}</Button>
             )}
           />
         </div>
@@ -93,7 +89,7 @@
     const rest = chapterShots.length - visible.length;
 
     const hubStrip = (
-      <RF.ui.Card className={RF.tw.hubstrip}>
+      <Card {...RF.workbenchCard({ className: RF.tw.hubstrip })}>
         {RF.ui.Stat(t('rf7.hub.costLabel'), RF.formatMoney(cost.spent ?? 0), kind === '' ? t('rf7.hub.kindUnset') : kind)}
         <div className={RF.tw.divider} />
         {RF.ui.Stat(
@@ -105,11 +101,11 @@
             total: chapterShots.length,
           }),
         )}
-      </RF.ui.Card>
+      </Card>
     );
 
     const chapterRail = (
-      <RF.ui.Card>
+      <Card {...RF.workbenchCard()}>
         <div className={RF.tw.row}>
           <div className={RF.tw.rowMain}>
             <div className={RF.tw.rowTitle}>
@@ -125,13 +121,10 @@
               })}
             </div>
           </div>
-          <RF.ui.Pill
-            label={t(chapterStatus(chapter.status).key)}
-            tone={chapterStatus(chapter.status).tone}
-          />
+          <Badge variant="outline" className={RF.cn("rounded-md px-2.5 py-1 text-[10px] font-normal", RF.statusToneClass(chapterStatus(chapter.status).tone))}>{t(chapterStatus(chapter.status).key)}</Badge>
         </div>
         {RF.ui.Track(chapterShots.length === 0 ? 0 : doneShots / chapterShots.length)}
-      </RF.ui.Card>
+      </Card>
     );
 
     const rows = [];
@@ -161,23 +154,19 @@
         {rows}
         <div className={RF.tw.row}>
           <span className={RF.tw.note}>{t('rf7.hub.moreShots', { count: rest > 0 ? rest : 0 })}</span>
-          <RF.ui.Button
-            label={t('rf7.hub.viewAll', { count: chapterShots.length })}
+          <Button
+            type="button"
             variant="secondary"
+            size="sm"
+            className="h-7 text-[10px]"
             onClick={() => props.state.goTab('shots')}
-          />
+          >
+            {t('rf7.hub.viewAll', { count: chapterShots.length })}
+          </Button>
         </div>
         <div className={RF.tw.row}>
-          <RF.ui.Button
-            label={t('rf7.hub.actProjectSettings')}
-            variant="secondary"
-            onClick={() => props.state.goFlow('projectSettings')}
-          />
-          <RF.ui.Button
-            label={t('rf7.hub.actSkills')}
-            variant="secondary"
-            onClick={() => props.state.goFlow('skills')}
-          />
+          <Button type="button" variant="secondary" size="sm" className="h-7 text-[10px]" onClick={() => props.state.goFlow('projectSettings')} >{t('rf7.hub.actProjectSettings')}</Button>
+          <Button type="button" variant="secondary" size="sm" className="h-7 text-[10px]" onClick={() => props.state.goFlow('skills')} >{t('rf7.hub.actSkills')}</Button>
         </div>
       </div>
     );
@@ -193,7 +182,7 @@
     const chapters = Array.isArray(project.chapters) ? project.chapters : [];
 
     const card = chapter => (
-      <RF.ui.Card key={chapter.id}>
+      <Card key={chapter.id} {...RF.workbenchCard()}>
         <div className={RF.tw.rowTitle}>
           {t('rf7.chapters.chapterTitle', { chapter: Number(chapter.id) || 1 })}
         </div>
@@ -206,31 +195,16 @@
                 duration: RF.formatDuration(chapter.durationSec ?? 0),
               })}
           </span>
-          <RF.ui.Pill
-            label={t(chapterStatus(chapter.status).key)}
-            tone={chapterStatus(chapter.status).tone}
-          />
+          <Badge variant="outline" className={RF.cn("rounded-md px-2.5 py-1 text-[10px] font-normal", RF.statusToneClass(chapterStatus(chapter.status).tone))}>{t(chapterStatus(chapter.status).key)}</Badge>
         </div>
         <div className={RF.tw.row}>
-          <RF.ui.Button
-            label={t('rf7.chapters.actGenerate')}
-            variant="secondary"
-            onClick={() => props.state.runStage('llm', chapter.id)}
-          />
-          <RF.ui.Button
-            label={t('rf7.chapters.actEdit')}
-            variant="secondary"
-            disabled
-            title={t('rf7.chapters.actEditDisabled')}
-          />
-          <RF.ui.Button
-            label={t('rf7.chapters.actMore')}
-            variant="secondary"
-            disabled
-            title={t('rf7.chapters.actMoreDisabled')}
-          />
+          <Button type="button" variant="secondary" size="sm" className="h-7 text-[10px]" onClick={() => props.state.runStage('llm', chapter.id)} >{t('rf7.chapters.actGenerate')}</Button>
+          <Button type="button" variant="secondary" size="sm" className="h-7 text-[10px]" disabled
+            title={t('rf7.chapters.actEditDisabled')} >{t('rf7.chapters.actEdit')}</Button>
+          <Button type="button" variant="secondary" size="sm" className="h-7 text-[10px]" disabled
+            title={t('rf7.chapters.actMoreDisabled')} >{t('rf7.chapters.actMore')}</Button>
         </div>
-      </RF.ui.Card>
+      </Card>
     );
 
     const rows = [];
@@ -247,16 +221,8 @@
       <div className={RF.tw.stack}>
         {RF.ui.ChatSync({ t, project })}
         <div className={RF.tw.row}>
-          <RF.ui.Button
-            label={t('rf7.chapters.actAdd')}
-            variant="primary"
-            onClick={() => props.state.goFlow('intake')}
-          />
-          <RF.ui.Button
-            label={t('rf7.chapters.actGenerateAll')}
-            variant="secondary"
-            onClick={() => props.state.runStage('llm')}
-          />
+          <Button type="button" variant="default" size="lg" className="h-10 font-semibold" onClick={() => props.state.goFlow('intake')} >{t('rf7.chapters.actAdd')}</Button>
+          <Button type="button" variant="secondary" size="sm" className="h-7 text-[10px]" onClick={() => props.state.runStage('llm')} >{t('rf7.chapters.actGenerateAll')}</Button>
         </div>
         {rows}
         {RF.ui.Notice(t('rf7.chapters.notice'), t('rf7.chapters.noticeSub'))}
@@ -289,11 +255,11 @@
       : `${assetCategoryName(item, t)} ${assets.filter(asset => String(asset?.category ?? '') === item).length}`));
 
     const card = asset => (
-      <RF.ui.Card key={asset.id}>
+      <Card key={asset.id} {...RF.workbenchCard()}>
         <div className={RF.tw.rowTitle}>{asset.name}</div>
         <div className={RF.tw.row}>
           <span className={RF.tw.rowSub}>{assetCategoryName(asset.category, t)}</span>
-          <RF.ui.Pill label={t('rf7.assets.stateReady')} tone="done" />
+          <Badge variant="outline" className={RF.cn('rounded-md px-2.5 py-1 text-[10px] font-normal', RF.statusToneClass('done'))}>{t('rf7.assets.stateReady')}</Badge>
         </div>
         <div className={RF.tw.rowSub}>
           {asset.description === '' ? t('rf7.assets.noDescription') : asset.description}
@@ -303,7 +269,7 @@
             <span key={action} className={RF.tw.chip}>{action}</span>
           ))}
         </div>
-      </RF.ui.Card>
+      </Card>
     );
 
     const rows = [];
@@ -319,11 +285,7 @@
     return (
       <div className={RF.tw.stack}>
         <div className={RF.tw.row}>
-          <RF.ui.Button
-            label={t('rf7.assets.actCreate')}
-            variant="primary"
-            onClick={() => props.state.goFlow('picker')}
-          />
+          <Button type="button" variant="default" size="lg" className="h-10 font-semibold" onClick={() => props.state.goFlow('picker')} >{t('rf7.assets.actCreate')}</Button>
         </div>
         {RF.ui.ChipRow(chipLabels, chipItems.indexOf(category), index => {
           props.state.setAssetCategory(chipItems[index] ?? 'all');
@@ -331,11 +293,15 @@
         {rows}
         <div className={RF.tw.row}>
           <span className={RF.tw.note}>{t('rf7.assets.more', { count: assets.length - shown.length })}</span>
-          <RF.ui.Button
-            label={t('rf7.assets.viewAll', { count: assets.length })}
+          <Button
+            type="button"
             variant="secondary"
+            size="sm"
+            className="h-7 text-[10px]"
             onClick={() => props.state.setAssetCategory('all')}
-          />
+          >
+            {t('rf7.assets.viewAll', { count: assets.length })}
+          </Button>
         </div>
         {RF.ui.Notice(gapText, t('rf7.assets.gapSub'))}
       </div>
@@ -374,7 +340,7 @@
     const preview = selected === null
       ? null
       : (
-        <RF.ui.Card>
+        <Card {...RF.workbenchCard()}>
           <div className={RF.tw.row}>
             {RF.ui.Thumb(t('rf7.storyboard.refCharacter'), { size: 48 })}
             {RF.ui.Thumb(t('rf7.storyboard.refScene'), { size: 48 })}
@@ -387,7 +353,7 @@
               size: selected.shotSize === '' ? '-' : selected.shotSize,
             })}
           </div>
-        </RF.ui.Card>
+        </Card>
       );
 
     return (
@@ -403,32 +369,20 @@
           )}
         {preview}
         {RF.ui.SectionHead(t('rf7.storyboard.sectionRegenerate'))}
-        <RF.ui.Card>
+        <Card {...RF.workbenchCard()}>
           <div className={RF.tw.row}>
-            <RF.ui.Button
-              label={t('rf7.storyboard.actSeed')}
-              variant="secondary"
-              onClick={() => props.state.regenerateShot(selected)}
-            />
-            <RF.ui.Button
-              label={t('rf7.storyboard.actRewrite')}
-              variant="secondary"
-              onClick={() => props.state.regenerateShot(selected)}
-            />
+            <Button type="button" variant="secondary" size="sm" className="h-7 text-[10px]" onClick={() => props.state.regenerateShot(selected)} >{t('rf7.storyboard.actSeed')}</Button>
+            <Button type="button" variant="secondary" size="sm" className="h-7 text-[10px]" onClick={() => props.state.regenerateShot(selected)} >{t('rf7.storyboard.actRewrite')}</Button>
           </div>
           {RF.ui.FieldBox(t('rf7.storyboard.feedbackPlaceholder'), 'placeholder')}
-        </RF.ui.Card>
+        </Card>
         <div className={RF.tw.row}>
-          <RF.ui.Button
-            label={t('rf7.storyboard.actDetail')}
-            variant="secondary"
-            disabled={selected === null}
+          <Button type="button" variant="secondary" size="sm" className="h-7 text-[10px]" disabled={selected === null}
             title={selected === null ? t('rf7.storyboard.actDetailDisabled') : undefined}
             onClick={() => {
               props.state.selectShot(String(selected.id));
               props.state.goFlow('shotDetail');
-            }}
-          />
+            }} >{t('rf7.storyboard.actDetail')}</Button>
         </div>
       </div>
     );
@@ -447,16 +401,13 @@
     const card = (key, titleKey, metaKey, value, tone) => {
       const filled = String(value ?? '').trim() !== '';
       return (
-        <RF.ui.Card key={key}>
+        <Card key={key} {...RF.workbenchCard()}>
           <div className={RF.tw.row}>
             <div className={RF.tw.rowMain}>
               <div className={RF.tw.rowTitle}>{t(titleKey)}</div>
               <div className={RF.tw.rowSub}>{t(metaKey)}</div>
             </div>
-            <RF.ui.Pill
-              label={t(filled ? 'rf7.context.stateReady' : 'rf7.context.stateMissing')}
-              tone={filled ? tone : 'queued'}
-            />
+            <Badge variant="outline" className={RF.cn('rounded-md px-2.5 py-1 text-[10px] font-normal', RF.statusToneClass(filled ? tone : 'queued'))}>{t(filled ? 'rf7.context.stateReady' : 'rf7.context.stateMissing')}</Badge>
           </div>
           {expanded === key
             ? (
@@ -464,19 +415,11 @@
             )
             : null}
           <div className={RF.tw.row}>
-            <RF.ui.Button
-              label={t('rf7.context.actView')}
-              variant="secondary"
-              onClick={() => props.state.toggleContextKey(key)}
-            />
-            <RF.ui.Button
-              label={t('rf7.context.actWrite')}
-              variant="secondary"
-              disabled
-              title={t('rf7.context.actWriteDisabled')}
-            />
+            <Button type="button" variant="secondary" size="sm" className="h-7 text-[10px]" onClick={() => props.state.toggleContextKey(key)} >{t('rf7.context.actView')}</Button>
+            <Button type="button" variant="secondary" size="sm" className="h-7 text-[10px]" disabled
+              title={t('rf7.context.actWriteDisabled')} >{t('rf7.context.actWrite')}</Button>
           </div>
-        </RF.ui.Card>
+        </Card>
       );
     };
 
@@ -487,11 +430,11 @@
         {card('style', 'rf7.context.styleTitle', 'rf7.context.styleMeta', context.style, 'done')}
         {card('continuity', 'rf7.context.continuityTitle', 'rf7.context.continuityMeta', context.continuity, 'warn')}
         {RF.ui.SectionHead(t('rf7.context.sectionInject'), t('rf7.context.sectionInjectSub'))}
-        <RF.ui.Card>
+        <Card {...RF.workbenchCard()}>
           {RF.CONTEXT_INJECTION_ORDER.map(key => (
             <div key={key} className={`text-[10px] text-primary`}>{RF.CONTEXT_INJECTION_TITLES[key]}</div>
           ))}
-        </RF.ui.Card>
+        </Card>
         {RF.ui.Notice(t('rf7.context.rule1'), t('rf7.context.rule2'))}
       </div>
     );
@@ -513,7 +456,7 @@
     const exportRow = first === null
       ? null
       : (
-        <RF.ui.Card>
+        <Card {...RF.workbenchCard()}>
           <div className={RF.tw.row}>
             <div className={RF.tw.rowMain}>
               <div className={RF.tw.rowTitle}>{first.label === '' ? t('rf7.output.untitled') : first.label}</div>
@@ -524,13 +467,9 @@
                 })}
               </div>
             </div>
-            <RF.ui.Button
-              label={t('rf7.output.actDownload')}
-              variant="primary"
-              onClick={() => window.open(RF.deliverableUrl(first), '_blank')}
-            />
+            <Button type="button" variant="default" size="lg" className="h-10 font-semibold" onClick={() => window.open(RF.deliverableUrl(first), '_blank')} >{t('rf7.output.actDownload')}</Button>
           </div>
-        </RF.ui.Card>
+        </Card>
       );
 
     const deliverList = deliverables.length === 0
@@ -538,14 +477,14 @@
         <RF.ui.EmptyState title={t('rf7.output.empty.title')} hint={t('rf7.output.empty.hint')} />
       )
       : (
-        <RF.ui.Card>
+        <Card {...RF.workbenchCard()}>
           {deliverables.map(item => RF.ui.KvRow(
             item.label === '' ? String(item.kind ?? '') : item.label,
             t('rf7.output.deliverMeta', { size: RF.formatBytes(item.bytes ?? 0) }),
             t('rf7.output.stateReady'),
             'ok',
           ))}
-        </RF.ui.Card>
+        </Card>
       );
 
     return (
@@ -555,7 +494,7 @@
         {RF.ui.SectionHead(t('rf7.output.sectionDeliver'), t('rf7.output.sectionDeliverSub'))}
         <div id="rf-deliverables">{deliverList}</div>
         {RF.ui.SectionHead(t('rf7.output.sectionChapters'))}
-        <RF.ui.Card>
+        <Card {...RF.workbenchCard()}>
           {chapters.length === 0
             ? (
               <div className={RF.tw.rowSub}>{t('rf7.output.noChapters')}</div>
@@ -578,13 +517,9 @@
                 </div>
               </div>
             ))}
-        </RF.ui.Card>
+        </Card>
         <div className={RF.tw.row}>
-          <RF.ui.Button
-            label={t('rf7.output.actMusic')}
-            variant="secondary"
-            onClick={() => props.state.goFlow('music')}
-          />
+          <Button type="button" variant="secondary" size="sm" className="h-7 text-[10px]" onClick={() => props.state.goFlow('music')} >{t('rf7.output.actMusic')}</Button>
         </div>
       </div>
     );
@@ -605,17 +540,17 @@
         <RF.ui.EmptyState title={t('rf7.log.empty.title')} hint={t('rf7.log.empty.hint')} />
       )
       : (
-        <RF.ui.Card>
+        <Card {...RF.workbenchCard()}>
           {entries.slice(0, 20).map(entry => (
             <div key={entry.id} className={RF.tw.row}>
               <span className={`shrink-0 text-[10px] text-muted-foreground`}>{RF.formatDateTime(entry.at ?? '')}</span>
               <span className={RF.tw.rowMain}>{String(entry.summary ?? '')}</span>
               {entry.drifted === true ? (
-                <RF.ui.Pill label={t('rf7.log.drifted')} tone="warn" />
+                <Badge variant="outline" className={RF.cn('rounded-md px-2.5 py-1 text-[10px] font-normal', RF.statusToneClass('warn'))}>{t('rf7.log.drifted')}</Badge>
               ) : null}
             </div>
           ))}
-        </RF.ui.Card>
+        </Card>
       );
 
     const latest = entries[entries.length - 1] ?? null;
@@ -627,34 +562,22 @@
         {RF.ui.SectionHead(t('rf7.log.sectionOutput'))}
         {RF.ui.CodeBox(entries.slice(-6).reverse().map(entry => `[${RF.formatDateTime(entry.at ?? '')}] ${String(entry.summary ?? '')}`))}
         {RF.ui.SectionHead(t('rf7.log.sectionRollback'))}
-        <RF.ui.Card>
+        <Card {...RF.workbenchCard()}>
           {RF.ui.KvRow(t('rf7.log.rollbackBatch'), '-', '', 'muted',
-            <RF.ui.Button
-              label={t('rf7.log.actRollback')}
-              variant="secondary"
-              disabled
-              title={t('rf7.log.rollbackBatchDisabled')}
-            />)}
+            <Button type="button" variant="secondary" size="sm" className="h-7 text-[10px]" disabled
+              title={t('rf7.log.rollbackBatchDisabled')} >{t('rf7.log.actRollback')}</Button>)}
           {RF.ui.KvRow(t('rf7.log.rollbackTime'), '-', '', 'muted',
-            <RF.ui.Button
-              label={t('rf7.log.actPick')}
-              variant="secondary"
-              disabled
-              title={t('rf7.log.rollbackTimeDisabled')}
-            />)}
+            <Button type="button" variant="secondary" size="sm" className="h-7 text-[10px]" disabled
+              title={t('rf7.log.rollbackTimeDisabled')} >{t('rf7.log.actPick')}</Button>)}
           {RF.ui.KvRow(
             t('rf7.log.rollbackSingle'),
             latest === null ? '-' : String(latest.summary ?? ''),
             '',
             'muted',
-            <RF.ui.Button
-              label={t('rf7.log.actRollback')}
-              variant="secondary"
-              onClick={latest === null ? undefined : () => props.state.rollback(latest, 'single')}
-            />,
+            <Button type="button" variant="secondary" size="sm" className="h-7 text-[10px]" onClick={latest === null ? undefined : () => props.state.rollback(latest, 'single')} >{t('rf7.log.actRollback')}</Button>,
           )}
           <div className="text-[10px] text-muted-foreground">{t('rf7.log.rollbackNote')}</div>
-        </RF.ui.Card>
+        </Card>
       </div>
     );
   };

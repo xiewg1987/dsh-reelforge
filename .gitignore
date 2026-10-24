@@ -39,6 +39,7 @@ design/_tools/.build-ok
 docs/*
 !docs/开发任务/
 !docs/代码阅读顺序.md
+!docs/UI设计与代码一致性.md
 docs/开发任务/reports/
 
 # exports/ 是端到端测试把「工作区」指向仓库根时产出的交付物

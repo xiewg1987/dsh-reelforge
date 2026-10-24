@@ -424,7 +424,7 @@
             <div className={RF.tw.headerTitle}>{chromeTitle}</div>
             <div className={RF.tw.headerSubtitle}>{chromeSubtitle}</div>
           </div>
-          <RF.ui.Pill label={chromeCapsule} tone={capsuleTone} />
+          <Badge variant="outline" className={RF.cn("rounded-md px-2.5 py-1 text-[10px] font-normal", RF.statusToneClass(capsuleTone))}>{chromeCapsule}</Badge>
         </header>
         <nav className={RF.tw.stagebar} aria-label={t('title')}>
           {RF.STAGE_STEPS.map((step, index) => {
@@ -475,13 +475,9 @@
             <div className={RF.tw.footerLabel}>{chromeLabel}</div>
             <div className={RF.tw.footerValue}>{chromeValue}</div>
           </div>
-          <RF.ui.Button
-            label={t(chromeAction.key)}
-            variant="primary"
-            disabled={chromeDisabled}
+          <Button type="button" variant="default" size="lg" className="h-10 font-semibold" disabled={chromeDisabled}
             title={chromeDisabled && chromeHintKey !== undefined ? t(chromeHintKey) : undefined}
-            onClick={() => runChromeAction()}
-          />
+            onClick={() => runChromeAction()} >{t(chromeAction.key)}</Button>
         </footer>
       </section>
     );

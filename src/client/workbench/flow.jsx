@@ -12,6 +12,7 @@
  * 1. **探测结果**走独立只读路由（`/api/reelforge.probe`），不进 wire view；
  * 2. **服务配置**走 `/api/reelforge.capabilities`（**只读**，插件没有写配置的通道）；
  * 3. 数据没有就**说清没有**（RF7 §6.7），不编内容。
+ * 4. shadcn 用 `<Button>` / `<Card>` / `<Badge>`；复合件用 `RF.ui.*`（见 AGENTS.md §3.9）。
  * ─────────────────────────────────────────────────────────────────────────── */
 ;(function (RF) {
   'use strict';
@@ -62,7 +63,7 @@
 
     const positionCard = (cardKey, titleKey, subKey, facts, value) => (
       <label key={cardKey} className={RF.tw.positionCard}>
-        <RF.ui.Card state={position === value ? 'selected' : 'default'}>
+        <Card {...RF.workbenchCard({ state: position === value ? 'selected' : 'default' })}>
           <div className={RF.tw.row}>
             <RF.ui.RadioInput
               name={positionRadioName}
@@ -76,13 +77,13 @@
           {facts.map(fact => (
             <div key={fact.key} className={RF.tw.rowSub}>{t(fact.key, fact.params)}</div>
           ))}
-        </RF.ui.Card>
+        </Card>
       </label>
     );
 
     return (
       <div className={RF.tw.stack}>
-        <RF.ui.Card>
+        <Card {...RF.workbenchCard()}>
           <div className={RF.tw.row}>
             <div className={RF.tw.rowMain}>
               <div className={RF.tw.rowTitle}>{t('rf7.runGate.summaryTitle')}</div>
@@ -98,16 +99,12 @@
                   })}
               </div>
             </div>
-            <RF.ui.Button
-              label={probed ? t('rf7.runGate.actRerun') : t('rf7.runGate.actStart')}
-              variant="secondary"
-              disabled={!probed && position === ''}
+            <Button type="button" variant="secondary" size="sm" className="h-7 text-[10px]" disabled={!probed && position === ''}
               title={!probed && position === '' ? t('rf7.runGate.pendingHint') : undefined}
-              onClick={() => (probed ? state.reloadProbe() : state.startProbe())}
-            />
+              onClick={() => (probed ? state.reloadProbe() : state.startProbe())} >{probed ? t('rf7.runGate.actRerun') : t('rf7.runGate.actStart')}</Button>
           </div>
           {RF.ui.Track(probed && summary.total > 0 ? summary.passed / summary.total : 0)}
-        </RF.ui.Card>
+        </Card>
         {RF.ui.SectionHead(t('rf7.runGate.sectionPosition'), t('rf7.runGate.sectionPositionSub'))}
         <div
           className={RF.tw.gridTwo}
@@ -129,36 +126,28 @@
         {RF.ui.SectionHead(t('rf7.runGate.sectionChecks'), probed ? undefined : t('rf7.runGate.pendingHint'))}
         {probed
           ? (
-            <RF.ui.Card>{rows}</RF.ui.Card>
+            <Card {...RF.workbenchCard()}>{rows}</Card>
           )
           : (
-            <RF.ui.Card>
+            <Card {...RF.workbenchCard()}>
               {RF.ui.Notice(
                 probeError !== '' ? probeError : t('rf7.runGate.pendingTitle'),
                 t('rf7.runGate.pendingHint'),
               )}
-            </RF.ui.Card>
+            </Card>
           )}
-        <RF.ui.Card>
+        <Card {...RF.workbenchCard()}>
           {RF.ui.KvRow(
             t('rf7.runGate.checkAgent'),
             t('rf7.runGate.agentValue'),
             t('rf7.runGate.builtin'),
             'muted',
           )}
-        </RF.ui.Card>
+        </Card>
         {RF.ui.Notice(t('rf7.runGate.noticeMain'), t('rf7.runGate.noticeSub'))}
         <div className={RF.tw.row}>
-          <RF.ui.Button
-            label={t('rf7.runGate.actSettings')}
-            variant="secondary"
-            onClick={() => state.goFlow('settings')}
-          />
-          <RF.ui.Button
-            label={t('rf7.runGate.actFailures')}
-            variant="secondary"
-            onClick={() => state.goFlow('degraded')}
-          />
+          <Button type="button" variant="secondary" size="sm" className="h-7 text-[10px]" onClick={() => state.goFlow('settings')} >{t('rf7.runGate.actSettings')}</Button>
+          <Button type="button" variant="secondary" size="sm" className="h-7 text-[10px]" onClick={() => state.goFlow('degraded')} >{t('rf7.runGate.actFailures')}</Button>
         </div>
       </div>
     );
@@ -185,39 +174,35 @@
     return (
       <div className={RF.tw.stack}>
         {RF.ui.SectionHead(t('rf7.settings.sectionComfy'), t('rf7.settings.sectionComfySub'))}
-        <RF.ui.Card>
+        <Card {...RF.workbenchCard()}>
           {field('rf7.settings.labelAddress', comfy, 'value')}
           <div className={RF.tw.row}>
-            <RF.ui.Button
-              label={t('rf7.settings.actTest')}
-              variant="secondary"
-              onClick={() => props.state.reloadProbe()}
-            />
+            <Button type="button" variant="secondary" size="sm" className="h-7 text-[10px]" onClick={() => props.state.reloadProbe()} >{t('rf7.settings.actTest')}</Button>
             <span className={RF.tw.rowSub}>{t('rf7.settings.testHint')}</span>
           </div>
-        </RF.ui.Card>
+        </Card>
         {RF.ui.SectionHead(t('rf7.settings.sectionLlm'), t('rf7.settings.sectionLlmSub'))}
-        <RF.ui.Card>
+        <Card {...RF.workbenchCard()}>
           {field('rf7.settings.labelBaseUrl', '', 'placeholder')}
           {field('rf7.settings.labelModel', '', 'placeholder')}
           {field('rf7.settings.labelApiKey', '', 'masked')}
           {RF.ui.Notice(t('rf7.settings.llmNotice'), t('rf7.settings.llmNoticeSub'))}
-        </RF.ui.Card>
+        </Card>
         {RF.ui.SectionHead(t('rf7.settings.sectionRuntime'), t('rf7.settings.sectionRuntimeSub'))}
-        <RF.ui.Card>
+        <Card {...RF.workbenchCard()}>
           {RF.ui.ChipRow(
             [t('rf7.settings.runtimeBuiltin'), t('rf7.settings.runtimeClaudeCode'), t('rf7.settings.runtimeCodex'), t('rf7.settings.runtimeGemini'), t('rf7.settings.runtimeCustom')],
             0,
             undefined,
             t('rf7.settings.runtimeDisabled'),
           )}
-        </RF.ui.Card>
+        </Card>
         {RF.ui.SectionHead(t('rf7.settings.sectionMaintenance'))}
-        <RF.ui.Card>
+        <Card {...RF.workbenchCard()}>
           {RF.ui.KvRow(t('rf7.settings.rowFree'), t('rf7.settings.valueFree'), t('rf7.settings.stateAdjustable'), 'muted')}
           {RF.ui.KvRow(t('rf7.settings.rowTimeout'), t('rf7.settings.valueTimeout'), '', 'muted')}
           {RF.ui.KvRow(t('rf7.settings.rowCloudKey'), t('rf7.settings.valueCloudKey'), t('rf7.settings.stateNotLoggedIn'), 'warn')}
-        </RF.ui.Card>
+        </Card>
         {RF.ui.Notice(
           t('rf7.settings.readonlyTitle'),
           t('rf7.settings.readonlySub', { budget: RF.formatMoney(budget), stages: stages.length }),
@@ -239,7 +224,7 @@
 
     return (
       <div className={RF.tw.stack}>
-        <RF.ui.Card>
+        <Card {...RF.workbenchCard()}>
           <div className="flex flex-col gap-1">
             <span className="text-[10px] text-muted-foreground">{t('rf7.intake.labelName')}</span>
             <input
@@ -257,8 +242,8 @@
             t('rf7.intake.style3d'),
             t('rf7.intake.styleSuspense'),
           ], state.projectStyleIndex ?? 0, index => state.setProjectStyleIndex(index))}
-        </RF.ui.Card>
-        <RF.ui.Card>
+        </Card>
+        <Card {...RF.workbenchCard()}>
           <textarea
             className={RF.tw.textarea}
             value={state.novelText ?? ''}
@@ -266,31 +251,27 @@
             onChange={(event) => state.setNovelText(event?.target?.value ?? '')}
           />
           <div className={RF.tw.rowSub}>{t('rf7.intake.textHint')}</div>
-        </RF.ui.Card>
-        <RF.ui.Card className={RF.tw.hubstrip}>
+        </Card>
+        <Card {...RF.workbenchCard({ className: RF.tw.hubstrip })}>
           {RF.ui.Stat(t('rf7.intake.specResolution'), String(project.settings?.resolution ?? '') || t('rf7.settings.unset'), '')}
           <div className={RF.tw.divider} />
           {RF.ui.Stat(t('rf7.intake.specAspect'), String(project.settings?.aspectRatio ?? '') || t('rf7.settings.unset'), '')}
           <div className={RF.tw.divider} />
           {RF.ui.Stat(t('rf7.intake.specMusic'), project.settings?.enableBgm === true ? t('rf7.intake.on') : t('rf7.intake.off'), '')}
-        </RF.ui.Card>
+        </Card>
         {RF.ui.SectionHead(t('rf7.intake.sectionReferences'), t('rf7.intake.sectionReferencesSub'))}
-        <RF.ui.Card>
+        <Card {...RF.workbenchCard()}>
           <div className={RF.tw.row}>
             {RF.ui.Thumb(t('rf7.intake.refThumb'), { size: 48 })}
             <div className={RF.tw.rowMain}>
               <div className={RF.tw.rowTitle}>{t('rf7.intake.refName')}</div>
               <div className={RF.tw.rowSub}>{t('rf7.intake.refUse')}</div>
             </div>
-            <RF.ui.Button
-              label={t('rf7.intake.actRemove')}
-              variant="secondary"
-              disabled
-              title={t('rf7.intake.actRemoveDisabled')}
-            />
+            <Button type="button" variant="secondary" size="sm" className="h-7 text-[10px]" disabled
+              title={t('rf7.intake.actRemoveDisabled')} >{t('rf7.intake.actRemove')}</Button>
           </div>
           <div className={`flex min-h-10 items-center justify-center rounded-lg border border-dashed border-border text-[11px] text-muted-foreground`}>{t('rf7.intake.actAddReference')}</div>
-        </RF.ui.Card>
+        </Card>
         {RF.ui.SectionHead(t('rf7.intake.sectionChapters'), t('rf7.intake.sectionChaptersSub', {
           count: headings.length,
           chars: Number(intake.chars ?? 0),
@@ -301,21 +282,17 @@
               <RF.ui.EmptyState title={t('rf7.intake.noChapters')} hint={t('rf7.intake.noChaptersHint')} />
             )
             : headings.slice(0, 4).map(heading => (
-              <RF.ui.Card key={heading.seq ?? heading.title}>
+              <Card key={heading.seq ?? heading.title} {...RF.workbenchCard()}>
                 <div className={RF.tw.row}>
                   <span className={RF.tw.rowSub}>{String(heading.seq ?? 0).padStart(2, '0')}</span>
                   <div className={RF.tw.rowMain}>
                     <div className={RF.tw.rowTitle}>{heading.title}</div>
                     <div className={RF.tw.rowSub}>{t('rf7.intake.chapterMeta')}</div>
                   </div>
-                  <RF.ui.Button
-                    label={t('rf7.intake.actImport')}
-                    variant="secondary"
-                    disabled
-                    title={t('rf7.intake.actImportDisabled')}
-                  />
+                  <Button type="button" variant="secondary" size="sm" className="h-7 text-[10px]" disabled
+                    title={t('rf7.intake.actImportDisabled')} >{t('rf7.intake.actImport')}</Button>
                 </div>
-              </RF.ui.Card>
+              </Card>
             ))}
         </div>
         {RF.ui.ChatSync({ t, project })}
@@ -334,35 +311,31 @@
     return (
       <div className={RF.tw.stack}>
         {RF.ui.SectionHead(t('rf7.projectSettings.sectionSpec'))}
-        <RF.ui.Card>
+        <Card {...RF.workbenchCard()}>
           <div className={RF.tw.gridTwo}>
             {RF.ui.Stat(t('rf7.projectSettings.rowResolution'), String(settings.resolution ?? '') || t('rf7.settings.unset'), '')}
             {RF.ui.Stat(t('rf7.projectSettings.rowAspect'), String(settings.aspectRatio ?? '') || t('rf7.settings.unset'), '')}
             {RF.ui.Stat(t('rf7.projectSettings.rowStyle'), t('rf7.projectSettings.styleDefault'), '')}
           </div>
-        </RF.ui.Card>
+        </Card>
         {RF.ui.SectionHead(t('rf7.projectSettings.sectionSubtitles'))}
-        <RF.ui.Card>
+        <Card {...RF.workbenchCard()}>
           {RF.ui.KvRow(t('rf7.projectSettings.rowAutoSub'), settings.enableSubtitles === true ? t('rf7.intake.on') : t('rf7.intake.off'), '', 'muted')}
           {RF.ui.KvRow(t('rf7.projectSettings.rowPosition'), t('rf7.projectSettings.bottomCenter'), '', 'muted')}
           {RF.ui.KvRow(t('rf7.projectSettings.rowHideName'), t('rf7.intake.on'), '', 'muted')}
           <div className={"text-[10px] text-muted-foreground"}>{t('rf7.projectSettings.subtitleNote')}</div>
-        </RF.ui.Card>
+        </Card>
         {RF.ui.SectionHead(t('rf7.projectSettings.sectionSound'))}
-        <RF.ui.Card>
+        <Card {...RF.workbenchCard()}>
           {RF.ui.KvRow(t('rf7.projectSettings.rowBgm'), settings.enableBgm === true ? t('rf7.intake.on') : t('rf7.intake.off'), '', 'muted')}
           {RF.ui.KvRow(t('rf7.projectSettings.rowVoice'), t('rf7.projectSettings.voiceH3'), '', 'muted')}
-        </RF.ui.Card>
+        </Card>
         {RF.ui.SectionHead(t('rf7.projectSettings.sectionDanger'))}
-        <RF.ui.Card tone="error">
+        <Card {...RF.workbenchCard({ tone: "error" })}>
           <div className={"text-[11px] text-muted-foreground"}>{t('rf7.projectSettings.dangerText')}</div>
-          <RF.ui.Button
-            label={t('rf7.projectSettings.dangerAction')}
-            variant="danger"
-            disabled
-            title={t('rf7.projectSettings.dangerDisabled')}
-          />
-        </RF.ui.Card>
+          <Button type="button" variant="destructive" size="sm" className="h-7 text-[10px]" disabled
+            title={t('rf7.projectSettings.dangerDisabled')} >{t('rf7.projectSettings.dangerAction')}</Button>
+        </Card>
       </div>
     );
   };
@@ -388,7 +361,7 @@
 
     return (
       <div className={RF.tw.stack}>
-        <RF.ui.Card>
+        <Card {...RF.workbenchCard()}>
           <div className={`flex gap-1`}>
             {RF.STAGES.map(stageId => (
               <span
@@ -406,14 +379,14 @@
               </span>
             ))}
           </div>
-        </RF.ui.Card>
-        <RF.ui.Card>
+        </Card>
+        <Card {...RF.workbenchCard()}>
           <div className={RF.tw.row}>
             <div className={RF.tw.rowMain}>
               <div className={RF.tw.rowTitle}>{t('rf7.stages.currentTitle', { kind: kind === '' ? '-' : kind })}</div>
               <div className={RF.tw.rowSub}>{t('rf7.stages.currentSub')}</div>
             </div>
-            <RF.ui.Pill label={kind === '' ? t('rf7.stages.stateUnset') : kind} tone={kind === '' ? 'queued' : 'running'} />
+            <Badge variant="outline" className={RF.cn("rounded-md px-2.5 py-1 text-[10px] font-normal", RF.statusToneClass(kind === '' ? 'queued' : 'running'))}>{kind === '' ? t('rf7.stages.stateUnset') : kind}</Badge>
           </div>
           {RF.ui.Track(0.25)}
           <div className={RF.tw.row}>
@@ -421,9 +394,9 @@
             <span className={RF.tw.rowSub}>{t('rf7.stages.metaVram')}</span>
             <span className={RF.tw.rowSub}>{t('rf7.stages.metaEta')}</span>
           </div>
-        </RF.ui.Card>
+        </Card>
         {RF.ui.SectionHead(t('rf7.stages.sectionQueue'), t('rf7.stages.sectionQueueSub'))}
-        <RF.ui.Card>
+        <Card {...RF.workbenchCard()}>
           {(state.queue ?? []).length === 0
             ? (
               <div className={RF.tw.rowSub}>{t('rf7.stages.queueEmpty')}</div>
@@ -435,9 +408,9 @@
                 <span className={RF.tw.rowSub}>{item.meta}</span>
               </div>
             ))}
-        </RF.ui.Card>
+        </Card>
         {RF.ui.SectionHead(t('rf7.stages.sectionPicker'))}
-        <RF.ui.Card>
+        <Card {...RF.workbenchCard()}>
           {RF.STAGES.map(stageId => (
             <div key={stageId} className={RF.tw.row}>
               {RF.ui.CheckboxIndicator(globalStages.includes(stageId))}
@@ -452,7 +425,7 @@
               </span>
             </div>
           ))}
-        </RF.ui.Card>
+        </Card>
         {RF.ui.Notice(t('rf7.stages.memMain'), t('rf7.stages.memSub'))}
       </div>
     );
@@ -474,11 +447,7 @@
             title={t('rf7.shotDetail.empty.title')}
             hint={t('rf7.shotDetail.empty.hint')}
             action={(
-              <RF.ui.Button
-                label={t('rf7.shotDetail.empty.action')}
-                variant="primary"
-                onClick={() => props.state.goTab('shots')}
-              />
+              <Button type="button" variant="default" size="lg" className="h-10 font-semibold" onClick={() => props.state.goTab('shots')} >{t('rf7.shotDetail.empty.action')}</Button>
             )}
           />
         </div>
@@ -489,7 +458,7 @@
 
     return (
       <div className={RF.tw.stack}>
-        <RF.ui.Card>
+        <Card {...RF.workbenchCard()}>
           <div className={RF.tw.rowTitle}>
             {t('rf7.shotDetail.headTitle', {
               chapter: Number(shot.seq) || 1,
@@ -503,9 +472,9 @@
               ratio: shot.aspectRatio === '' ? '-' : shot.aspectRatio,
             })}
           </div>
-        </RF.ui.Card>
+        </Card>
         {RF.ui.SectionHead(t('rf7.shotDetail.sectionReferences'), t('rf7.shotDetail.sectionReferencesSub'))}
-        <RF.ui.Card>
+        <Card {...RF.workbenchCard()}>
           <div className={RF.tw.row}>
             {references.length === 0
               ? (
@@ -517,19 +486,19 @@
             <div style={{ flex: '1 1 auto' }} />
             {RF.ui.PlayerBar(t('rf7.shotDetail.duration', { seconds: shot.duration ?? 0 }))}
           </div>
-        </RF.ui.Card>
+        </Card>
         {RF.ui.SectionHead(t('rf7.shotDetail.sectionScript'))}
-        <RF.ui.Card>
+        <Card {...RF.workbenchCard()}>
           <div className={RF.tw.rowTitle}>
             {t('rf7.shotDetail.scriptLens', { size: shot.shotSize === '' ? '-' : shot.shotSize })}
           </div>
           <div className={RF.tw.rowSub}>{t('rf7.shotDetail.scriptMissing')}</div>
-        </RF.ui.Card>
+        </Card>
         {RF.ui.SectionHead(t('rf7.shotDetail.sectionPrompt'))}
-        <RF.ui.Card tone="warn">
+        <Card {...RF.workbenchCard({ tone: "warn" })}>
           <div className={"text-[11px] text-muted-foreground"}>{t('rf7.shotDetail.promptMissing')}</div>
           <div className={"text-[10px] text-muted-foreground"}>{t('rf7.shotDetail.promptMissingSub')}</div>
-        </RF.ui.Card>
+        </Card>
       </div>
     );
   };
@@ -550,7 +519,7 @@
 
     return (
       <div className={RF.tw.stack}>
-        <RF.ui.Card>
+        <Card {...RF.workbenchCard()}>
           <div className={RF.tw.rowTitle}>{t('rf7.music.generateTitle')}</div>
           {RF.ui.FieldBox(t('rf7.music.generatePlaceholder'), 'placeholder')}
           <div className={RF.tw.row}>
@@ -561,49 +530,37 @@
               t('rf7.music.chipStrings'),
             ], 0, undefined, t('rf7.music.chipsDisabled'))}
             <div style={{ flex: '1 1 auto' }} />
-            <RF.ui.Button
-              label={t('rf7.music.actGenerate')}
-              variant="primary"
-              disabled
-              title={t('rf7.music.actGenerateDisabled')}
-            />
+            <Button type="button" variant="default" size="lg" className="h-10 font-semibold" disabled
+              title={t('rf7.music.actGenerateDisabled')} >{t('rf7.music.actGenerate')}</Button>
           </div>
-        </RF.ui.Card>
+        </Card>
         {RF.ui.SectionHead(t('rf7.music.sectionLibrary'), t('rf7.music.sectionLibrarySub'))}
         {tracks.length === 0
           ? (
-            <RF.ui.Card tone="warn">
+            <Card {...RF.workbenchCard({ tone: "warn" })}>
               <div className={"text-[11px] text-muted-foreground"}>{t('rf7.music.emptyTitle')}</div>
               <div className={"text-[10px] text-muted-foreground"}>{t('rf7.music.emptySub')}</div>
-            </RF.ui.Card>
+            </Card>
           )
           : (
             <div className={RF.tw.stack}>
               {tracks.map(track => (
-                <RF.ui.Card key={track.name}>
+                <Card key={track.name} {...RF.workbenchCard()}>
                   <div className={RF.tw.row}>
                     <div className={RF.tw.rowMain}>
                       <div className={RF.tw.rowTitle}>{track.name}</div>
                       <div className={RF.tw.rowSub}>{track.description}</div>
                     </div>
-                    <RF.ui.Pill label={t('rf7.music.stateApplied')} tone="done" />
+                    <Badge variant="outline" className={RF.cn("rounded-md px-2.5 py-1 text-[10px] font-normal", RF.statusToneClass("done"))}>{t('rf7.music.stateApplied')}</Badge>
                   </div>
                   {RF.ui.PlayerBar('-')}
                   <div className={RF.tw.row}>
-                    <RF.ui.Button
-                      label={t('rf7.music.actPreview')}
-                      variant="secondary"
-                      disabled
-                      title={t('rf7.music.actPreviewDisabled')}
-                    />
-                    <RF.ui.Button
-                      label={t('rf7.music.actApply')}
-                      variant="secondary"
-                      disabled
-                      title={t('rf7.music.actApplyDisabled')}
-                    />
+                    <Button type="button" variant="secondary" size="sm" className="h-7 text-[10px]" disabled
+                      title={t('rf7.music.actPreviewDisabled')} >{t('rf7.music.actPreview')}</Button>
+                    <Button type="button" variant="secondary" size="sm" className="h-7 text-[10px]" disabled
+                      title={t('rf7.music.actApplyDisabled')} >{t('rf7.music.actApply')}</Button>
                   </div>
-                </RF.ui.Card>
+                </Card>
               ))}
             </div>
           )}
@@ -626,7 +583,7 @@
         {RF.ui.SectionHead(t('rf7.skills.sectionInstalled'), t('rf7.skills.sectionInstalledSub', {
           count: skills.length,
         }))}
-        <RF.ui.Card>
+        <Card {...RF.workbenchCard()}>
           {skills.length === 0
             ? (
               <RF.ui.EmptyState title={t('rf7.skills.empty.title')} hint={t('rf7.skills.empty.hint')} />
@@ -637,12 +594,12 @@
                   <div className={RF.tw.rowTitle}>{skill.name}</div>
                   <div className={RF.tw.rowSub}>{t(`rf7.skills.source.${skill.source ?? 'bundled'}`)}</div>
                 </div>
-                <RF.ui.Pill label={t('rf7.skills.stateReady')} tone="done" />
+                <Badge variant="outline" className={RF.cn("rounded-md px-2.5 py-1 text-[10px] font-normal", RF.statusToneClass("done"))}>{t('rf7.skills.stateReady')}</Badge>
               </div>
             ))}
-        </RF.ui.Card>
+        </Card>
         {RF.ui.SectionHead(t('rf7.skills.sectionIterate'), t('rf7.skills.sectionIterateSub'))}
-        <RF.ui.Card>
+        <Card {...RF.workbenchCard()}>
           <div className={RF.tw.row}>
             <span className={`inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-accent text-[10px] text-primary`}>1</span>
             <span className={RF.tw.rowSub}>{t('rf7.skills.step1')}</span>
@@ -654,15 +611,11 @@
           <div className={`flex min-h-10 items-center justify-center rounded-lg border border-dashed border-border text-[11px] text-muted-foreground`}>{t('rf7.skills.dropHint')}</div>
           {analysis === null
             ? (
-              <RF.ui.Button
-                label={t('rf7.skills.actAnalyze')}
-                variant="primary"
-                disabled
-                title={t('rf7.skills.actAnalyzeDisabled')}
-              />
+              <Button type="button" variant="default" size="lg" className="h-10 font-semibold" disabled
+                title={t('rf7.skills.actAnalyzeDisabled')} >{t('rf7.skills.actAnalyze')}</Button>
             )
             : RF.ui.Notice(String(analysis.summary ?? t('rf7.skills.analyzed')), '')}
-        </RF.ui.Card>
+        </Card>
         {RF.ui.Notice(t('rf7.skills.note'), '')}
       </div>
     );
@@ -712,7 +665,7 @@
 
     return (
       <div className={RF.tw.stack}>
-        <RF.ui.Card>
+        <Card {...RF.workbenchCard()}>
           {RF.ui.FieldBox(t('rf7.picker.searchPlaceholder'), 'placeholder')}
           {RF.ui.ChipRow(
             chipItems.map(item => t(item.key)),
@@ -731,13 +684,9 @@
               })}
             </span>
             <div style={{ flex: '1 1 auto' }} />
-            <RF.ui.Button
-              label={t('rf7.picker.actClear')}
-              variant="secondary"
-              onClick={() => state.clearPicker()}
-            />
+            <Button type="button" variant="secondary" size="sm" className="h-7 text-[10px]" onClick={() => state.clearPicker()} >{t('rf7.picker.actClear')}</Button>
           </div>
-        </RF.ui.Card>
+        </Card>
         {RF.ui.Notice(t('rf7.picker.note'), '')}
       </div>
     );
@@ -760,10 +709,10 @@
     const noVoice = RF.charactersWithoutVoice(project);
 
     const stateCard = (titleKey, metaKey, tone) => (
-      <RF.ui.Card tone={tone}>
+      <Card {...RF.workbenchCard({ tone: tone })}>
         <div className={"text-[11px] text-muted-foreground"}>{t(titleKey)}</div>
         <div className={"text-[10px] text-muted-foreground"}>{t(metaKey)}</div>
-      </RF.ui.Card>
+      </Card>
     );
 
     const missingShots = missing
@@ -776,33 +725,29 @@
         {degradations.length === 0
           ? stateCard('rf7.degraded.noneTitle', 'rf7.degraded.noneSub', 'warn-border')
           : degradations.map((item, index) => (
-            <RF.ui.Card key={index} tone="error">
+            <Card key={index} {...RF.workbenchCard({ tone: "error" })}>
               <div className={"text-[11px] text-muted-foreground"}>{String(item.message ?? item.kind ?? '')}</div>
               <div className={"text-[10px] text-muted-foreground"}>{t('rf7.degraded.blockedHint')}</div>
-            </RF.ui.Card>
+            </Card>
           ))}
         {RF.ui.SectionHead(t('rf7.degraded.sectionWarning'), t('rf7.degraded.sectionWarningSub'))}
         {notices.length === 0
           ? stateCard('rf7.degraded.noWarningTitle', 'rf7.degraded.noWarningSub', 'warn-border')
           : notices.map((item, index) => (
-            <RF.ui.Card key={index} tone="warn">
+            <Card key={index} {...RF.workbenchCard({ tone: "warn" })}>
               <div className={"text-[11px] text-muted-foreground"}>{String(item.message ?? item.kind ?? '')}</div>
               <div className={"text-[10px] text-muted-foreground"}>{t('rf7.degraded.warningHint')}</div>
-            </RF.ui.Card>
+            </Card>
           ))}
         {RF.ui.SectionHead(t('rf7.degraded.sectionMissing'), t('rf7.degraded.sectionMissingSub'))}
         {missing.length === 0
           ? stateCard('rf7.degraded.noMissingTitle', 'rf7.degraded.noMissingSub', 'warn-border')
           : (
-            <RF.ui.Card tone="warn">
+            <Card {...RF.workbenchCard({ tone: "warn" })}>
               <div className={"text-[11px] text-muted-foreground"}>{t('rf7.degraded.missingTitle', { count: missing.length })}</div>
               <div className={"text-[10px] text-muted-foreground"}>{t('rf7.degraded.missingSub', { shots: missingShots })}</div>
-              <RF.ui.Button
-                label={t('rf7.degraded.actFill')}
-                variant="secondary"
-                onClick={() => state.goTab('assets')}
-              />
-            </RF.ui.Card>
+              <Button type="button" variant="secondary" size="sm" className="h-7 text-[10px]" onClick={() => state.goTab('assets')} >{t('rf7.degraded.actFill')}</Button>
+            </Card>
           )}
         {chapters.length === 0
           ? (
@@ -815,10 +760,10 @@
         {noVoice.length === 0
           ? null
           : (
-            <RF.ui.Card tone="warn">
+            <Card {...RF.workbenchCard({ tone: "warn" })}>
               <div className={"text-[11px] text-muted-foreground"}>{t('rf7.degraded.softTitle', { count: noVoice.length })}</div>
               <div className={"text-[10px] text-muted-foreground"}>{t('rf7.degraded.softSub')}</div>
-            </RF.ui.Card>
+            </Card>
           )}
       </div>
     );

@@ -89,7 +89,7 @@ function cordisTriQuery() {
         '| --- | --- | --- |',
         '| `--service Tool` | `ctx.tools.register(definition)`，15 工具含 name/description/parameters/output/execute | `src/host/apply.js` · `src/host/tools.js` |',
         '| `--event Event` | **不新增 type**；fold 监听 `session/event`；消息行挂 `tool/result` + `reelforge.kind` | `src/host/apply.js` · `src/host/chatEvents.js` |',
-        '| `--slots Slots` | 右栏 `sidebar.right.pane.tab`（key=Tab id）；聊天 `conversation.chat.node`（key=7 kind） | `src/client/entry.js` |',
+        '| `--slots Slots` | 右栏 `sidebar.right.pane.tab`（key=Tab id）；聊天 `conversation.chat.node`（key=7 kind） | `src/client/entry.jsx` |',
         '| 存储服务 | **未在本机 CLI 确认**；变更日志与私有目录走工作区 `.reelforge/` 与 `changelogStore` | `src/host/changelogStore.js` · `src/host/paths.js` |',
         '',
         '**DSH 实机补验**（装上插件后人工执行一次并贴输出）：',
@@ -338,7 +338,7 @@ const automationOk = identity.code === 0 && verify.code === 0 && buildClient.cod
 const deviations = [
   '- **工具数 15**：F4 文案写 13 ReelForge + 2 技能只读；`verify:bundle` 计 15 个宿主工具注册项（含 skill / skill_reference）。',
   '- **客户端构建**：无 tsdown 分片，采用 `build-client.mjs` 单文件拼接（T5 任务书 R10 分片路线在本仓库以「无分片、确定性拼接」落地；验收 A34–A36 标记为 N/A，A38 以 pack dry-run 为准）。',
-  '- **RF.actions 已加固，但最终 transport 仍待 owner 确认**：UI 写操作经 `remote.session.prompt` 转模型调工具（`src/client/entry.js`）。'
+  '- **RF.actions 已加固，但最终 transport 仍待 owner 确认**：UI 写操作经 `remote.session.prompt` 转模型调工具（`src/client/entry.jsx`）。'
     + '原先「没有 transport ⇒ 只 `console.warn`」是静默降质，现已改为**可见失败 + 可重放**（请求进 `RF.actions.pending` 队列并发结构化通知，文案说清缺什么、给什么替代；`retryPending()` 可一键重放）。'
     + '代码里**不写死**任何宿主 API 名 —— 本机无 DSH 宿主包，无法证明 `remote.commands` 存在，那处探测带运行时存在性检查且非默认路径，启用前需宿主 owner 确认签名。',
   '- **本轮修掉的真实缺陷（都是新增测试/实跑暴露出来的，不是代码审查发现的）**：'

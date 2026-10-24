@@ -2933,7 +2933,7 @@ window.__ModuleLoader__.load({
 // 由 src/client/build-ui.mjs 生成，请勿手改。
 ;(function (RF) {
 'use strict';
-RF.TAILWIND_STYLES = "*, ::before, ::after {\n  --tw-border-spacing-x: 0;\n  --tw-border-spacing-y: 0;\n  --tw-translate-x: 0;\n  --tw-translate-y: 0;\n  --tw-rotate: 0;\n  --tw-skew-x: 0;\n  --tw-skew-y: 0;\n  --tw-scale-x: 1;\n  --tw-scale-y: 1;\n  --tw-pan-x:  ;\n  --tw-pan-y:  ;\n  --tw-pinch-zoom:  ;\n  --tw-scroll-snap-strictness: proximity;\n  --tw-gradient-from-position:  ;\n  --tw-gradient-via-position:  ;\n  --tw-gradient-to-position:  ;\n  --tw-ordinal:  ;\n  --tw-slashed-zero:  ;\n  --tw-numeric-figure:  ;\n  --tw-numeric-spacing:  ;\n  --tw-numeric-fraction:  ;\n  --tw-ring-inset:  ;\n  --tw-ring-offset-width: 0px;\n  --tw-ring-offset-color: #fff;\n  --tw-ring-color: rgb(59 130 246 / 0.5);\n  --tw-ring-offset-shadow: 0 0 #0000;\n  --tw-ring-shadow: 0 0 #0000;\n  --tw-shadow: 0 0 #0000;\n  --tw-shadow-colored: 0 0 #0000;\n  --tw-blur:  ;\n  --tw-brightness:  ;\n  --tw-contrast:  ;\n  --tw-grayscale:  ;\n  --tw-hue-rotate:  ;\n  --tw-invert:  ;\n  --tw-saturate:  ;\n  --tw-sepia:  ;\n  --tw-drop-shadow:  ;\n  --tw-backdrop-blur:  ;\n  --tw-backdrop-brightness:  ;\n  --tw-backdrop-contrast:  ;\n  --tw-backdrop-grayscale:  ;\n  --tw-backdrop-hue-rotate:  ;\n  --tw-backdrop-invert:  ;\n  --tw-backdrop-opacity:  ;\n  --tw-backdrop-saturate:  ;\n  --tw-backdrop-sepia:  ;\n  --tw-contain-size:  ;\n  --tw-contain-layout:  ;\n  --tw-contain-paint:  ;\n  --tw-contain-style:  ;\n}\n\n::backdrop {\n  --tw-border-spacing-x: 0;\n  --tw-border-spacing-y: 0;\n  --tw-translate-x: 0;\n  --tw-translate-y: 0;\n  --tw-rotate: 0;\n  --tw-skew-x: 0;\n  --tw-skew-y: 0;\n  --tw-scale-x: 1;\n  --tw-scale-y: 1;\n  --tw-pan-x:  ;\n  --tw-pan-y:  ;\n  --tw-pinch-zoom:  ;\n  --tw-scroll-snap-strictness: proximity;\n  --tw-gradient-from-position:  ;\n  --tw-gradient-via-position:  ;\n  --tw-gradient-to-position:  ;\n  --tw-ordinal:  ;\n  --tw-slashed-zero:  ;\n  --tw-numeric-figure:  ;\n  --tw-numeric-spacing:  ;\n  --tw-numeric-fraction:  ;\n  --tw-ring-inset:  ;\n  --tw-ring-offset-width: 0px;\n  --tw-ring-offset-color: #fff;\n  --tw-ring-color: rgb(59 130 246 / 0.5);\n  --tw-ring-offset-shadow: 0 0 #0000;\n  --tw-ring-shadow: 0 0 #0000;\n  --tw-shadow: 0 0 #0000;\n  --tw-shadow-colored: 0 0 #0000;\n  --tw-blur:  ;\n  --tw-brightness:  ;\n  --tw-contrast:  ;\n  --tw-grayscale:  ;\n  --tw-hue-rotate:  ;\n  --tw-invert:  ;\n  --tw-saturate:  ;\n  --tw-sepia:  ;\n  --tw-drop-shadow:  ;\n  --tw-backdrop-blur:  ;\n  --tw-backdrop-brightness:  ;\n  --tw-backdrop-contrast:  ;\n  --tw-backdrop-grayscale:  ;\n  --tw-backdrop-hue-rotate:  ;\n  --tw-backdrop-invert:  ;\n  --tw-backdrop-opacity:  ;\n  --tw-backdrop-saturate:  ;\n  --tw-backdrop-sepia:  ;\n  --tw-contain-size:  ;\n  --tw-contain-layout:  ;\n  --tw-contain-paint:  ;\n  --tw-contain-style:  ;\n}/*\n! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com\n*//*\n1. Prevent padding and border from affecting element width. (https://github.com/mozdevs/cssremedy/issues/4)\n2. Allow adding a border to an element by just adding a border-width. (https://github.com/tailwindcss/tailwindcss/pull/116)\n*/\n\n*,\n::before,\n::after {\n  box-sizing: border-box; /* 1 */\n  border-width: 0; /* 2 */\n  border-style: solid; /* 2 */\n  border-color: #e5e7eb; /* 2 */\n}\n\n::before,\n::after {\n  --tw-content: '';\n}\n\n/*\n1. Use a consistent sensible line-height in all browsers.\n2. Prevent adjustments of font size after orientation changes in iOS.\n3. Use a more readable tab size.\n4. Use the user's configured `sans` font-family by default.\n5. Use the user's configured `sans` font-feature-settings by default.\n6. Use the user's configured `sans` font-variation-settings by default.\n7. Disable tap highlights on iOS\n*/\n\nhtml,\n:host {\n  line-height: 1.5; /* 1 */\n  -webkit-text-size-adjust: 100%; /* 2 */\n  -moz-tab-size: 4; /* 3 */\n  -o-tab-size: 4;\n     tab-size: 4; /* 3 */\n  font-family: ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\"; /* 4 */\n  font-feature-settings: normal; /* 5 */\n  font-variation-settings: normal; /* 6 */\n  -webkit-tap-highlight-color: transparent; /* 7 */\n}\n\n/*\n1. Remove the margin in all browsers.\n2. Inherit line-height from `html` so users can set them as a class directly on the `html` element.\n*/\n\nbody {\n  margin: 0; /* 1 */\n  line-height: inherit; /* 2 */\n}\n\n/*\n1. Add the correct height in Firefox.\n2. Correct the inheritance of border color in Firefox. (https://bugzilla.mozilla.org/show_bug.cgi?id=190655)\n3. Ensure horizontal rules are visible by default.\n*/\n\nhr {\n  height: 0; /* 1 */\n  color: inherit; /* 2 */\n  border-top-width: 1px; /* 3 */\n}\n\n/*\nAdd the correct text decoration in Chrome, Edge, and Safari.\n*/\n\nabbr:where([title]) {\n  -webkit-text-decoration: underline dotted;\n          text-decoration: underline dotted;\n}\n\n/*\nRemove the default font size and weight for headings.\n*/\n\nh1,\nh2,\nh3,\nh4,\nh5,\nh6 {\n  font-size: inherit;\n  font-weight: inherit;\n}\n\n/*\nReset links to optimize for opt-in styling instead of opt-out.\n*/\n\na {\n  color: inherit;\n  text-decoration: inherit;\n}\n\n/*\nAdd the correct font weight in Edge and Safari.\n*/\n\nb,\nstrong {\n  font-weight: bolder;\n}\n\n/*\n1. Use the user's configured `mono` font-family by default.\n2. Use the user's configured `mono` font-feature-settings by default.\n3. Use the user's configured `mono` font-variation-settings by default.\n4. Correct the odd `em` font sizing in all browsers.\n*/\n\ncode,\nkbd,\nsamp,\npre {\n  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\", \"Courier New\", monospace; /* 1 */\n  font-feature-settings: normal; /* 2 */\n  font-variation-settings: normal; /* 3 */\n  font-size: 1em; /* 4 */\n}\n\n/*\nAdd the correct font size in all browsers.\n*/\n\nsmall {\n  font-size: 80%;\n}\n\n/*\nPrevent `sub` and `sup` elements from affecting the line height in all browsers.\n*/\n\nsub,\nsup {\n  font-size: 75%;\n  line-height: 0;\n  position: relative;\n  vertical-align: baseline;\n}\n\nsub {\n  bottom: -0.25em;\n}\n\nsup {\n  top: -0.5em;\n}\n\n/*\n1. Remove text indentation from table contents in Chrome and Safari. (https://bugs.chromium.org/p/chromium/issues/detail?id=999088, https://bugs.webkit.org/show_bug.cgi?id=201297)\n2. Correct table border color inheritance in all Chrome and Safari. (https://bugs.chromium.org/p/chromium/issues/detail?id=935729, https://bugs.webkit.org/show_bug.cgi?id=195016)\n3. Remove gaps between table borders by default.\n*/\n\ntable {\n  text-indent: 0; /* 1 */\n  border-color: inherit; /* 2 */\n  border-collapse: collapse; /* 3 */\n}\n\n/*\n1. Change the font styles in all browsers.\n2. Remove the margin in Firefox and Safari.\n3. Remove default padding in all browsers.\n*/\n\nbutton,\ninput,\noptgroup,\nselect,\ntextarea {\n  font-family: inherit; /* 1 */\n  font-feature-settings: inherit; /* 1 */\n  font-variation-settings: inherit; /* 1 */\n  font-size: 100%; /* 1 */\n  font-weight: inherit; /* 1 */\n  line-height: inherit; /* 1 */\n  letter-spacing: inherit; /* 1 */\n  color: inherit; /* 1 */\n  margin: 0; /* 2 */\n  padding: 0; /* 3 */\n}\n\n/*\nRemove the inheritance of text transform in Edge and Firefox.\n*/\n\nbutton,\nselect {\n  text-transform: none;\n}\n\n/*\n1. Correct the inability to style clickable types in iOS and Safari.\n2. Remove default button styles.\n*/\n\nbutton,\ninput:where([type='button']),\ninput:where([type='reset']),\ninput:where([type='submit']) {\n  -webkit-appearance: button; /* 1 */\n  background-color: transparent; /* 2 */\n  background-image: none; /* 2 */\n}\n\n/*\nUse the modern Firefox focus style for all focusable elements.\n*/\n\n:-moz-focusring {\n  outline: auto;\n}\n\n/*\nRemove the additional `:invalid` styles in Firefox. (https://github.com/mozilla/gecko-dev/blob/2f9eacd9d3d995c937b4251a5557d95d494c9be1/layout/style/res/forms.css#L728-L737)\n*/\n\n:-moz-ui-invalid {\n  box-shadow: none;\n}\n\n/*\nAdd the correct vertical alignment in Chrome and Firefox.\n*/\n\nprogress {\n  vertical-align: baseline;\n}\n\n/*\nCorrect the cursor style of increment and decrement buttons in Safari.\n*/\n\n::-webkit-inner-spin-button,\n::-webkit-outer-spin-button {\n  height: auto;\n}\n\n/*\n1. Correct the odd appearance in Chrome and Safari.\n2. Correct the outline style in Safari.\n*/\n\n[type='search'] {\n  -webkit-appearance: textfield; /* 1 */\n  outline-offset: -2px; /* 2 */\n}\n\n/*\nRemove the inner padding in Chrome and Safari on macOS.\n*/\n\n::-webkit-search-decoration {\n  -webkit-appearance: none;\n}\n\n/*\n1. Correct the inability to style clickable types in iOS and Safari.\n2. Change font properties to `inherit` in Safari.\n*/\n\n::-webkit-file-upload-button {\n  -webkit-appearance: button; /* 1 */\n  font: inherit; /* 2 */\n}\n\n/*\nAdd the correct display in Chrome and Safari.\n*/\n\nsummary {\n  display: list-item;\n}\n\n/*\nRemoves the default spacing and border for appropriate elements.\n*/\n\nblockquote,\ndl,\ndd,\nh1,\nh2,\nh3,\nh4,\nh5,\nh6,\nhr,\nfigure,\np,\npre {\n  margin: 0;\n}\n\nfieldset {\n  margin: 0;\n  padding: 0;\n}\n\nlegend {\n  padding: 0;\n}\n\nol,\nul,\nmenu {\n  list-style: none;\n  margin: 0;\n  padding: 0;\n}\n\n/*\nReset default styling for dialogs.\n*/\ndialog {\n  padding: 0;\n}\n\n/*\nPrevent resizing textareas horizontally by default.\n*/\n\ntextarea {\n  resize: vertical;\n}\n\n/*\n1. Reset the default placeholder opacity in Firefox. (https://github.com/tailwindlabs/tailwindcss/issues/3300)\n2. Set the default placeholder color to the user's configured gray 400 color.\n*/\n\ninput::-moz-placeholder, textarea::-moz-placeholder {\n  opacity: 1; /* 1 */\n  color: #9ca3af; /* 2 */\n}\n\ninput::placeholder,\ntextarea::placeholder {\n  opacity: 1; /* 1 */\n  color: #9ca3af; /* 2 */\n}\n\n/*\nSet the default cursor for buttons.\n*/\n\nbutton,\n[role=\"button\"] {\n  cursor: pointer;\n}\n\n/*\nMake sure disabled buttons don't get the pointer cursor.\n*/\n:disabled {\n  cursor: default;\n}\n\n/*\n1. Make replaced elements `display: block` by default. (https://github.com/mozdevs/cssremedy/issues/14)\n2. Add `vertical-align: middle` to align replaced elements more sensibly by default. (https://github.com/jensimmons/cssremedy/issues/14#issuecomment-634934210)\n   This can trigger a poorly considered lint error in some tools but is included by design.\n*/\n\nimg,\nsvg,\nvideo,\ncanvas,\naudio,\niframe,\nembed,\nobject {\n  display: block; /* 1 */\n  vertical-align: middle; /* 2 */\n}\n\n/*\nConstrain images and videos to the parent width and preserve their intrinsic aspect ratio. (https://github.com/mozdevs/cssremedy/issues/14)\n*/\n\nimg,\nvideo {\n  max-width: 100%;\n  height: auto;\n}\n\n/* Make elements with the HTML hidden attribute stay hidden by default */\n[hidden]:where(:not([hidden=\"until-found\"])) {\n  display: none;\n}\n  .rf-root {\n    --radius: 10px;\n    --rf-bg: color-mix(in srgb, var(--dsw-alias-bg-base) 96%, var(--dsw-alias-label-primary) 4%);\n    --rf-surface: var(--dsw-alias-bg-base);\n    --rf-surface-2: color-mix(in srgb, var(--dsw-alias-bg-base) 94%, var(--dsw-alias-label-primary) 6%);\n    --rf-surface-3: color-mix(in srgb, var(--dsw-alias-bg-base) 90%, var(--dsw-alias-label-primary) 10%);\n    --rf-line: var(--dsw-alias-border-l2);\n    --rf-text-1: var(--dsw-alias-label-primary);\n    --rf-text-2: var(--dsw-alias-label-secondary);\n    --rf-text-3: var(--dsw-alias-label-tertiary);\n    --rf-accent: var(--dsw-alias-brand-primary-new-colorprimary-new-color);\n    --rf-accent-dim: color-mix(in srgb, var(--rf-accent) 14%, var(--rf-surface));\n    --rf-ok: var(--dsw-alias-state-success-primary);\n    --rf-warn: var(--dsw-alias-state-warn-label);\n    --rf-error: var(--dsw-alias-state-error-primary);\n    --rf-on-accent: var(--dsw-alias-toast-label);\n    --rf-accent-hover: color-mix(in srgb, var(--rf-accent) 86%, var(--dsw-alias-label-primary));\n    --background: var(--rf-bg);\n    --foreground: var(--rf-text-1);\n    --card: var(--rf-surface);\n    --card-foreground: var(--rf-text-1);\n    --popover: var(--rf-surface);\n    --popover-foreground: var(--rf-text-1);\n    --primary: var(--rf-accent);\n    --primary-foreground: var(--rf-on-accent);\n    --secondary: var(--rf-surface-3);\n    --secondary-foreground: var(--rf-text-1);\n    --muted: var(--rf-surface-2);\n    --muted-foreground: var(--rf-text-2);\n    --accent: var(--rf-accent-dim);\n    --accent-foreground: var(--rf-text-1);\n    --destructive: var(--rf-error);\n    --destructive-foreground: var(--rf-on-accent);\n    --border: var(--rf-line);\n    --input: var(--rf-line);\n    --ring: var(--rf-accent);\n  }\n\n  body[data-ds-dark-theme] .rf-root {\n    --rf-bg: var(--dsw-alias-bg-base);\n    --rf-surface: var(--dsw-alias-bg-layer-1);\n    --rf-surface-2: color-mix(in srgb, var(--dsw-alias-bg-layer-1) 22%, var(--dsw-alias-bg-base));\n    --rf-surface-3: var(--dsw-alias-bg-layer-3);\n  }\n.rf-root .pointer-events-none {\n  pointer-events: none;\n}\n.rf-root .visible {\n  visibility: visible;\n}\n.rf-root .collapse {\n  visibility: collapse;\n}\n.rf-root .absolute {\n  position: absolute;\n}\n.rf-root .relative {\n  position: relative;\n}\n.rf-root .inset-0 {\n  inset: 0px;\n}\n.rf-root .my-1 {\n  margin-top: 0.25rem;\n  margin-bottom: 0.25rem;\n}\n.rf-root .mb-1 {\n  margin-bottom: 0.25rem;\n}\n.rf-root .mb-2 {\n  margin-bottom: 0.5rem;\n}\n.rf-root .ml-auto {\n  margin-left: auto;\n}\n.rf-root .mt-1 {\n  margin-top: 0.25rem;\n}\n.rf-root .mt-2 {\n  margin-top: 0.5rem;\n}\n.rf-root .mt-3 {\n  margin-top: 0.75rem;\n}\n.rf-root .box-border {\n  box-sizing: border-box;\n}\n.rf-root .block {\n  display: block;\n}\n.rf-root .flex {\n  display: flex;\n}\n.rf-root .inline-flex {\n  display: inline-flex;\n}\n.rf-root .grid {\n  display: grid;\n}\n.rf-root .h-1\\.5 {\n  height: 0.375rem;\n}\n.rf-root .h-10 {\n  height: 2.5rem;\n}\n.rf-root .h-11 {\n  height: 2.75rem;\n}\n.rf-root .h-2 {\n  height: 0.5rem;\n}\n.rf-root .h-2\\.5 {\n  height: 0.625rem;\n}\n.rf-root .h-4 {\n  height: 1rem;\n}\n.rf-root .h-7 {\n  height: 1.75rem;\n}\n.rf-root .h-8 {\n  height: 2rem;\n}\n.rf-root .h-9 {\n  height: 2.25rem;\n}\n.rf-root .h-\\[168px\\] {\n  height: 168px;\n}\n.rf-root .h-\\[18px\\] {\n  height: 18px;\n}\n.rf-root .h-\\[42px\\] {\n  height: 42px;\n}\n.rf-root .h-\\[50px\\] {\n  height: 50px;\n}\n.rf-root .h-\\[60px\\] {\n  height: 60px;\n}\n.rf-root .h-\\[70px\\] {\n  height: 70px;\n}\n.rf-root .h-\\[7px\\] {\n  height: 7px;\n}\n.rf-root .h-full {\n  height: 100%;\n}\n.rf-root .min-h-0 {\n  min-height: 0px;\n}\n.rf-root .min-h-10 {\n  min-height: 2.5rem;\n}\n.rf-root .min-h-8 {\n  min-height: 2rem;\n}\n.rf-root .min-h-\\[120px\\] {\n  min-height: 120px;\n}\n.rf-root .w-1\\.5 {\n  width: 0.375rem;\n}\n.rf-root .w-2\\.5 {\n  width: 0.625rem;\n}\n.rf-root .w-4 {\n  width: 1rem;\n}\n.rf-root .w-7 {\n  width: 1.75rem;\n}\n.rf-root .w-9 {\n  width: 2.25rem;\n}\n.rf-root .w-\\[104px\\] {\n  width: 104px;\n}\n.rf-root .w-\\[18px\\] {\n  width: 18px;\n}\n.rf-root .w-\\[7px\\] {\n  width: 7px;\n}\n.rf-root .w-full {\n  width: 100%;\n}\n.rf-root .w-px {\n  width: 1px;\n}\n.rf-root .min-w-0 {\n  min-width: 0px;\n}\n.rf-root .flex-1 {\n  flex: 1 1 0%;\n}\n.rf-root .shrink-0 {\n  flex-shrink: 0;\n}\n.rf-root .transform {\n  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));\n}\n.rf-root .cursor-pointer {\n  cursor: pointer;\n}\n.rf-root .resize-y {\n  resize: vertical;\n}\n.rf-root .resize {\n  resize: both;\n}\n.rf-root .grid-cols-1 {\n  grid-template-columns: repeat(1, minmax(0, 1fr));\n}\n.rf-root .grid-cols-2 {\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n}\n.rf-root .grid-cols-3 {\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n}\n.rf-root .flex-row {\n  flex-direction: row;\n}\n.rf-root .flex-col {\n  flex-direction: column;\n}\n.rf-root .flex-wrap {\n  flex-wrap: wrap;\n}\n.rf-root .items-center {\n  align-items: center;\n}\n.rf-root .justify-center {\n  justify-content: center;\n}\n.rf-root .justify-between {\n  justify-content: space-between;\n}\n.rf-root .gap-1 {\n  gap: 0.25rem;\n}\n.rf-root .gap-1\\.5 {\n  gap: 0.375rem;\n}\n.rf-root .gap-2 {\n  gap: 0.5rem;\n}\n.rf-root .gap-2\\.5 {\n  gap: 0.625rem;\n}\n.rf-root .gap-3 {\n  gap: 0.75rem;\n}\n.rf-root .gap-3\\.5 {\n  gap: 0.875rem;\n}\n.rf-root .gap-4 {\n  gap: 1rem;\n}\n.rf-root .gap-5 {\n  gap: 1.25rem;\n}\n.rf-root :is(.space-y-1\\.5 > :not([hidden]) ~ :not([hidden])) {\n  --tw-space-y-reverse: 0;\n  margin-top: calc(0.375rem * calc(1 - var(--tw-space-y-reverse)));\n  margin-bottom: calc(0.375rem * var(--tw-space-y-reverse));\n}\n.rf-root .overflow-hidden {\n  overflow: hidden;\n}\n.rf-root .overflow-x-auto {\n  overflow-x: auto;\n}\n.rf-root .overflow-y-auto {\n  overflow-y: auto;\n}\n.rf-root .overflow-x-hidden {\n  overflow-x: hidden;\n}\n.rf-root .whitespace-nowrap {\n  white-space: nowrap;\n}\n.rf-root .break-all {\n  word-break: break-all;\n}\n.rf-root .rounded {\n  border-radius: 0.25rem;\n}\n.rf-root .rounded-2xl {\n  border-radius: 1rem;\n}\n.rf-root .rounded-\\[10px\\] {\n  border-radius: 10px;\n}\n.rf-root .rounded-full {\n  border-radius: 9999px;\n}\n.rf-root .rounded-lg {\n  border-radius: var(--radius);\n}\n.rf-root .rounded-md {\n  border-radius: calc(var(--radius) - 2px);\n}\n.rf-root .rounded-sm {\n  border-radius: calc(var(--radius) - 4px);\n}\n.rf-root .border {\n  border-width: 1px;\n}\n.rf-root .border-0 {\n  border-width: 0px;\n}\n.rf-root .border-l-4 {\n  border-left-width: 4px;\n}\n.rf-root .border-t {\n  border-top-width: 1px;\n}\n.rf-root .border-dashed {\n  border-style: dashed;\n}\n.rf-root .border-\\[var\\(--rf-warn\\)\\] {\n  border-color: var(--rf-warn);\n}\n.rf-root .border-border {\n  border-color: var(--border);\n}\n.rf-root .border-destructive {\n  border-color: var(--destructive);\n}\n.rf-root .border-input {\n  border-color: var(--input);\n}\n.rf-root .border-primary {\n  border-color: var(--primary);\n}\n.rf-root .border-transparent {\n  border-color: transparent;\n}\n.rf-root .border-l-primary {\n  border-left-color: var(--primary);\n}\n.rf-root .bg-\\[color-mix\\(in_srgb\\2c var\\(--rf-warn\\)_10\\%\\2c var\\(--card\\)\\)\\] {\n  background-color: color-mix(in srgb,var(--rf-warn) 10%,var(--card));\n}\n.rf-root .bg-\\[var\\(--rf-ok\\)\\] {\n  background-color: var(--rf-ok);\n}\n.rf-root .bg-\\[var\\(--rf-warn\\)\\] {\n  background-color: var(--rf-warn);\n}\n.rf-root .bg-accent {\n  background-color: var(--accent);\n}\n.rf-root .bg-background {\n  background-color: var(--background);\n}\n.rf-root .bg-border {\n  background-color: var(--border);\n}\n.rf-root .bg-card {\n  background-color: var(--card);\n}\n.rf-root .bg-destructive {\n  background-color: var(--destructive);\n}\n.rf-root .bg-muted {\n  background-color: var(--muted);\n}\n.rf-root .bg-muted-foreground {\n  background-color: var(--muted-foreground);\n}\n.rf-root .bg-primary {\n  background-color: var(--primary);\n}\n.rf-root .bg-primary-foreground {\n  background-color: var(--primary-foreground);\n}\n.rf-root .bg-secondary {\n  background-color: var(--secondary);\n}\n.rf-root .bg-transparent {\n  background-color: transparent;\n}\n.rf-root .object-contain {\n  -o-object-fit: contain;\n     object-fit: contain;\n}\n.rf-root .p-0 {\n  padding: 0px;\n}\n.rf-root .p-2\\.5 {\n  padding: 0.625rem;\n}\n.rf-root .p-3 {\n  padding: 0.75rem;\n}\n.rf-root .p-3\\.5 {\n  padding: 0.875rem;\n}\n.rf-root .p-4 {\n  padding: 1rem;\n}\n.rf-root .p-5 {\n  padding: 1.25rem;\n}\n.rf-root .px-1\\.5 {\n  padding-left: 0.375rem;\n  padding-right: 0.375rem;\n}\n.rf-root .px-2 {\n  padding-left: 0.5rem;\n  padding-right: 0.5rem;\n}\n.rf-root .px-2\\.5 {\n  padding-left: 0.625rem;\n  padding-right: 0.625rem;\n}\n.rf-root .px-3 {\n  padding-left: 0.75rem;\n  padding-right: 0.75rem;\n}\n.rf-root .px-4 {\n  padding-left: 1rem;\n  padding-right: 1rem;\n}\n.rf-root .px-5 {\n  padding-left: 1.25rem;\n  padding-right: 1.25rem;\n}\n.rf-root .px-8 {\n  padding-left: 2rem;\n  padding-right: 2rem;\n}\n.rf-root .py-0\\.5 {\n  padding-top: 0.125rem;\n  padding-bottom: 0.125rem;\n}\n.rf-root .py-1 {\n  padding-top: 0.25rem;\n  padding-bottom: 0.25rem;\n}\n.rf-root .py-1\\.5 {\n  padding-top: 0.375rem;\n  padding-bottom: 0.375rem;\n}\n.rf-root .py-2 {\n  padding-top: 0.5rem;\n  padding-bottom: 0.5rem;\n}\n.rf-root .py-3 {\n  padding-top: 0.75rem;\n  padding-bottom: 0.75rem;\n}\n.rf-root .pl-6 {\n  padding-left: 1.5rem;\n}\n.rf-root .pt-0 {\n  padding-top: 0px;\n}\n.rf-root .text-left {\n  text-align: left;\n}\n.rf-root .text-center {\n  text-align: center;\n}\n.rf-root .font-sans {\n  font-family: ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\";\n}\n.rf-root .text-\\[10px\\] {\n  font-size: 10px;\n}\n.rf-root .text-\\[11px\\] {\n  font-size: 11px;\n}\n.rf-root .text-\\[13px\\] {\n  font-size: 13px;\n}\n.rf-root .text-\\[9px\\] {\n  font-size: 9px;\n}\n.rf-root .text-sm {\n  font-size: 0.875rem;\n  line-height: 1.25rem;\n}\n.rf-root .text-xs {\n  font-size: 0.75rem;\n  line-height: 1rem;\n}\n.rf-root .font-medium {\n  font-weight: 500;\n}\n.rf-root .font-normal {\n  font-weight: 400;\n}\n.rf-root .font-semibold {\n  font-weight: 600;\n}\n.rf-root .leading-none {\n  line-height: 1;\n}\n.rf-root .leading-normal {\n  line-height: 1.5;\n}\n.rf-root .tracking-tight {\n  letter-spacing: -0.025em;\n}\n.rf-root .text-\\[var\\(--rf-ok\\)\\] {\n  color: var(--rf-ok);\n}\n.rf-root .text-\\[var\\(--rf-warn\\)\\] {\n  color: var(--rf-warn);\n}\n.rf-root .text-card-foreground {\n  color: var(--card-foreground);\n}\n.rf-root .text-destructive {\n  color: var(--destructive);\n}\n.rf-root .text-destructive-foreground {\n  color: var(--destructive-foreground);\n}\n.rf-root .text-foreground {\n  color: var(--foreground);\n}\n.rf-root .text-muted-foreground {\n  color: var(--muted-foreground);\n}\n.rf-root .text-primary {\n  color: var(--primary);\n}\n.rf-root .text-primary-foreground {\n  color: var(--primary-foreground);\n}\n.rf-root .text-secondary-foreground {\n  color: var(--secondary-foreground);\n}\n.rf-root .no-underline {\n  text-decoration-line: none;\n}\n.rf-root .underline-offset-4 {\n  text-underline-offset: 4px;\n}\n.rf-root .accent-primary {\n  accent-color: var(--primary);\n}\n.rf-root .opacity-50 {\n  opacity: 0.5;\n}\n.rf-root .shadow-none {\n  --tw-shadow: 0 0 #0000;\n  --tw-shadow-colored: 0 0 #0000;\n  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);\n}\n.rf-root .shadow-sm {\n  --tw-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);\n  --tw-shadow-colored: 0 1px 2px 0 var(--tw-shadow-color);\n  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);\n}\n.rf-root .outline {\n  outline-style: solid;\n}\n.rf-root .filter {\n  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);\n}\n.rf-root .transition-all {\n  transition-property: all;\n  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n  transition-duration: 150ms;\n}\n.rf-root .transition-colors {\n  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;\n  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n  transition-duration: 150ms;\n}\n@keyframes enter {\n\n  from {\n    opacity: var(--tw-enter-opacity, 1);\n    transform: translate3d(var(--tw-enter-translate-x, 0), var(--tw-enter-translate-y, 0), 0) scale3d(var(--tw-enter-scale, 1), var(--tw-enter-scale, 1), var(--tw-enter-scale, 1)) rotate(var(--tw-enter-rotate, 0));\n  }\n}\n@keyframes exit {\n\n  to {\n    opacity: var(--tw-exit-opacity, 1);\n    transform: translate3d(var(--tw-exit-translate-x, 0), var(--tw-exit-translate-y, 0), 0) scale3d(var(--tw-exit-scale, 1), var(--tw-exit-scale, 1), var(--tw-exit-scale, 1)) rotate(var(--tw-exit-rotate, 0));\n  }\n}\n.rf-root .running {\n  animation-play-state: running;\n}\n.rf-root .file\\:border-0::file-selector-button {\n  border-width: 0px;\n}\n.rf-root .file\\:bg-transparent::file-selector-button {\n  background-color: transparent;\n}\n.rf-root .file\\:text-sm::file-selector-button {\n  font-size: 0.875rem;\n  line-height: 1.25rem;\n}\n.rf-root .file\\:font-medium::file-selector-button {\n  font-weight: 500;\n}\n.rf-root .file\\:text-foreground::file-selector-button {\n  color: var(--foreground);\n}\n.rf-root .placeholder\\:text-muted-foreground::-moz-placeholder {\n  color: var(--muted-foreground);\n}\n.rf-root .placeholder\\:text-muted-foreground::placeholder {\n  color: var(--muted-foreground);\n}\n.rf-root .after\\:block::after {\n  content: var(--tw-content);\n  display: block;\n}\n.rf-root .after\\:h-3::after {\n  content: var(--tw-content);\n  height: 0.75rem;\n}\n.rf-root .after\\:w-3::after {\n  content: var(--tw-content);\n  width: 0.75rem;\n}\n.rf-root .after\\:rounded-sm::after {\n  content: var(--tw-content);\n  border-radius: calc(var(--radius) - 4px);\n}\n.rf-root .after\\:bg-primary::after {\n  content: var(--tw-content);\n  background-color: var(--primary);\n}\n.rf-root .hover\\:bg-accent:hover {\n  background-color: var(--accent);\n}\n.rf-root .hover\\:text-accent-foreground:hover {\n  color: var(--accent-foreground);\n}\n.rf-root .hover\\:underline:hover {\n  text-decoration-line: underline;\n}\n.rf-root .hover\\:opacity-90:hover {\n  opacity: 0.9;\n}\n.rf-root .focus\\:outline-none:focus {\n  outline: 2px solid transparent;\n  outline-offset: 2px;\n}\n.rf-root .focus\\:ring-2:focus {\n  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);\n  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);\n  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);\n}\n.rf-root .focus\\:ring-ring:focus {\n  --tw-ring-color: var(--ring);\n}\n.rf-root .focus\\:ring-offset-2:focus {\n  --tw-ring-offset-width: 2px;\n}\n.rf-root .focus-visible\\:outline-none:focus-visible {\n  outline: 2px solid transparent;\n  outline-offset: 2px;\n}\n.rf-root .focus-visible\\:ring-2:focus-visible {\n  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);\n  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);\n  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);\n}\n.rf-root .focus-visible\\:ring-destructive:focus-visible {\n  --tw-ring-color: var(--destructive);\n}\n.rf-root .focus-visible\\:ring-ring:focus-visible {\n  --tw-ring-color: var(--ring);\n}\n.rf-root .focus-visible\\:ring-offset-2:focus-visible {\n  --tw-ring-offset-width: 2px;\n}\n.rf-root .focus-visible\\:ring-offset-background:focus-visible {\n  --tw-ring-offset-color: var(--background);\n}\n.rf-root .disabled\\:pointer-events-none:disabled {\n  pointer-events: none;\n}\n.rf-root .disabled\\:cursor-not-allowed:disabled {\n  cursor: not-allowed;\n}\n.rf-root .disabled\\:opacity-50:disabled {\n  opacity: 0.5;\n}\n.rf-root .disabled\\:opacity-60:disabled {\n  opacity: 0.6;\n}\n.rf-root :is(.peer:disabled ~ .peer-disabled\\:cursor-not-allowed) {\n  cursor: not-allowed;\n}\n.rf-root :is(.peer:disabled ~ .peer-disabled\\:opacity-70) {\n  opacity: 0.7;\n}\n.rf-root .dark\\:border-destructive:where(body[data-ds-dark-theme] .rf-root, body[data-ds-dark-theme] .rf-root *) {\n  border-color: var(--destructive);\n}\n.rf-root :is(.\\[\\&\\>div\\]\\:bg-\\[var\\(--rf-ok\\)\\]>div) {\n  background-color: var(--rf-ok);\n}\n.rf-root :is(.\\[\\&\\>div\\]\\:bg-destructive>div) {\n  background-color: var(--destructive);\n}\n.rf-root :is(.\\[\\&\\>svg\\+div\\]\\:translate-y-\\[-3px\\]>svg+div) {\n  --tw-translate-y: -3px;\n  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));\n}\n.rf-root :is(.\\[\\&\\>svg\\]\\:absolute>svg) {\n  position: absolute;\n}\n.rf-root :is(.\\[\\&\\>svg\\]\\:left-4>svg) {\n  left: 1rem;\n}\n.rf-root :is(.\\[\\&\\>svg\\]\\:top-4>svg) {\n  top: 1rem;\n}\n.rf-root :is(.\\[\\&\\>svg\\]\\:text-destructive>svg) {\n  color: var(--destructive);\n}\n.rf-root :is(.\\[\\&\\>svg\\]\\:text-foreground>svg) {\n  color: var(--foreground);\n}\n.rf-root :is(.\\[\\&\\>svg\\~\\*\\]\\:pl-7>svg~*) {\n  padding-left: 1.75rem;\n}\n.rf-root :is(.focus-within\\:\\[\\&_\\.rf-ui-card\\]\\:border-primary .rf-ui-card:focus-within) {\n  border-color: var(--primary);\n}\n.rf-root :is(.\\[\\&_\\.stage-dot\\]\\:bg-\\[var\\(--rf-ok\\)\\] .stage-dot) {\n  background-color: var(--rf-ok);\n}\n.rf-root :is(.\\[\\&_\\.stage-dot\\]\\:bg-border .stage-dot) {\n  background-color: var(--border);\n}\n.rf-root :is(.\\[\\&_\\.stage-dot\\]\\:bg-primary .stage-dot) {\n  background-color: var(--primary);\n}\n.rf-root :is(.\\[\\&_\\.stage-label\\]\\:rounded-md .stage-label) {\n  border-radius: calc(var(--radius) - 2px);\n}\n.rf-root :is(.\\[\\&_\\.stage-label\\]\\:bg-accent .stage-label) {\n  background-color: var(--accent);\n}\n.rf-root :is(.\\[\\&_\\.stage-label\\]\\:px-1\\.5 .stage-label) {\n  padding-left: 0.375rem;\n  padding-right: 0.375rem;\n}\n.rf-root :is(.\\[\\&_\\.stage-label\\]\\:py-0\\.5 .stage-label) {\n  padding-top: 0.125rem;\n  padding-bottom: 0.125rem;\n}\n.rf-root :is(.\\[\\&_\\.thumb-target\\]\\:outline .thumb-target) {\n  outline-style: solid;\n}\n.rf-root :is(.\\[\\&_\\.thumb-target\\]\\:outline-2 .thumb-target) {\n  outline-width: 2px;\n}\n.rf-root :is(.\\[\\&_\\.thumb-target\\]\\:outline-offset-2 .thumb-target) {\n  outline-offset: 2px;\n}\n.rf-root :is(.\\[\\&_\\.thumb-target\\]\\:outline-primary .thumb-target) {\n  outline-color: var(--primary);\n}\n.rf-root :is(.\\[\\&_p\\]\\:leading-relaxed p) {\n  line-height: 1.625;\n}\n.rf-root :is(.\\[\\&_svg\\]\\:pointer-events-none svg) {\n  pointer-events: none;\n}\n.rf-root :is(.\\[\\&_svg\\]\\:size-4 svg) {\n  width: 1rem;\n  height: 1rem;\n}\n.rf-root :is(.\\[\\&_svg\\]\\:shrink-0 svg) {\n  flex-shrink: 0;\n}";
+RF.TAILWIND_STYLES = "*, ::before, ::after {\n  --tw-border-spacing-x: 0;\n  --tw-border-spacing-y: 0;\n  --tw-translate-x: 0;\n  --tw-translate-y: 0;\n  --tw-rotate: 0;\n  --tw-skew-x: 0;\n  --tw-skew-y: 0;\n  --tw-scale-x: 1;\n  --tw-scale-y: 1;\n  --tw-pan-x:  ;\n  --tw-pan-y:  ;\n  --tw-pinch-zoom:  ;\n  --tw-scroll-snap-strictness: proximity;\n  --tw-gradient-from-position:  ;\n  --tw-gradient-via-position:  ;\n  --tw-gradient-to-position:  ;\n  --tw-ordinal:  ;\n  --tw-slashed-zero:  ;\n  --tw-numeric-figure:  ;\n  --tw-numeric-spacing:  ;\n  --tw-numeric-fraction:  ;\n  --tw-ring-inset:  ;\n  --tw-ring-offset-width: 0px;\n  --tw-ring-offset-color: #fff;\n  --tw-ring-color: rgb(59 130 246 / 0.5);\n  --tw-ring-offset-shadow: 0 0 #0000;\n  --tw-ring-shadow: 0 0 #0000;\n  --tw-shadow: 0 0 #0000;\n  --tw-shadow-colored: 0 0 #0000;\n  --tw-blur:  ;\n  --tw-brightness:  ;\n  --tw-contrast:  ;\n  --tw-grayscale:  ;\n  --tw-hue-rotate:  ;\n  --tw-invert:  ;\n  --tw-saturate:  ;\n  --tw-sepia:  ;\n  --tw-drop-shadow:  ;\n  --tw-backdrop-blur:  ;\n  --tw-backdrop-brightness:  ;\n  --tw-backdrop-contrast:  ;\n  --tw-backdrop-grayscale:  ;\n  --tw-backdrop-hue-rotate:  ;\n  --tw-backdrop-invert:  ;\n  --tw-backdrop-opacity:  ;\n  --tw-backdrop-saturate:  ;\n  --tw-backdrop-sepia:  ;\n  --tw-contain-size:  ;\n  --tw-contain-layout:  ;\n  --tw-contain-paint:  ;\n  --tw-contain-style:  ;\n}\n\n::backdrop {\n  --tw-border-spacing-x: 0;\n  --tw-border-spacing-y: 0;\n  --tw-translate-x: 0;\n  --tw-translate-y: 0;\n  --tw-rotate: 0;\n  --tw-skew-x: 0;\n  --tw-skew-y: 0;\n  --tw-scale-x: 1;\n  --tw-scale-y: 1;\n  --tw-pan-x:  ;\n  --tw-pan-y:  ;\n  --tw-pinch-zoom:  ;\n  --tw-scroll-snap-strictness: proximity;\n  --tw-gradient-from-position:  ;\n  --tw-gradient-via-position:  ;\n  --tw-gradient-to-position:  ;\n  --tw-ordinal:  ;\n  --tw-slashed-zero:  ;\n  --tw-numeric-figure:  ;\n  --tw-numeric-spacing:  ;\n  --tw-numeric-fraction:  ;\n  --tw-ring-inset:  ;\n  --tw-ring-offset-width: 0px;\n  --tw-ring-offset-color: #fff;\n  --tw-ring-color: rgb(59 130 246 / 0.5);\n  --tw-ring-offset-shadow: 0 0 #0000;\n  --tw-ring-shadow: 0 0 #0000;\n  --tw-shadow: 0 0 #0000;\n  --tw-shadow-colored: 0 0 #0000;\n  --tw-blur:  ;\n  --tw-brightness:  ;\n  --tw-contrast:  ;\n  --tw-grayscale:  ;\n  --tw-hue-rotate:  ;\n  --tw-invert:  ;\n  --tw-saturate:  ;\n  --tw-sepia:  ;\n  --tw-drop-shadow:  ;\n  --tw-backdrop-blur:  ;\n  --tw-backdrop-brightness:  ;\n  --tw-backdrop-contrast:  ;\n  --tw-backdrop-grayscale:  ;\n  --tw-backdrop-hue-rotate:  ;\n  --tw-backdrop-invert:  ;\n  --tw-backdrop-opacity:  ;\n  --tw-backdrop-saturate:  ;\n  --tw-backdrop-sepia:  ;\n  --tw-contain-size:  ;\n  --tw-contain-layout:  ;\n  --tw-contain-paint:  ;\n  --tw-contain-style:  ;\n}/*\n! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com\n*//*\n1. Prevent padding and border from affecting element width. (https://github.com/mozdevs/cssremedy/issues/4)\n2. Allow adding a border to an element by just adding a border-width. (https://github.com/tailwindcss/tailwindcss/pull/116)\n*/\n\n*,\n::before,\n::after {\n  box-sizing: border-box; /* 1 */\n  border-width: 0; /* 2 */\n  border-style: solid; /* 2 */\n  border-color: #e5e7eb; /* 2 */\n}\n\n::before,\n::after {\n  --tw-content: '';\n}\n\n/*\n1. Use a consistent sensible line-height in all browsers.\n2. Prevent adjustments of font size after orientation changes in iOS.\n3. Use a more readable tab size.\n4. Use the user's configured `sans` font-family by default.\n5. Use the user's configured `sans` font-feature-settings by default.\n6. Use the user's configured `sans` font-variation-settings by default.\n7. Disable tap highlights on iOS\n*/\n\nhtml,\n:host {\n  line-height: 1.5; /* 1 */\n  -webkit-text-size-adjust: 100%; /* 2 */\n  -moz-tab-size: 4; /* 3 */\n  -o-tab-size: 4;\n     tab-size: 4; /* 3 */\n  font-family: ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\"; /* 4 */\n  font-feature-settings: normal; /* 5 */\n  font-variation-settings: normal; /* 6 */\n  -webkit-tap-highlight-color: transparent; /* 7 */\n}\n\n/*\n1. Remove the margin in all browsers.\n2. Inherit line-height from `html` so users can set them as a class directly on the `html` element.\n*/\n\nbody {\n  margin: 0; /* 1 */\n  line-height: inherit; /* 2 */\n}\n\n/*\n1. Add the correct height in Firefox.\n2. Correct the inheritance of border color in Firefox. (https://bugzilla.mozilla.org/show_bug.cgi?id=190655)\n3. Ensure horizontal rules are visible by default.\n*/\n\nhr {\n  height: 0; /* 1 */\n  color: inherit; /* 2 */\n  border-top-width: 1px; /* 3 */\n}\n\n/*\nAdd the correct text decoration in Chrome, Edge, and Safari.\n*/\n\nabbr:where([title]) {\n  -webkit-text-decoration: underline dotted;\n          text-decoration: underline dotted;\n}\n\n/*\nRemove the default font size and weight for headings.\n*/\n\nh1,\nh2,\nh3,\nh4,\nh5,\nh6 {\n  font-size: inherit;\n  font-weight: inherit;\n}\n\n/*\nReset links to optimize for opt-in styling instead of opt-out.\n*/\n\na {\n  color: inherit;\n  text-decoration: inherit;\n}\n\n/*\nAdd the correct font weight in Edge and Safari.\n*/\n\nb,\nstrong {\n  font-weight: bolder;\n}\n\n/*\n1. Use the user's configured `mono` font-family by default.\n2. Use the user's configured `mono` font-feature-settings by default.\n3. Use the user's configured `mono` font-variation-settings by default.\n4. Correct the odd `em` font sizing in all browsers.\n*/\n\ncode,\nkbd,\nsamp,\npre {\n  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\", \"Courier New\", monospace; /* 1 */\n  font-feature-settings: normal; /* 2 */\n  font-variation-settings: normal; /* 3 */\n  font-size: 1em; /* 4 */\n}\n\n/*\nAdd the correct font size in all browsers.\n*/\n\nsmall {\n  font-size: 80%;\n}\n\n/*\nPrevent `sub` and `sup` elements from affecting the line height in all browsers.\n*/\n\nsub,\nsup {\n  font-size: 75%;\n  line-height: 0;\n  position: relative;\n  vertical-align: baseline;\n}\n\nsub {\n  bottom: -0.25em;\n}\n\nsup {\n  top: -0.5em;\n}\n\n/*\n1. Remove text indentation from table contents in Chrome and Safari. (https://bugs.chromium.org/p/chromium/issues/detail?id=999088, https://bugs.webkit.org/show_bug.cgi?id=201297)\n2. Correct table border color inheritance in all Chrome and Safari. (https://bugs.chromium.org/p/chromium/issues/detail?id=935729, https://bugs.webkit.org/show_bug.cgi?id=195016)\n3. Remove gaps between table borders by default.\n*/\n\ntable {\n  text-indent: 0; /* 1 */\n  border-color: inherit; /* 2 */\n  border-collapse: collapse; /* 3 */\n}\n\n/*\n1. Change the font styles in all browsers.\n2. Remove the margin in Firefox and Safari.\n3. Remove default padding in all browsers.\n*/\n\nbutton,\ninput,\noptgroup,\nselect,\ntextarea {\n  font-family: inherit; /* 1 */\n  font-feature-settings: inherit; /* 1 */\n  font-variation-settings: inherit; /* 1 */\n  font-size: 100%; /* 1 */\n  font-weight: inherit; /* 1 */\n  line-height: inherit; /* 1 */\n  letter-spacing: inherit; /* 1 */\n  color: inherit; /* 1 */\n  margin: 0; /* 2 */\n  padding: 0; /* 3 */\n}\n\n/*\nRemove the inheritance of text transform in Edge and Firefox.\n*/\n\nbutton,\nselect {\n  text-transform: none;\n}\n\n/*\n1. Correct the inability to style clickable types in iOS and Safari.\n2. Remove default button styles.\n*/\n\nbutton,\ninput:where([type='button']),\ninput:where([type='reset']),\ninput:where([type='submit']) {\n  -webkit-appearance: button; /* 1 */\n  background-color: transparent; /* 2 */\n  background-image: none; /* 2 */\n}\n\n/*\nUse the modern Firefox focus style for all focusable elements.\n*/\n\n:-moz-focusring {\n  outline: auto;\n}\n\n/*\nRemove the additional `:invalid` styles in Firefox. (https://github.com/mozilla/gecko-dev/blob/2f9eacd9d3d995c937b4251a5557d95d494c9be1/layout/style/res/forms.css#L728-L737)\n*/\n\n:-moz-ui-invalid {\n  box-shadow: none;\n}\n\n/*\nAdd the correct vertical alignment in Chrome and Firefox.\n*/\n\nprogress {\n  vertical-align: baseline;\n}\n\n/*\nCorrect the cursor style of increment and decrement buttons in Safari.\n*/\n\n::-webkit-inner-spin-button,\n::-webkit-outer-spin-button {\n  height: auto;\n}\n\n/*\n1. Correct the odd appearance in Chrome and Safari.\n2. Correct the outline style in Safari.\n*/\n\n[type='search'] {\n  -webkit-appearance: textfield; /* 1 */\n  outline-offset: -2px; /* 2 */\n}\n\n/*\nRemove the inner padding in Chrome and Safari on macOS.\n*/\n\n::-webkit-search-decoration {\n  -webkit-appearance: none;\n}\n\n/*\n1. Correct the inability to style clickable types in iOS and Safari.\n2. Change font properties to `inherit` in Safari.\n*/\n\n::-webkit-file-upload-button {\n  -webkit-appearance: button; /* 1 */\n  font: inherit; /* 2 */\n}\n\n/*\nAdd the correct display in Chrome and Safari.\n*/\n\nsummary {\n  display: list-item;\n}\n\n/*\nRemoves the default spacing and border for appropriate elements.\n*/\n\nblockquote,\ndl,\ndd,\nh1,\nh2,\nh3,\nh4,\nh5,\nh6,\nhr,\nfigure,\np,\npre {\n  margin: 0;\n}\n\nfieldset {\n  margin: 0;\n  padding: 0;\n}\n\nlegend {\n  padding: 0;\n}\n\nol,\nul,\nmenu {\n  list-style: none;\n  margin: 0;\n  padding: 0;\n}\n\n/*\nReset default styling for dialogs.\n*/\ndialog {\n  padding: 0;\n}\n\n/*\nPrevent resizing textareas horizontally by default.\n*/\n\ntextarea {\n  resize: vertical;\n}\n\n/*\n1. Reset the default placeholder opacity in Firefox. (https://github.com/tailwindlabs/tailwindcss/issues/3300)\n2. Set the default placeholder color to the user's configured gray 400 color.\n*/\n\ninput::-moz-placeholder, textarea::-moz-placeholder {\n  opacity: 1; /* 1 */\n  color: #9ca3af; /* 2 */\n}\n\ninput::placeholder,\ntextarea::placeholder {\n  opacity: 1; /* 1 */\n  color: #9ca3af; /* 2 */\n}\n\n/*\nSet the default cursor for buttons.\n*/\n\nbutton,\n[role=\"button\"] {\n  cursor: pointer;\n}\n\n/*\nMake sure disabled buttons don't get the pointer cursor.\n*/\n:disabled {\n  cursor: default;\n}\n\n/*\n1. Make replaced elements `display: block` by default. (https://github.com/mozdevs/cssremedy/issues/14)\n2. Add `vertical-align: middle` to align replaced elements more sensibly by default. (https://github.com/jensimmons/cssremedy/issues/14#issuecomment-634934210)\n   This can trigger a poorly considered lint error in some tools but is included by design.\n*/\n\nimg,\nsvg,\nvideo,\ncanvas,\naudio,\niframe,\nembed,\nobject {\n  display: block; /* 1 */\n  vertical-align: middle; /* 2 */\n}\n\n/*\nConstrain images and videos to the parent width and preserve their intrinsic aspect ratio. (https://github.com/mozdevs/cssremedy/issues/14)\n*/\n\nimg,\nvideo {\n  max-width: 100%;\n  height: auto;\n}\n\n/* Make elements with the HTML hidden attribute stay hidden by default */\n[hidden]:where(:not([hidden=\"until-found\"])) {\n  display: none;\n}\n  .rf-root {\n    --radius: 10px;\n    --rf-bg: color-mix(in srgb, var(--dsw-alias-bg-base) 96%, var(--dsw-alias-label-primary) 4%);\n    --rf-surface: var(--dsw-alias-bg-base);\n    --rf-surface-2: color-mix(in srgb, var(--dsw-alias-bg-base) 94%, var(--dsw-alias-label-primary) 6%);\n    --rf-surface-3: color-mix(in srgb, var(--dsw-alias-bg-base) 90%, var(--dsw-alias-label-primary) 10%);\n    --rf-line: var(--dsw-alias-border-l2);\n    --rf-text-1: var(--dsw-alias-label-primary);\n    --rf-text-2: var(--dsw-alias-label-secondary);\n    --rf-text-3: var(--dsw-alias-label-tertiary);\n    --rf-accent: var(--dsw-alias-brand-primary-new-colorprimary-new-color);\n    --rf-accent-dim: color-mix(in srgb, var(--rf-accent) 14%, var(--rf-surface));\n    --rf-ok: var(--dsw-alias-state-success-primary);\n    --rf-warn: var(--dsw-alias-state-warn-label);\n    --rf-error: var(--dsw-alias-state-error-primary);\n    --rf-on-accent: var(--dsw-alias-toast-label);\n    --rf-accent-hover: color-mix(in srgb, var(--rf-accent) 86%, var(--dsw-alias-label-primary));\n    --background: var(--rf-bg);\n    --foreground: var(--rf-text-1);\n    --card: var(--rf-surface);\n    --card-foreground: var(--rf-text-1);\n    --popover: var(--rf-surface);\n    --popover-foreground: var(--rf-text-1);\n    --primary: var(--rf-accent);\n    --primary-foreground: var(--rf-on-accent);\n    --secondary: var(--rf-surface-3);\n    --secondary-foreground: var(--rf-text-1);\n    --muted: var(--rf-surface-2);\n    --muted-foreground: var(--rf-text-2);\n    --accent: var(--rf-accent-dim);\n    --accent-foreground: var(--rf-text-1);\n    --destructive: var(--rf-error);\n    --destructive-foreground: var(--rf-on-accent);\n    --border: var(--rf-line);\n    --input: var(--rf-line);\n    --ring: var(--rf-accent);\n  }\n\n  body[data-ds-dark-theme] .rf-root {\n    --rf-bg: var(--dsw-alias-bg-base);\n    --rf-surface: var(--dsw-alias-bg-layer-1);\n    --rf-surface-2: color-mix(in srgb, var(--dsw-alias-bg-layer-1) 22%, var(--dsw-alias-bg-base));\n    --rf-surface-3: var(--dsw-alias-bg-layer-3);\n  }\n.rf-root .pointer-events-none {\n  pointer-events: none;\n}\n.rf-root .visible {\n  visibility: visible;\n}\n.rf-root .collapse {\n  visibility: collapse;\n}\n.rf-root .relative {\n  position: relative;\n}\n.rf-root .my-1 {\n  margin-top: 0.25rem;\n  margin-bottom: 0.25rem;\n}\n.rf-root .mb-1 {\n  margin-bottom: 0.25rem;\n}\n.rf-root .mb-2 {\n  margin-bottom: 0.5rem;\n}\n.rf-root .ml-auto {\n  margin-left: auto;\n}\n.rf-root .mt-1 {\n  margin-top: 0.25rem;\n}\n.rf-root .mt-2 {\n  margin-top: 0.5rem;\n}\n.rf-root .mt-3 {\n  margin-top: 0.75rem;\n}\n.rf-root .box-border {\n  box-sizing: border-box;\n}\n.rf-root .block {\n  display: block;\n}\n.rf-root .flex {\n  display: flex;\n}\n.rf-root .inline-flex {\n  display: inline-flex;\n}\n.rf-root .grid {\n  display: grid;\n}\n.rf-root .h-1\\.5 {\n  height: 0.375rem;\n}\n.rf-root .h-10 {\n  height: 2.5rem;\n}\n.rf-root .h-11 {\n  height: 2.75rem;\n}\n.rf-root .h-2 {\n  height: 0.5rem;\n}\n.rf-root .h-2\\.5 {\n  height: 0.625rem;\n}\n.rf-root .h-4 {\n  height: 1rem;\n}\n.rf-root .h-7 {\n  height: 1.75rem;\n}\n.rf-root .h-8 {\n  height: 2rem;\n}\n.rf-root .h-9 {\n  height: 2.25rem;\n}\n.rf-root .h-\\[168px\\] {\n  height: 168px;\n}\n.rf-root .h-\\[18px\\] {\n  height: 18px;\n}\n.rf-root .h-\\[42px\\] {\n  height: 42px;\n}\n.rf-root .h-\\[50px\\] {\n  height: 50px;\n}\n.rf-root .h-\\[60px\\] {\n  height: 60px;\n}\n.rf-root .h-\\[70px\\] {\n  height: 70px;\n}\n.rf-root .h-\\[7px\\] {\n  height: 7px;\n}\n.rf-root .h-full {\n  height: 100%;\n}\n.rf-root .min-h-0 {\n  min-height: 0px;\n}\n.rf-root .min-h-10 {\n  min-height: 2.5rem;\n}\n.rf-root .min-h-8 {\n  min-height: 2rem;\n}\n.rf-root .min-h-\\[120px\\] {\n  min-height: 120px;\n}\n.rf-root .w-1\\.5 {\n  width: 0.375rem;\n}\n.rf-root .w-2\\.5 {\n  width: 0.625rem;\n}\n.rf-root .w-4 {\n  width: 1rem;\n}\n.rf-root .w-7 {\n  width: 1.75rem;\n}\n.rf-root .w-9 {\n  width: 2.25rem;\n}\n.rf-root .w-\\[104px\\] {\n  width: 104px;\n}\n.rf-root .w-\\[18px\\] {\n  width: 18px;\n}\n.rf-root .w-\\[7px\\] {\n  width: 7px;\n}\n.rf-root .w-full {\n  width: 100%;\n}\n.rf-root .w-px {\n  width: 1px;\n}\n.rf-root .min-w-0 {\n  min-width: 0px;\n}\n.rf-root .flex-1 {\n  flex: 1 1 0%;\n}\n.rf-root .shrink-0 {\n  flex-shrink: 0;\n}\n.rf-root .transform {\n  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));\n}\n.rf-root .cursor-pointer {\n  cursor: pointer;\n}\n.rf-root .resize-y {\n  resize: vertical;\n}\n.rf-root .resize {\n  resize: both;\n}\n.rf-root .grid-cols-1 {\n  grid-template-columns: repeat(1, minmax(0, 1fr));\n}\n.rf-root .grid-cols-2 {\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n}\n.rf-root .grid-cols-3 {\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n}\n.rf-root .flex-row {\n  flex-direction: row;\n}\n.rf-root .flex-col {\n  flex-direction: column;\n}\n.rf-root .flex-wrap {\n  flex-wrap: wrap;\n}\n.rf-root .items-center {\n  align-items: center;\n}\n.rf-root .justify-center {\n  justify-content: center;\n}\n.rf-root .gap-1 {\n  gap: 0.25rem;\n}\n.rf-root .gap-1\\.5 {\n  gap: 0.375rem;\n}\n.rf-root .gap-2 {\n  gap: 0.5rem;\n}\n.rf-root .gap-2\\.5 {\n  gap: 0.625rem;\n}\n.rf-root .gap-3 {\n  gap: 0.75rem;\n}\n.rf-root .gap-3\\.5 {\n  gap: 0.875rem;\n}\n.rf-root .gap-4 {\n  gap: 1rem;\n}\n.rf-root .gap-5 {\n  gap: 1.25rem;\n}\n.rf-root :is(.space-y-1\\.5 > :not([hidden]) ~ :not([hidden])) {\n  --tw-space-y-reverse: 0;\n  margin-top: calc(0.375rem * calc(1 - var(--tw-space-y-reverse)));\n  margin-bottom: calc(0.375rem * var(--tw-space-y-reverse));\n}\n.rf-root .overflow-hidden {\n  overflow: hidden;\n}\n.rf-root .overflow-x-auto {\n  overflow-x: auto;\n}\n.rf-root .overflow-y-auto {\n  overflow-y: auto;\n}\n.rf-root .overflow-x-hidden {\n  overflow-x: hidden;\n}\n.rf-root .whitespace-nowrap {\n  white-space: nowrap;\n}\n.rf-root .break-all {\n  word-break: break-all;\n}\n.rf-root .rounded {\n  border-radius: 0.25rem;\n}\n.rf-root .rounded-2xl {\n  border-radius: 1rem;\n}\n.rf-root .rounded-\\[10px\\] {\n  border-radius: 10px;\n}\n.rf-root .rounded-full {\n  border-radius: 9999px;\n}\n.rf-root .rounded-lg {\n  border-radius: var(--radius);\n}\n.rf-root .rounded-md {\n  border-radius: calc(var(--radius) - 2px);\n}\n.rf-root .rounded-sm {\n  border-radius: calc(var(--radius) - 4px);\n}\n.rf-root .border {\n  border-width: 1px;\n}\n.rf-root .border-0 {\n  border-width: 0px;\n}\n.rf-root .border-l-4 {\n  border-left-width: 4px;\n}\n.rf-root .border-t {\n  border-top-width: 1px;\n}\n.rf-root .border-dashed {\n  border-style: dashed;\n}\n.rf-root .border-\\[var\\(--rf-warn\\)\\] {\n  border-color: var(--rf-warn);\n}\n.rf-root .border-border {\n  border-color: var(--border);\n}\n.rf-root .border-destructive {\n  border-color: var(--destructive);\n}\n.rf-root .border-input {\n  border-color: var(--input);\n}\n.rf-root .border-primary {\n  border-color: var(--primary);\n}\n.rf-root .border-transparent {\n  border-color: transparent;\n}\n.rf-root .border-l-primary {\n  border-left-color: var(--primary);\n}\n.rf-root .bg-\\[color-mix\\(in_srgb\\2c var\\(--rf-warn\\)_10\\%\\2c var\\(--card\\)\\)\\] {\n  background-color: color-mix(in srgb,var(--rf-warn) 10%,var(--card));\n}\n.rf-root .bg-\\[var\\(--rf-ok\\)\\] {\n  background-color: var(--rf-ok);\n}\n.rf-root .bg-\\[var\\(--rf-warn\\)\\] {\n  background-color: var(--rf-warn);\n}\n.rf-root .bg-accent {\n  background-color: var(--accent);\n}\n.rf-root .bg-background {\n  background-color: var(--background);\n}\n.rf-root .bg-border {\n  background-color: var(--border);\n}\n.rf-root .bg-card {\n  background-color: var(--card);\n}\n.rf-root .bg-destructive {\n  background-color: var(--destructive);\n}\n.rf-root .bg-muted {\n  background-color: var(--muted);\n}\n.rf-root .bg-muted-foreground {\n  background-color: var(--muted-foreground);\n}\n.rf-root .bg-primary {\n  background-color: var(--primary);\n}\n.rf-root .bg-primary-foreground {\n  background-color: var(--primary-foreground);\n}\n.rf-root .bg-secondary {\n  background-color: var(--secondary);\n}\n.rf-root .bg-transparent {\n  background-color: transparent;\n}\n.rf-root .object-contain {\n  -o-object-fit: contain;\n     object-fit: contain;\n}\n.rf-root .p-0 {\n  padding: 0px;\n}\n.rf-root .p-2\\.5 {\n  padding: 0.625rem;\n}\n.rf-root .p-3 {\n  padding: 0.75rem;\n}\n.rf-root .p-3\\.5 {\n  padding: 0.875rem;\n}\n.rf-root .p-4 {\n  padding: 1rem;\n}\n.rf-root .p-5 {\n  padding: 1.25rem;\n}\n.rf-root .px-1\\.5 {\n  padding-left: 0.375rem;\n  padding-right: 0.375rem;\n}\n.rf-root .px-2 {\n  padding-left: 0.5rem;\n  padding-right: 0.5rem;\n}\n.rf-root .px-2\\.5 {\n  padding-left: 0.625rem;\n  padding-right: 0.625rem;\n}\n.rf-root .px-3 {\n  padding-left: 0.75rem;\n  padding-right: 0.75rem;\n}\n.rf-root .px-4 {\n  padding-left: 1rem;\n  padding-right: 1rem;\n}\n.rf-root .px-5 {\n  padding-left: 1.25rem;\n  padding-right: 1.25rem;\n}\n.rf-root .px-8 {\n  padding-left: 2rem;\n  padding-right: 2rem;\n}\n.rf-root .py-0\\.5 {\n  padding-top: 0.125rem;\n  padding-bottom: 0.125rem;\n}\n.rf-root .py-1 {\n  padding-top: 0.25rem;\n  padding-bottom: 0.25rem;\n}\n.rf-root .py-1\\.5 {\n  padding-top: 0.375rem;\n  padding-bottom: 0.375rem;\n}\n.rf-root .py-2 {\n  padding-top: 0.5rem;\n  padding-bottom: 0.5rem;\n}\n.rf-root .py-3 {\n  padding-top: 0.75rem;\n  padding-bottom: 0.75rem;\n}\n.rf-root .pl-6 {\n  padding-left: 1.5rem;\n}\n.rf-root .pt-0 {\n  padding-top: 0px;\n}\n.rf-root .text-left {\n  text-align: left;\n}\n.rf-root .text-center {\n  text-align: center;\n}\n.rf-root .font-sans {\n  font-family: ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\";\n}\n.rf-root .text-\\[10px\\] {\n  font-size: 10px;\n}\n.rf-root .text-\\[11px\\] {\n  font-size: 11px;\n}\n.rf-root .text-\\[13px\\] {\n  font-size: 13px;\n}\n.rf-root .text-\\[9px\\] {\n  font-size: 9px;\n}\n.rf-root .text-sm {\n  font-size: 0.875rem;\n  line-height: 1.25rem;\n}\n.rf-root .text-xs {\n  font-size: 0.75rem;\n  line-height: 1rem;\n}\n.rf-root .font-medium {\n  font-weight: 500;\n}\n.rf-root .font-normal {\n  font-weight: 400;\n}\n.rf-root .font-semibold {\n  font-weight: 600;\n}\n.rf-root .leading-none {\n  line-height: 1;\n}\n.rf-root .leading-normal {\n  line-height: 1.5;\n}\n.rf-root .tracking-tight {\n  letter-spacing: -0.025em;\n}\n.rf-root .text-\\[var\\(--rf-ok\\)\\] {\n  color: var(--rf-ok);\n}\n.rf-root .text-\\[var\\(--rf-warn\\)\\] {\n  color: var(--rf-warn);\n}\n.rf-root .text-card-foreground {\n  color: var(--card-foreground);\n}\n.rf-root .text-destructive {\n  color: var(--destructive);\n}\n.rf-root .text-destructive-foreground {\n  color: var(--destructive-foreground);\n}\n.rf-root .text-foreground {\n  color: var(--foreground);\n}\n.rf-root .text-muted-foreground {\n  color: var(--muted-foreground);\n}\n.rf-root .text-primary {\n  color: var(--primary);\n}\n.rf-root .text-primary-foreground {\n  color: var(--primary-foreground);\n}\n.rf-root .text-secondary-foreground {\n  color: var(--secondary-foreground);\n}\n.rf-root .no-underline {\n  text-decoration-line: none;\n}\n.rf-root .underline-offset-4 {\n  text-underline-offset: 4px;\n}\n.rf-root .accent-primary {\n  accent-color: var(--primary);\n}\n.rf-root .shadow-none {\n  --tw-shadow: 0 0 #0000;\n  --tw-shadow-colored: 0 0 #0000;\n  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);\n}\n.rf-root .shadow-sm {\n  --tw-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);\n  --tw-shadow-colored: 0 1px 2px 0 var(--tw-shadow-color);\n  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);\n}\n.rf-root .outline {\n  outline-style: solid;\n}\n.rf-root .filter {\n  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);\n}\n.rf-root .transition-all {\n  transition-property: all;\n  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n  transition-duration: 150ms;\n}\n.rf-root .transition-colors {\n  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;\n  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n  transition-duration: 150ms;\n}\n@keyframes enter {\n\n  from {\n    opacity: var(--tw-enter-opacity, 1);\n    transform: translate3d(var(--tw-enter-translate-x, 0), var(--tw-enter-translate-y, 0), 0) scale3d(var(--tw-enter-scale, 1), var(--tw-enter-scale, 1), var(--tw-enter-scale, 1)) rotate(var(--tw-enter-rotate, 0));\n  }\n}\n@keyframes exit {\n\n  to {\n    opacity: var(--tw-exit-opacity, 1);\n    transform: translate3d(var(--tw-exit-translate-x, 0), var(--tw-exit-translate-y, 0), 0) scale3d(var(--tw-exit-scale, 1), var(--tw-exit-scale, 1), var(--tw-exit-scale, 1)) rotate(var(--tw-exit-rotate, 0));\n  }\n}\n.rf-root .running {\n  animation-play-state: running;\n}\n.rf-root .file\\:border-0::file-selector-button {\n  border-width: 0px;\n}\n.rf-root .file\\:bg-transparent::file-selector-button {\n  background-color: transparent;\n}\n.rf-root .file\\:text-sm::file-selector-button {\n  font-size: 0.875rem;\n  line-height: 1.25rem;\n}\n.rf-root .file\\:font-medium::file-selector-button {\n  font-weight: 500;\n}\n.rf-root .file\\:text-foreground::file-selector-button {\n  color: var(--foreground);\n}\n.rf-root .placeholder\\:text-muted-foreground::-moz-placeholder {\n  color: var(--muted-foreground);\n}\n.rf-root .placeholder\\:text-muted-foreground::placeholder {\n  color: var(--muted-foreground);\n}\n.rf-root .after\\:block::after {\n  content: var(--tw-content);\n  display: block;\n}\n.rf-root .after\\:h-3::after {\n  content: var(--tw-content);\n  height: 0.75rem;\n}\n.rf-root .after\\:w-3::after {\n  content: var(--tw-content);\n  width: 0.75rem;\n}\n.rf-root .after\\:rounded-sm::after {\n  content: var(--tw-content);\n  border-radius: calc(var(--radius) - 4px);\n}\n.rf-root .after\\:bg-primary::after {\n  content: var(--tw-content);\n  background-color: var(--primary);\n}\n.rf-root .hover\\:bg-accent:hover {\n  background-color: var(--accent);\n}\n.rf-root .hover\\:text-accent-foreground:hover {\n  color: var(--accent-foreground);\n}\n.rf-root .hover\\:underline:hover {\n  text-decoration-line: underline;\n}\n.rf-root .hover\\:opacity-90:hover {\n  opacity: 0.9;\n}\n.rf-root .focus\\:outline-none:focus {\n  outline: 2px solid transparent;\n  outline-offset: 2px;\n}\n.rf-root .focus\\:ring-2:focus {\n  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);\n  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);\n  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);\n}\n.rf-root .focus\\:ring-ring:focus {\n  --tw-ring-color: var(--ring);\n}\n.rf-root .focus\\:ring-offset-2:focus {\n  --tw-ring-offset-width: 2px;\n}\n.rf-root .focus-visible\\:outline-none:focus-visible {\n  outline: 2px solid transparent;\n  outline-offset: 2px;\n}\n.rf-root .focus-visible\\:ring-2:focus-visible {\n  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);\n  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);\n  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);\n}\n.rf-root .focus-visible\\:ring-ring:focus-visible {\n  --tw-ring-color: var(--ring);\n}\n.rf-root .focus-visible\\:ring-offset-2:focus-visible {\n  --tw-ring-offset-width: 2px;\n}\n.rf-root .focus-visible\\:ring-offset-background:focus-visible {\n  --tw-ring-offset-color: var(--background);\n}\n.rf-root .disabled\\:pointer-events-none:disabled {\n  pointer-events: none;\n}\n.rf-root .disabled\\:cursor-not-allowed:disabled {\n  cursor: not-allowed;\n}\n.rf-root .disabled\\:opacity-50:disabled {\n  opacity: 0.5;\n}\n.rf-root .disabled\\:opacity-60:disabled {\n  opacity: 0.6;\n}\n.rf-root :is(.peer:disabled ~ .peer-disabled\\:cursor-not-allowed) {\n  cursor: not-allowed;\n}\n.rf-root :is(.peer:disabled ~ .peer-disabled\\:opacity-70) {\n  opacity: 0.7;\n}\n.rf-root .dark\\:border-destructive:where(body[data-ds-dark-theme] .rf-root, body[data-ds-dark-theme] .rf-root *) {\n  border-color: var(--destructive);\n}\n.rf-root :is(.\\[\\&\\>svg\\+div\\]\\:translate-y-\\[-3px\\]>svg+div) {\n  --tw-translate-y: -3px;\n  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));\n}\n.rf-root :is(.\\[\\&\\>svg\\]\\:absolute>svg) {\n  position: absolute;\n}\n.rf-root :is(.\\[\\&\\>svg\\]\\:left-4>svg) {\n  left: 1rem;\n}\n.rf-root :is(.\\[\\&\\>svg\\]\\:top-4>svg) {\n  top: 1rem;\n}\n.rf-root :is(.\\[\\&\\>svg\\]\\:text-destructive>svg) {\n  color: var(--destructive);\n}\n.rf-root :is(.\\[\\&\\>svg\\]\\:text-foreground>svg) {\n  color: var(--foreground);\n}\n.rf-root :is(.\\[\\&\\>svg\\~\\*\\]\\:pl-7>svg~*) {\n  padding-left: 1.75rem;\n}\n.rf-root :is(.focus-within\\:\\[\\&_\\.rf-ui-card\\]\\:border-primary .rf-ui-card:focus-within) {\n  border-color: var(--primary);\n}\n.rf-root :is(.\\[\\&_\\.stage-dot\\]\\:bg-\\[var\\(--rf-ok\\)\\] .stage-dot) {\n  background-color: var(--rf-ok);\n}\n.rf-root :is(.\\[\\&_\\.stage-dot\\]\\:bg-border .stage-dot) {\n  background-color: var(--border);\n}\n.rf-root :is(.\\[\\&_\\.stage-dot\\]\\:bg-primary .stage-dot) {\n  background-color: var(--primary);\n}\n.rf-root :is(.\\[\\&_\\.stage-label\\]\\:rounded-md .stage-label) {\n  border-radius: calc(var(--radius) - 2px);\n}\n.rf-root :is(.\\[\\&_\\.stage-label\\]\\:bg-accent .stage-label) {\n  background-color: var(--accent);\n}\n.rf-root :is(.\\[\\&_\\.stage-label\\]\\:px-1\\.5 .stage-label) {\n  padding-left: 0.375rem;\n  padding-right: 0.375rem;\n}\n.rf-root :is(.\\[\\&_\\.stage-label\\]\\:py-0\\.5 .stage-label) {\n  padding-top: 0.125rem;\n  padding-bottom: 0.125rem;\n}\n.rf-root :is(.\\[\\&_\\.thumb-target\\]\\:outline .thumb-target) {\n  outline-style: solid;\n}\n.rf-root :is(.\\[\\&_\\.thumb-target\\]\\:outline-2 .thumb-target) {\n  outline-width: 2px;\n}\n.rf-root :is(.\\[\\&_\\.thumb-target\\]\\:outline-offset-2 .thumb-target) {\n  outline-offset: 2px;\n}\n.rf-root :is(.\\[\\&_\\.thumb-target\\]\\:outline-primary .thumb-target) {\n  outline-color: var(--primary);\n}\n.rf-root :is(.\\[\\&_p\\]\\:leading-relaxed p) {\n  line-height: 1.625;\n}\n.rf-root :is(.\\[\\&_svg\\]\\:pointer-events-none svg) {\n  pointer-events: none;\n}\n.rf-root :is(.\\[\\&_svg\\]\\:size-4 svg) {\n  width: 1rem;\n  height: 1rem;\n}\n.rf-root :is(.\\[\\&_svg\\]\\:shrink-0 svg) {\n  flex-shrink: 0;\n}";
 RF.STYLES = RF.TAILWIND_STYLES;
 })(RF);
 
@@ -3303,6 +3303,9 @@ var require_react_dom = __commonJS({
     }
   }
 });
+
+// src/client/ui/components/ui/card.jsx
+init_react_shim();
 
 // node_modules/clsx/dist/clsx.mjs
 function r(e) {
@@ -6289,6 +6292,39 @@ function jsxs(type, props, key) {
   return jsx(type, props, key);
 }
 
+// src/client/ui/components/ui/card.jsx
+var Card = forwardRef(function Card2({ className, ...props }, ref) {
+  return /* @__PURE__ */ jsx(
+    "div",
+    {
+      ref,
+      className: cn("rounded-lg border border-border bg-card text-card-foreground shadow-sm", className),
+      ...props
+    }
+  );
+});
+Card.displayName = "Card";
+var CardHeader = forwardRef(function CardHeader2({ className, ...props }, ref) {
+  return /* @__PURE__ */ jsx("div", { ref, className: cn("flex flex-col space-y-1.5 p-4", className), ...props });
+});
+CardHeader.displayName = "CardHeader";
+var CardTitle = forwardRef(function CardTitle2({ className, ...props }, ref) {
+  return /* @__PURE__ */ jsx("div", { ref, className: cn("font-semibold leading-none tracking-tight", className), ...props });
+});
+CardTitle.displayName = "CardTitle";
+var CardDescription = forwardRef(function CardDescription2({ className, ...props }, ref) {
+  return /* @__PURE__ */ jsx("div", { ref, className: cn("text-sm text-muted-foreground", className), ...props });
+});
+CardDescription.displayName = "CardDescription";
+var CardContent = forwardRef(function CardContent2({ className, ...props }, ref) {
+  return /* @__PURE__ */ jsx("div", { ref, className: cn("p-4 pt-0", className), ...props });
+});
+CardContent.displayName = "CardContent";
+var CardFooter = forwardRef(function CardFooter2({ className, ...props }, ref) {
+  return /* @__PURE__ */ jsx("div", { ref, className: cn("flex items-center p-4 pt-0", className), ...props });
+});
+CardFooter.displayName = "CardFooter";
+
 // src/client/ui/workbench-ui.jsx
 function attachWorkbenchUi(RF) {
   const { tw: tw2 } = RF;
@@ -6406,7 +6442,7 @@ function attachWorkbenchUi(RF) {
   };
   RF.ui.ShotChip = function ShotChip(id, size, state, tone) {
     const dotClass = tone === "ok" ? "bg-[var(--rf-ok)]" : tone === "accent" ? "bg-primary" : "bg-border";
-    return /* @__PURE__ */ jsxs(RF.ui.Card, { className: "gap-1.5 p-3", children: [
+    return /* @__PURE__ */ jsxs(Card, { ...RF.workbenchCard({ className: "gap-1.5 p-3" }), children: [
       /* @__PURE__ */ jsx("div", { className: "text-[10px] text-muted-foreground", children: id }),
       /* @__PURE__ */ jsx("div", { className: "text-xs font-semibold text-foreground", children: size }),
       /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-1.5", children: [
@@ -6431,6 +6467,23 @@ function attachWorkbenchUi(RF) {
       message = t("rf7.chatSync.captured");
     }
     return /* @__PURE__ */ jsx("div", { className: "flex items-center gap-1.5 text-[10px] text-muted-foreground", children: message });
+  };
+  RF.ui.EmptyState = function EmptyState(props) {
+    const isError = props.tone === "error";
+    return /* @__PURE__ */ jsxs(
+      "div",
+      {
+        className: cn(
+          "rounded-lg border border-dashed p-4 text-center",
+          isError ? "border-destructive" : "border-border"
+        ),
+        children: [
+          /* @__PURE__ */ jsx("div", { className: "text-xs font-medium text-foreground", children: props.title }),
+          props.hint === void 0 ? null : /* @__PURE__ */ jsx("div", { className: "mt-1 text-[11px] text-muted-foreground", children: props.hint }),
+          props.action === void 0 || props.action === null ? null : /* @__PURE__ */ jsx("div", { className: "mt-3 flex justify-center", children: props.action })
+        ]
+      }
+    );
   };
   RF.ui.FieldBox = function FieldBox(text, kind) {
     const muted = kind === "placeholder" || kind === "masked";
@@ -6705,40 +6758,6 @@ var Button = forwardRef(function Button2({ className, variant, size, asChild = f
   );
 });
 Button.displayName = "Button";
-
-// src/client/ui/components/ui/card.jsx
-init_react_shim();
-var Card = forwardRef(function Card2({ className, ...props }, ref) {
-  return /* @__PURE__ */ jsx(
-    "div",
-    {
-      ref,
-      className: cn("rounded-lg border border-border bg-card text-card-foreground shadow-sm", className),
-      ...props
-    }
-  );
-});
-Card.displayName = "Card";
-var CardHeader = forwardRef(function CardHeader2({ className, ...props }, ref) {
-  return /* @__PURE__ */ jsx("div", { ref, className: cn("flex flex-col space-y-1.5 p-4", className), ...props });
-});
-CardHeader.displayName = "CardHeader";
-var CardTitle = forwardRef(function CardTitle2({ className, ...props }, ref) {
-  return /* @__PURE__ */ jsx("div", { ref, className: cn("font-semibold leading-none tracking-tight", className), ...props });
-});
-CardTitle.displayName = "CardTitle";
-var CardDescription = forwardRef(function CardDescription2({ className, ...props }, ref) {
-  return /* @__PURE__ */ jsx("div", { ref, className: cn("text-sm text-muted-foreground", className), ...props });
-});
-CardDescription.displayName = "CardDescription";
-var CardContent = forwardRef(function CardContent2({ className, ...props }, ref) {
-  return /* @__PURE__ */ jsx("div", { ref, className: cn("p-4 pt-0", className), ...props });
-});
-CardContent.displayName = "CardContent";
-var CardFooter = forwardRef(function CardFooter2({ className, ...props }, ref) {
-  return /* @__PURE__ */ jsx("div", { ref, className: cn("flex items-center p-4 pt-0", className), ...props });
-});
-CardFooter.displayName = "CardFooter";
 
 // src/client/ui/components/ui/input.jsx
 init_react_shim();
@@ -7066,52 +7085,16 @@ function attachReelforgeUi(RF) {
   RF.cn = cn;
   RF.tw = tw;
   RF.stageStepClass = stageStepClass;
-  const mapButtonVariant = (variant) => {
-    if (variant === "danger") return "destructive";
-    if (variant === "secondary") return "secondary";
-    if (variant === "ghost") return "ghost";
-    return "default";
-  };
-  RF.Button = function Button3(props) {
-    const disabled = props.disabled === true;
-    return /* @__PURE__ */ jsx(
-      Button,
-      {
-        type: "button",
-        variant: mapButtonVariant(props.variant),
-        size: props.variant === "primary" || props.variant === void 0 ? "lg" : "sm",
-        className: cn(
-          props.variant === "primary" || props.variant === void 0 ? "h-10 font-semibold" : "h-7 text-[10px]",
-          disabled && "pointer-events-none opacity-50"
-        ),
-        disabled,
-        title: props.title,
-        onClick: disabled ? void 0 : props.onClick,
-        children: props.label
-      }
-    );
-  };
-  RF.Input = function InputField(props) {
-    const state = props.state === "error" ? "error" : "default";
-    return /* @__PURE__ */ jsxs("div", { className: "flex flex-col gap-1", children: [
-      props.label === void 0 ? null : /* @__PURE__ */ jsx(Label2, { className: "text-[10px] text-muted-foreground", children: props.label }),
-      /* @__PURE__ */ jsx(
-        Input,
-        {
-          className: cn(
-            "h-9 bg-secondary text-xs",
-            state === "error" && "border-destructive text-destructive focus-visible:ring-destructive"
-          ),
-          value: props.value ?? "",
-          placeholder: props.placeholder ?? "",
-          onChange: props.onChange
-        }
-      )
-    ] });
-  };
-  RF.Pill = function Pill(props) {
-    const tone = props.tone ?? "queued";
-    const toneClass = {
+  RF.Button = Button;
+  RF.Input = Input;
+  RF.Label = Label2;
+  RF.Card = Card;
+  RF.Badge = Badge;
+  RF.Progress = Progress2;
+  RF.Alert = Alert;
+  RF.AlertDescription = AlertDescription;
+  RF.statusToneClass = function statusToneClass(tone) {
+    const map = {
       accent: "border-transparent bg-accent text-primary",
       running: "border-transparent bg-accent text-primary",
       ok: "border-transparent bg-secondary text-[var(--rf-ok)]",
@@ -7121,93 +7104,47 @@ function attachReelforgeUi(RF) {
       failed: "border-transparent bg-secondary text-destructive",
       neutral: "border-transparent bg-secondary text-muted-foreground",
       queued: "border-transparent bg-secondary text-muted-foreground"
-    }[tone] ?? "border-transparent bg-secondary text-muted-foreground";
-    return /* @__PURE__ */ jsx(Badge, { variant: "outline", className: cn("rounded-md px-2.5 py-1 text-[10px] font-normal", toneClass), children: props.label });
+    };
+    return map[tone ?? "queued"] ?? map.queued;
   };
-  RF.Progress = function ProgressBar(props) {
-    const ratio = Math.max(0, Math.min(1, Number(props.value ?? 0)));
-    const value = Math.round(ratio * 100);
-    const indicatorClass = props.tone === "done" ? "[&>div]:bg-[var(--rf-ok)]" : props.tone === "failed" ? "[&>div]:bg-destructive" : "";
-    return /* @__PURE__ */ jsxs("div", { className: "relative", children: [
-      /* @__PURE__ */ jsx(Progress2, { value, className: cn("h-1.5", indicatorClass) }),
-      props.label === void 0 ? null : /* @__PURE__ */ jsx("span", { className: "absolute inset-0 flex items-center justify-center text-[10px] text-muted-foreground", children: props.label })
-    ] });
-  };
-  RF.EmptyState = function EmptyState(props) {
-    const isError = props.tone === "error";
-    return /* @__PURE__ */ jsxs(
-      "div",
-      {
-        className: cn(
-          "rounded-lg border border-dashed p-4 text-center",
-          isError ? "border-destructive" : "border-border"
-        ),
-        children: [
-          /* @__PURE__ */ jsx("div", { className: "text-xs font-medium text-foreground", children: props.title }),
-          props.hint === void 0 ? null : /* @__PURE__ */ jsx("div", { className: "mt-1 text-[11px] text-muted-foreground", children: props.hint }),
-          props.action === void 0 || props.action === null ? null : /* @__PURE__ */ jsx("div", { className: "mt-3 flex justify-center", children: props.action })
-        ]
-      }
-    );
-  };
-  RF.Toast = function Toast(props) {
-    const tone = props.tone ?? "info";
-    const variant = tone === "error" ? "destructive" : "default";
-    return /* @__PURE__ */ jsxs(Alert, { variant, className: "flex flex-row items-center justify-between gap-2 py-2", children: [
-      /* @__PURE__ */ jsx(AlertDescription, { className: "text-xs", children: props.message }),
-      props.onDismiss === void 0 ? null : /* @__PURE__ */ jsx(Button, { type: "button", variant: "ghost", size: "icon", className: "h-7 w-7 shrink-0", onClick: props.onDismiss, children: "\xD7" })
-    ] });
-  };
-  RF.Card = function CardWrap(props) {
+  RF.workbenchCard = function workbenchCard(options) {
+    const props = options ?? {};
     const state = props.state === "selected" || props.state === "disabled" ? props.state : "default";
     const clickable = state !== "disabled" && typeof props.onClick === "function";
-    return /* @__PURE__ */ jsx(
-      Card,
-      {
-        className: cn(
-          "rf-ui-card flex flex-col gap-2.5 rounded-[10px] border bg-card p-3.5 shadow-none",
-          state === "selected" && "border-primary",
-          props.accent === true && "border-l-4 border-l-primary",
-          props.tone === "warn" && "border-[var(--rf-warn)] bg-[color-mix(in_srgb,var(--rf-warn)_10%,var(--card))]",
-          props.tone === "error" && "border-destructive bg-destructive/10",
-          props.tone === "warn-border" && "border-[var(--rf-warn)]",
-          state === "disabled" && "pointer-events-none border-border/60 bg-muted text-muted-foreground",
-          clickable && "cursor-pointer",
-          props.className
-        ),
-        onClick: clickable ? props.onClick : void 0,
-        role: clickable ? "button" : void 0,
-        tabIndex: clickable ? 0 : void 0,
-        onKeyDown: clickable ? (event) => {
-          if (event?.target !== event?.currentTarget) return;
-          const key = event?.key;
-          if (key !== "Enter" && key !== " " && key !== "Spacebar") return;
-          if (event?.preventDefault) event.preventDefault();
-          props.onClick(event);
-        } : void 0,
-        children: props.children
-      }
-    );
+    return {
+      className: cn(
+        "rf-ui-card flex flex-col gap-2.5 rounded-[10px] border bg-card p-3.5 shadow-none",
+        state === "selected" && "border-primary",
+        props.accent === true && "border-l-4 border-l-primary",
+        props.tone === "warn" && "border-[var(--rf-warn)] bg-[color-mix(in_srgb,var(--rf-warn)_10%,var(--card))]",
+        props.tone === "error" && "border-destructive bg-destructive/10",
+        props.tone === "warn-border" && "border-[var(--rf-warn)]",
+        state === "disabled" && "pointer-events-none border-border/60 bg-muted text-muted-foreground",
+        clickable && "cursor-pointer",
+        props.className
+      ),
+      onClick: clickable ? props.onClick : void 0,
+      role: clickable ? "button" : void 0,
+      tabIndex: clickable ? 0 : void 0,
+      onKeyDown: clickable ? (event) => {
+        if (event?.target !== event?.currentTarget) return;
+        const key = event?.key;
+        if (key !== "Enter" && key !== " " && key !== "Spacebar") return;
+        if (event?.preventDefault) event.preventDefault();
+        props.onClick(event);
+      } : void 0
+    };
   };
-  RF.SectionLabel = function SectionLabel(props) {
+  RF.ui.SectionLabel = function SectionLabel(props) {
     return /* @__PURE__ */ jsx("div", { className: "my-1 text-xs text-muted-foreground", children: props.children });
   };
-  RF.MetaRow = function MetaRow(props) {
+  RF.ui.MetaRow = function MetaRow(props) {
     return /* @__PURE__ */ jsxs("div", { className: "flex gap-2 py-0.5 text-[11px]", children: [
       /* @__PURE__ */ jsx("span", { className: "shrink-0 text-muted-foreground", children: props.label }),
       /* @__PURE__ */ jsx("span", { className: "min-w-0 text-foreground/80", children: props.value })
     ] });
   };
   attachWorkbenchUi(RF);
-  RF.ui.Button = RF.Button;
-  RF.ui.Input = RF.Input;
-  RF.ui.Pill = RF.Pill;
-  RF.ui.Progress = RF.Progress;
-  RF.ui.EmptyState = RF.EmptyState;
-  RF.ui.Toast = RF.Toast;
-  RF.ui.Card = RF.Card;
-  RF.ui.SectionLabel = RF.SectionLabel;
-  RF.ui.MetaRow = RF.MetaRow;
 }
 
 /*! Bundled license information:
@@ -8175,7 +8112,7 @@ attachReelforgeUi(RF);
  * 纪律：
  *   1. 数据只从宿主投影读（R1）；交互态走 `props.state`；
  *   2. **数据没有就说清楚没有**，不编内容（RF7 §6.7「失败不许静默降质」）；
- *   3. 排版用 `workbench/rf7.js` 的零件，样式只写 class 名。
+ *   3. shadcn 用 `<Button>` / `<Card>` / `<Badge>`；复合件用 `RF.ui.*`（`workbench-ui.jsx`）；类名走 Tailwind / `RF.tw`。
  * ─────────────────────────────────────────────────────────────────────────── */
 ;
 (function (RF) {
@@ -8233,7 +8170,7 @@ attachReelforgeUi(RF);
         if (chapters.length === 0) {
             return (h("div", { className: RF.tw.stack },
                 RF.ui.ChatSync({ t, project }),
-                h(RF.ui.EmptyState, { title: t('rf7.hub.empty.title'), hint: t('rf7.hub.empty.hint'), action: (h(RF.ui.Button, { label: t('rf7.hub.empty.action'), variant: "primary", onClick: () => props.state.goFlow('intake') })) })));
+                h(RF.ui.EmptyState, { title: t('rf7.hub.empty.title'), hint: t('rf7.hub.empty.hint'), action: (h(Button, { type: "button", variant: "default", size: "lg", className: "h-10 font-semibold", onClick: () => props.state.goFlow('intake') }, t('rf7.hub.empty.action'))) })));
         }
         // 成本 + 当前阶段 = RF/HubStrip（横向两格 + 竖分隔线）。
         const cost = project.cost ?? {};
@@ -8244,7 +8181,7 @@ attachReelforgeUi(RF);
         const doneShots = chapterShots.filter(shot => String(shot.status ?? '') === 'done').length;
         const visible = chapterShots.slice(0, 6);
         const rest = chapterShots.length - visible.length;
-        const hubStrip = (h(RF.ui.Card, { className: RF.tw.hubstrip },
+        const hubStrip = (h(Card, { ...RF.workbenchCard({ className: RF.tw.hubstrip }) },
             RF.ui.Stat(t('rf7.hub.costLabel'), RF.formatMoney(cost.spent ?? 0), kind === '' ? t('rf7.hub.kindUnset') : kind),
             h("div", { className: RF.tw.divider }),
             RF.ui.Stat(t('rf7.hub.stageLabel'), kind === '' ? t('rf7.hub.stageUnset') : kind, t('rf7.hub.stageSub', {
@@ -8252,7 +8189,7 @@ attachReelforgeUi(RF);
                 done: doneShots,
                 total: chapterShots.length,
             }))));
-        const chapterRail = (h(RF.ui.Card, null,
+        const chapterRail = (h(Card, { ...RF.workbenchCard() },
             h("div", { className: RF.tw.row },
                 h("div", { className: RF.tw.rowMain },
                     h("div", { className: RF.tw.rowTitle }, t('rf7.hub.chapterTitle', {
@@ -8263,7 +8200,7 @@ attachReelforgeUi(RF);
                         shots: chapter.shotCount ?? 0,
                         duration: RF.formatDuration(chapter.durationSec ?? 0),
                     }))),
-                h(RF.ui.Pill, { label: t(chapterStatus(chapter.status).key), tone: chapterStatus(chapter.status).tone })),
+                h(Badge, { variant: "outline", className: RF.cn("rounded-md px-2.5 py-1 text-[10px] font-normal", RF.statusToneClass(chapterStatus(chapter.status).tone)) }, t(chapterStatus(chapter.status).key))),
             RF.ui.Track(chapterShots.length === 0 ? 0 : doneShots / chapterShots.length)));
         const rows = [];
         for (let index = 0; index < visible.length; index += 2) {
@@ -8281,10 +8218,10 @@ attachReelforgeUi(RF);
             rows,
             h("div", { className: RF.tw.row },
                 h("span", { className: RF.tw.note }, t('rf7.hub.moreShots', { count: rest > 0 ? rest : 0 })),
-                h(RF.ui.Button, { label: t('rf7.hub.viewAll', { count: chapterShots.length }), variant: "secondary", onClick: () => props.state.goTab('shots') })),
+                h(Button, { type: "button", variant: "secondary", size: "sm", className: "h-7 text-[10px]", onClick: () => props.state.goTab('shots') }, t('rf7.hub.viewAll', { count: chapterShots.length }))),
             h("div", { className: RF.tw.row },
-                h(RF.ui.Button, { label: t('rf7.hub.actProjectSettings'), variant: "secondary", onClick: () => props.state.goFlow('projectSettings') }),
-                h(RF.ui.Button, { label: t('rf7.hub.actSkills'), variant: "secondary", onClick: () => props.state.goFlow('skills') }))));
+                h(Button, { type: "button", variant: "secondary", size: "sm", className: "h-7 text-[10px]", onClick: () => props.state.goFlow('projectSettings') }, t('rf7.hub.actProjectSettings')),
+                h(Button, { type: "button", variant: "secondary", size: "sm", className: "h-7 text-[10px]", onClick: () => props.state.goFlow('skills') }, t('rf7.hub.actSkills')))));
     };
     // ══════════════════════════════════════════════════════════════
     // 03 章节（Chapters）
@@ -8293,7 +8230,7 @@ attachReelforgeUi(RF);
         const t = props.t;
         const project = props.project ?? {};
         const chapters = Array.isArray(project.chapters) ? project.chapters : [];
-        const card = chapter => (h(RF.ui.Card, { key: chapter.id },
+        const card = chapter => (h(Card, { key: chapter.id, ...RF.workbenchCard() },
             h("div", { className: RF.tw.rowTitle }, t('rf7.chapters.chapterTitle', { chapter: Number(chapter.id) || 1 })),
             h("div", { className: RF.tw.row },
                 h("span", { className: RF.tw.rowSub }, (Number(chapter.shotCount) || 0) === 0
@@ -8302,11 +8239,11 @@ attachReelforgeUi(RF);
                         shots: chapter.shotCount,
                         duration: RF.formatDuration(chapter.durationSec ?? 0),
                     })),
-                h(RF.ui.Pill, { label: t(chapterStatus(chapter.status).key), tone: chapterStatus(chapter.status).tone })),
+                h(Badge, { variant: "outline", className: RF.cn("rounded-md px-2.5 py-1 text-[10px] font-normal", RF.statusToneClass(chapterStatus(chapter.status).tone)) }, t(chapterStatus(chapter.status).key))),
             h("div", { className: RF.tw.row },
-                h(RF.ui.Button, { label: t('rf7.chapters.actGenerate'), variant: "secondary", onClick: () => props.state.runStage('llm', chapter.id) }),
-                h(RF.ui.Button, { label: t('rf7.chapters.actEdit'), variant: "secondary", disabled: true, title: t('rf7.chapters.actEditDisabled') }),
-                h(RF.ui.Button, { label: t('rf7.chapters.actMore'), variant: "secondary", disabled: true, title: t('rf7.chapters.actMoreDisabled') }))));
+                h(Button, { type: "button", variant: "secondary", size: "sm", className: "h-7 text-[10px]", onClick: () => props.state.runStage('llm', chapter.id) }, t('rf7.chapters.actGenerate')),
+                h(Button, { type: "button", variant: "secondary", size: "sm", className: "h-7 text-[10px]", disabled: true, title: t('rf7.chapters.actEditDisabled') }, t('rf7.chapters.actEdit')),
+                h(Button, { type: "button", variant: "secondary", size: "sm", className: "h-7 text-[10px]", disabled: true, title: t('rf7.chapters.actMoreDisabled') }, t('rf7.chapters.actMore')))));
         const rows = [];
         for (let index = 0; index < chapters.length; index += 2) {
             const pair = chapters.slice(index, index + 2);
@@ -8315,8 +8252,8 @@ attachReelforgeUi(RF);
         return (h("div", { className: RF.tw.stack },
             RF.ui.ChatSync({ t, project }),
             h("div", { className: RF.tw.row },
-                h(RF.ui.Button, { label: t('rf7.chapters.actAdd'), variant: "primary", onClick: () => props.state.goFlow('intake') }),
-                h(RF.ui.Button, { label: t('rf7.chapters.actGenerateAll'), variant: "secondary", onClick: () => props.state.runStage('llm') })),
+                h(Button, { type: "button", variant: "default", size: "lg", className: "h-10 font-semibold", onClick: () => props.state.goFlow('intake') }, t('rf7.chapters.actAdd')),
+                h(Button, { type: "button", variant: "secondary", size: "sm", className: "h-7 text-[10px]", onClick: () => props.state.runStage('llm') }, t('rf7.chapters.actGenerateAll'))),
             rows,
             RF.ui.Notice(t('rf7.chapters.notice'), t('rf7.chapters.noticeSub'))));
     };
@@ -8339,11 +8276,11 @@ attachReelforgeUi(RF);
         const chipLabels = chipItems.map(item => (item === 'all'
             ? t('rf7.assets.chipAll', { count: assets.length })
             : `${assetCategoryName(item, t)} ${assets.filter(asset => String(asset?.category ?? '') === item).length}`));
-        const card = asset => (h(RF.ui.Card, { key: asset.id },
+        const card = asset => (h(Card, { key: asset.id, ...RF.workbenchCard() },
             h("div", { className: RF.tw.rowTitle }, asset.name),
             h("div", { className: RF.tw.row },
                 h("span", { className: RF.tw.rowSub }, assetCategoryName(asset.category, t)),
-                h(RF.ui.Pill, { label: t('rf7.assets.stateReady'), tone: "done" })),
+                h(Badge, { variant: "outline", className: RF.cn('rounded-md px-2.5 py-1 text-[10px] font-normal', RF.statusToneClass('done')) }, t('rf7.assets.stateReady'))),
             h("div", { className: RF.tw.rowSub }, asset.description === '' ? t('rf7.assets.noDescription') : asset.description),
             h("div", { className: RF.tw.chips }, [t('rf7.assets.actGenerate'), t('rf7.assets.actReplace')].map(action => (h("span", { key: action, className: RF.tw.chip }, action))))));
         const rows = [];
@@ -8353,14 +8290,14 @@ attachReelforgeUi(RF);
         }
         return (h("div", { className: RF.tw.stack },
             h("div", { className: RF.tw.row },
-                h(RF.ui.Button, { label: t('rf7.assets.actCreate'), variant: "primary", onClick: () => props.state.goFlow('picker') })),
+                h(Button, { type: "button", variant: "default", size: "lg", className: "h-10 font-semibold", onClick: () => props.state.goFlow('picker') }, t('rf7.assets.actCreate'))),
             RF.ui.ChipRow(chipLabels, chipItems.indexOf(category), index => {
                 props.state.setAssetCategory(chipItems[index] ?? 'all');
             }),
             rows,
             h("div", { className: RF.tw.row },
                 h("span", { className: RF.tw.note }, t('rf7.assets.more', { count: assets.length - shown.length })),
-                h(RF.ui.Button, { label: t('rf7.assets.viewAll', { count: assets.length }), variant: "secondary", onClick: () => props.state.setAssetCategory('all') })),
+                h(Button, { type: "button", variant: "secondary", size: "sm", className: "h-7 text-[10px]", onClick: () => props.state.setAssetCategory('all') }, t('rf7.assets.viewAll', { count: assets.length }))),
             RF.ui.Notice(gapText, t('rf7.assets.gapSub'))));
     };
     // ══════════════════════════════════════════════════════════════
@@ -8383,7 +8320,7 @@ attachReelforgeUi(RF);
         });
         const preview = selected === null
             ? null
-            : (h(RF.ui.Card, null,
+            : (h(Card, { ...RF.workbenchCard() },
                 h("div", { className: RF.tw.row },
                     RF.ui.Thumb(t('rf7.storyboard.refCharacter'), { size: 48 }),
                     RF.ui.Thumb(t('rf7.storyboard.refScene'), { size: 48 }),
@@ -8400,16 +8337,16 @@ attachReelforgeUi(RF);
                 : RF.ui.SectionHead(t('rf7.storyboard.sectionSelected', { idx: Number(selected.idx) || 1 }), t('rf7.storyboard.sectionSelectedSub')),
             preview,
             RF.ui.SectionHead(t('rf7.storyboard.sectionRegenerate')),
-            h(RF.ui.Card, null,
+            h(Card, { ...RF.workbenchCard() },
                 h("div", { className: RF.tw.row },
-                    h(RF.ui.Button, { label: t('rf7.storyboard.actSeed'), variant: "secondary", onClick: () => props.state.regenerateShot(selected) }),
-                    h(RF.ui.Button, { label: t('rf7.storyboard.actRewrite'), variant: "secondary", onClick: () => props.state.regenerateShot(selected) })),
+                    h(Button, { type: "button", variant: "secondary", size: "sm", className: "h-7 text-[10px]", onClick: () => props.state.regenerateShot(selected) }, t('rf7.storyboard.actSeed')),
+                    h(Button, { type: "button", variant: "secondary", size: "sm", className: "h-7 text-[10px]", onClick: () => props.state.regenerateShot(selected) }, t('rf7.storyboard.actRewrite'))),
                 RF.ui.FieldBox(t('rf7.storyboard.feedbackPlaceholder'), 'placeholder')),
             h("div", { className: RF.tw.row },
-                h(RF.ui.Button, { label: t('rf7.storyboard.actDetail'), variant: "secondary", disabled: selected === null, title: selected === null ? t('rf7.storyboard.actDetailDisabled') : undefined, onClick: () => {
+                h(Button, { type: "button", variant: "secondary", size: "sm", className: "h-7 text-[10px]", disabled: selected === null, title: selected === null ? t('rf7.storyboard.actDetailDisabled') : undefined, onClick: () => {
                         props.state.selectShot(String(selected.id));
                         props.state.goFlow('shotDetail');
-                    } }))));
+                    } }, t('rf7.storyboard.actDetail')))));
     };
     // ══════════════════════════════════════════════════════════════
     // 05 上下文（Context）
@@ -8421,18 +8358,18 @@ attachReelforgeUi(RF);
         const expanded = String(props.state.expandedContextKey ?? '');
         const card = (key, titleKey, metaKey, value, tone) => {
             const filled = String(value ?? '').trim() !== '';
-            return (h(RF.ui.Card, { key: key },
+            return (h(Card, { key: key, ...RF.workbenchCard() },
                 h("div", { className: RF.tw.row },
                     h("div", { className: RF.tw.rowMain },
                         h("div", { className: RF.tw.rowTitle }, t(titleKey)),
                         h("div", { className: RF.tw.rowSub }, t(metaKey))),
-                    h(RF.ui.Pill, { label: t(filled ? 'rf7.context.stateReady' : 'rf7.context.stateMissing'), tone: filled ? tone : 'queued' })),
+                    h(Badge, { variant: "outline", className: RF.cn('rounded-md px-2.5 py-1 text-[10px] font-normal', RF.statusToneClass(filled ? tone : 'queued')) }, t(filled ? 'rf7.context.stateReady' : 'rf7.context.stateMissing'))),
                 expanded === key
                     ? (h("div", { className: RF.tw.rowSub }, filled ? value : t('rf7.context.stateMissing')))
                     : null,
                 h("div", { className: RF.tw.row },
-                    h(RF.ui.Button, { label: t('rf7.context.actView'), variant: "secondary", onClick: () => props.state.toggleContextKey(key) }),
-                    h(RF.ui.Button, { label: t('rf7.context.actWrite'), variant: "secondary", disabled: true, title: t('rf7.context.actWriteDisabled') }))));
+                    h(Button, { type: "button", variant: "secondary", size: "sm", className: "h-7 text-[10px]", onClick: () => props.state.toggleContextKey(key) }, t('rf7.context.actView')),
+                    h(Button, { type: "button", variant: "secondary", size: "sm", className: "h-7 text-[10px]", disabled: true, title: t('rf7.context.actWriteDisabled') }, t('rf7.context.actWrite')))));
         };
         return (h("div", { className: RF.tw.stack },
             RF.ui.ChatSync({ t, project }),
@@ -8440,7 +8377,7 @@ attachReelforgeUi(RF);
             card('style', 'rf7.context.styleTitle', 'rf7.context.styleMeta', context.style, 'done'),
             card('continuity', 'rf7.context.continuityTitle', 'rf7.context.continuityMeta', context.continuity, 'warn'),
             RF.ui.SectionHead(t('rf7.context.sectionInject'), t('rf7.context.sectionInjectSub')),
-            h(RF.ui.Card, null, RF.CONTEXT_INJECTION_ORDER.map(key => (h("div", { key: key, className: `text-[10px] text-primary` }, RF.CONTEXT_INJECTION_TITLES[key])))),
+            h(Card, { ...RF.workbenchCard() }, RF.CONTEXT_INJECTION_ORDER.map(key => (h("div", { key: key, className: `text-[10px] text-primary` }, RF.CONTEXT_INJECTION_TITLES[key])))),
             RF.ui.Notice(t('rf7.context.rule1'), t('rf7.context.rule2'))));
     };
     // ══════════════════════════════════════════════════════════════
@@ -8455,7 +8392,7 @@ attachReelforgeUi(RF);
         const first = videos[0] ?? deliverables[0] ?? null;
         const exportRow = first === null
             ? null
-            : (h(RF.ui.Card, null,
+            : (h(Card, { ...RF.workbenchCard() },
                 h("div", { className: RF.tw.row },
                     h("div", { className: RF.tw.rowMain },
                         h("div", { className: RF.tw.rowTitle }, first.label === '' ? t('rf7.output.untitled') : first.label),
@@ -8463,17 +8400,17 @@ attachReelforgeUi(RF);
                             size: RF.formatBytes(first.bytes ?? 0),
                             time: RF.formatDateTime(first.at ?? ''),
                         }))),
-                    h(RF.ui.Button, { label: t('rf7.output.actDownload'), variant: "primary", onClick: () => window.open(RF.deliverableUrl(first), '_blank') }))));
+                    h(Button, { type: "button", variant: "default", size: "lg", className: "h-10 font-semibold", onClick: () => window.open(RF.deliverableUrl(first), '_blank') }, t('rf7.output.actDownload')))));
         const deliverList = deliverables.length === 0
             ? (h(RF.ui.EmptyState, { title: t('rf7.output.empty.title'), hint: t('rf7.output.empty.hint') }))
-            : (h(RF.ui.Card, null, deliverables.map(item => RF.ui.KvRow(item.label === '' ? String(item.kind ?? '') : item.label, t('rf7.output.deliverMeta', { size: RF.formatBytes(item.bytes ?? 0) }), t('rf7.output.stateReady'), 'ok'))));
+            : (h(Card, { ...RF.workbenchCard() }, deliverables.map(item => RF.ui.KvRow(item.label === '' ? String(item.kind ?? '') : item.label, t('rf7.output.deliverMeta', { size: RF.formatBytes(item.bytes ?? 0) }), t('rf7.output.stateReady'), 'ok'))));
         return (h("div", { className: RF.tw.stack },
             exportRow,
             h("div", { className: `flex h-[168px] items-center justify-center rounded-[10px] bg-muted text-[11px] text-muted-foreground` }, t('rf7.output.playerPlaceholder')),
             RF.ui.SectionHead(t('rf7.output.sectionDeliver'), t('rf7.output.sectionDeliverSub')),
             h("div", { id: "rf-deliverables" }, deliverList),
             RF.ui.SectionHead(t('rf7.output.sectionChapters')),
-            h(RF.ui.Card, null, chapters.length === 0
+            h(Card, { ...RF.workbenchCard() }, chapters.length === 0
                 ? (h("div", { className: RF.tw.rowSub }, t('rf7.output.noChapters')))
                 : chapters.map(chapter => (h("div", { key: chapter.id, className: RF.tw.row },
                     h("div", { className: RF.tw.rowMain },
@@ -8486,7 +8423,7 @@ attachReelforgeUi(RF);
                             duration: RF.formatDuration(chapter.durationSec ?? 0),
                         }))))))),
             h("div", { className: RF.tw.row },
-                h(RF.ui.Button, { label: t('rf7.output.actMusic'), variant: "secondary", onClick: () => props.state.goFlow('music') }))));
+                h(Button, { type: "button", variant: "secondary", size: "sm", className: "h-7 text-[10px]", onClick: () => props.state.goFlow('music') }, t('rf7.output.actMusic')))));
     };
     // ══════════════════════════════════════════════════════════════
     // 12 运行日志（Log）
@@ -8498,10 +8435,10 @@ attachReelforgeUi(RF);
         const entries = Array.isArray(changelog.entries) ? changelog.entries : [];
         const changeList = entries.length === 0
             ? (h(RF.ui.EmptyState, { title: t('rf7.log.empty.title'), hint: t('rf7.log.empty.hint') }))
-            : (h(RF.ui.Card, null, entries.slice(0, 20).map(entry => (h("div", { key: entry.id, className: RF.tw.row },
+            : (h(Card, { ...RF.workbenchCard() }, entries.slice(0, 20).map(entry => (h("div", { key: entry.id, className: RF.tw.row },
                 h("span", { className: `shrink-0 text-[10px] text-muted-foreground` }, RF.formatDateTime(entry.at ?? '')),
                 h("span", { className: RF.tw.rowMain }, String(entry.summary ?? '')),
-                entry.drifted === true ? (h(RF.ui.Pill, { label: t('rf7.log.drifted'), tone: "warn" })) : null)))));
+                entry.drifted === true ? (h(Badge, { variant: "outline", className: RF.cn('rounded-md px-2.5 py-1 text-[10px] font-normal', RF.statusToneClass('warn')) }, t('rf7.log.drifted'))) : null)))));
         const latest = entries[entries.length - 1] ?? null;
         return (h("div", { className: RF.tw.stack },
             RF.ui.SectionHead(t('rf7.log.sectionChanges'), t('rf7.log.sectionChangesSub')),
@@ -8509,10 +8446,10 @@ attachReelforgeUi(RF);
             RF.ui.SectionHead(t('rf7.log.sectionOutput')),
             RF.ui.CodeBox(entries.slice(-6).reverse().map(entry => `[${RF.formatDateTime(entry.at ?? '')}] ${String(entry.summary ?? '')}`)),
             RF.ui.SectionHead(t('rf7.log.sectionRollback')),
-            h(RF.ui.Card, null,
-                RF.ui.KvRow(t('rf7.log.rollbackBatch'), '-', '', 'muted', h(RF.ui.Button, { label: t('rf7.log.actRollback'), variant: "secondary", disabled: true, title: t('rf7.log.rollbackBatchDisabled') })),
-                RF.ui.KvRow(t('rf7.log.rollbackTime'), '-', '', 'muted', h(RF.ui.Button, { label: t('rf7.log.actPick'), variant: "secondary", disabled: true, title: t('rf7.log.rollbackTimeDisabled') })),
-                RF.ui.KvRow(t('rf7.log.rollbackSingle'), latest === null ? '-' : String(latest.summary ?? ''), '', 'muted', h(RF.ui.Button, { label: t('rf7.log.actRollback'), variant: "secondary", onClick: latest === null ? undefined : () => props.state.rollback(latest, 'single') })),
+            h(Card, { ...RF.workbenchCard() },
+                RF.ui.KvRow(t('rf7.log.rollbackBatch'), '-', '', 'muted', h(Button, { type: "button", variant: "secondary", size: "sm", className: "h-7 text-[10px]", disabled: true, title: t('rf7.log.rollbackBatchDisabled') }, t('rf7.log.actRollback'))),
+                RF.ui.KvRow(t('rf7.log.rollbackTime'), '-', '', 'muted', h(Button, { type: "button", variant: "secondary", size: "sm", className: "h-7 text-[10px]", disabled: true, title: t('rf7.log.rollbackTimeDisabled') }, t('rf7.log.actPick'))),
+                RF.ui.KvRow(t('rf7.log.rollbackSingle'), latest === null ? '-' : String(latest.summary ?? ''), '', 'muted', h(Button, { type: "button", variant: "secondary", size: "sm", className: "h-7 text-[10px]", onClick: latest === null ? undefined : () => props.state.rollback(latest, 'single') }, t('rf7.log.actRollback'))),
                 h("div", { className: "text-[10px] text-muted-foreground" }, t('rf7.log.rollbackNote')))));
     };
 })(RF);
@@ -8533,6 +8470,7 @@ attachReelforgeUi(RF);
  * 1. **探测结果**走独立只读路由（`/api/reelforge.probe`），不进 wire view；
  * 2. **服务配置**走 `/api/reelforge.capabilities`（**只读**，插件没有写配置的通道）；
  * 3. 数据没有就**说清没有**（RF7 §6.7），不编内容。
+ * 4. shadcn 用 `<Button>` / `<Card>` / `<Badge>`；复合件用 `RF.ui.*`（见 AGENTS.md §3.9）。
  * ─────────────────────────────────────────────────────────────────────────── */
 ;
 (function (RF) {
@@ -8577,14 +8515,14 @@ attachReelforgeUi(RF);
         });
         const positionRadioName = 'reelforge-run-position';
         const positionCard = (cardKey, titleKey, subKey, facts, value) => (h("label", { key: cardKey, className: RF.tw.positionCard },
-            h(RF.ui.Card, { state: position === value ? 'selected' : 'default' },
+            h(Card, { ...RF.workbenchCard({ state: position === value ? 'selected' : 'default' }) },
                 h("div", { className: RF.tw.row },
                     h(RF.ui.RadioInput, { name: positionRadioName, value: value, checked: position === value, onChange: () => state.choosePosition(value) }),
                     h("span", { className: RF.tw.rowTitle }, t(titleKey))),
                 h("div", { className: RF.tw.rowSub }, t(subKey)),
                 facts.map(fact => (h("div", { key: fact.key, className: RF.tw.rowSub }, t(fact.key, fact.params)))))));
         return (h("div", { className: RF.tw.stack },
-            h(RF.ui.Card, null,
+            h(Card, { ...RF.workbenchCard() },
                 h("div", { className: RF.tw.row },
                     h("div", { className: RF.tw.rowMain },
                         h("div", { className: RF.tw.rowTitle }, t('rf7.runGate.summaryTitle')),
@@ -8597,7 +8535,7 @@ attachReelforgeUi(RF);
                                 warned: summary.warned,
                                 unconfigured: summary.unset,
                             }))),
-                    h(RF.ui.Button, { label: probed ? t('rf7.runGate.actRerun') : t('rf7.runGate.actStart'), variant: "secondary", disabled: !probed && position === '', title: !probed && position === '' ? t('rf7.runGate.pendingHint') : undefined, onClick: () => (probed ? state.reloadProbe() : state.startProbe()) })),
+                    h(Button, { type: "button", variant: "secondary", size: "sm", className: "h-7 text-[10px]", disabled: !probed && position === '', title: !probed && position === '' ? t('rf7.runGate.pendingHint') : undefined, onClick: () => (probed ? state.reloadProbe() : state.startProbe()) }, probed ? t('rf7.runGate.actRerun') : t('rf7.runGate.actStart'))),
                 RF.ui.Track(probed && summary.total > 0 ? summary.passed / summary.total : 0)),
             RF.ui.SectionHead(t('rf7.runGate.sectionPosition'), t('rf7.runGate.sectionPositionSub')),
             h("div", { className: RF.tw.gridTwo, role: "radiogroup", "aria-label": t('rf7.runGate.sectionPosition') },
@@ -8614,13 +8552,13 @@ attachReelforgeUi(RF);
                 : null,
             RF.ui.SectionHead(t('rf7.runGate.sectionChecks'), probed ? undefined : t('rf7.runGate.pendingHint')),
             probed
-                ? (h(RF.ui.Card, null, rows))
-                : (h(RF.ui.Card, null, RF.ui.Notice(probeError !== '' ? probeError : t('rf7.runGate.pendingTitle'), t('rf7.runGate.pendingHint')))),
-            h(RF.ui.Card, null, RF.ui.KvRow(t('rf7.runGate.checkAgent'), t('rf7.runGate.agentValue'), t('rf7.runGate.builtin'), 'muted')),
+                ? (h(Card, { ...RF.workbenchCard() }, rows))
+                : (h(Card, { ...RF.workbenchCard() }, RF.ui.Notice(probeError !== '' ? probeError : t('rf7.runGate.pendingTitle'), t('rf7.runGate.pendingHint')))),
+            h(Card, { ...RF.workbenchCard() }, RF.ui.KvRow(t('rf7.runGate.checkAgent'), t('rf7.runGate.agentValue'), t('rf7.runGate.builtin'), 'muted')),
             RF.ui.Notice(t('rf7.runGate.noticeMain'), t('rf7.runGate.noticeSub')),
             h("div", { className: RF.tw.row },
-                h(RF.ui.Button, { label: t('rf7.runGate.actSettings'), variant: "secondary", onClick: () => state.goFlow('settings') }),
-                h(RF.ui.Button, { label: t('rf7.runGate.actFailures'), variant: "secondary", onClick: () => state.goFlow('degraded') }))));
+                h(Button, { type: "button", variant: "secondary", size: "sm", className: "h-7 text-[10px]", onClick: () => state.goFlow('settings') }, t('rf7.runGate.actSettings')),
+                h(Button, { type: "button", variant: "secondary", size: "sm", className: "h-7 text-[10px]", onClick: () => state.goFlow('degraded') }, t('rf7.runGate.actFailures')))));
     };
     // ══════════════════════════════════════════════════════════════
     // 14 服务配置（Settings）—— 只读屏
@@ -8636,21 +8574,21 @@ attachReelforgeUi(RF);
             RF.ui.FieldBox(value === '' ? t('rf7.settings.unset') : value, kind)));
         return (h("div", { className: RF.tw.stack },
             RF.ui.SectionHead(t('rf7.settings.sectionComfy'), t('rf7.settings.sectionComfySub')),
-            h(RF.ui.Card, null,
+            h(Card, { ...RF.workbenchCard() },
                 field('rf7.settings.labelAddress', comfy, 'value'),
                 h("div", { className: RF.tw.row },
-                    h(RF.ui.Button, { label: t('rf7.settings.actTest'), variant: "secondary", onClick: () => props.state.reloadProbe() }),
+                    h(Button, { type: "button", variant: "secondary", size: "sm", className: "h-7 text-[10px]", onClick: () => props.state.reloadProbe() }, t('rf7.settings.actTest')),
                     h("span", { className: RF.tw.rowSub }, t('rf7.settings.testHint')))),
             RF.ui.SectionHead(t('rf7.settings.sectionLlm'), t('rf7.settings.sectionLlmSub')),
-            h(RF.ui.Card, null,
+            h(Card, { ...RF.workbenchCard() },
                 field('rf7.settings.labelBaseUrl', '', 'placeholder'),
                 field('rf7.settings.labelModel', '', 'placeholder'),
                 field('rf7.settings.labelApiKey', '', 'masked'),
                 RF.ui.Notice(t('rf7.settings.llmNotice'), t('rf7.settings.llmNoticeSub'))),
             RF.ui.SectionHead(t('rf7.settings.sectionRuntime'), t('rf7.settings.sectionRuntimeSub')),
-            h(RF.ui.Card, null, RF.ui.ChipRow([t('rf7.settings.runtimeBuiltin'), t('rf7.settings.runtimeClaudeCode'), t('rf7.settings.runtimeCodex'), t('rf7.settings.runtimeGemini'), t('rf7.settings.runtimeCustom')], 0, undefined, t('rf7.settings.runtimeDisabled'))),
+            h(Card, { ...RF.workbenchCard() }, RF.ui.ChipRow([t('rf7.settings.runtimeBuiltin'), t('rf7.settings.runtimeClaudeCode'), t('rf7.settings.runtimeCodex'), t('rf7.settings.runtimeGemini'), t('rf7.settings.runtimeCustom')], 0, undefined, t('rf7.settings.runtimeDisabled'))),
             RF.ui.SectionHead(t('rf7.settings.sectionMaintenance')),
-            h(RF.ui.Card, null,
+            h(Card, { ...RF.workbenchCard() },
                 RF.ui.KvRow(t('rf7.settings.rowFree'), t('rf7.settings.valueFree'), t('rf7.settings.stateAdjustable'), 'muted'),
                 RF.ui.KvRow(t('rf7.settings.rowTimeout'), t('rf7.settings.valueTimeout'), '', 'muted'),
                 RF.ui.KvRow(t('rf7.settings.rowCloudKey'), t('rf7.settings.valueCloudKey'), t('rf7.settings.stateNotLoggedIn'), 'warn')),
@@ -8666,7 +8604,7 @@ attachReelforgeUi(RF);
         const intake = project.intake ?? {};
         const headings = Array.isArray(intake.headings) ? intake.headings : [];
         return (h("div", { className: RF.tw.stack },
-            h(RF.ui.Card, null,
+            h(Card, { ...RF.workbenchCard() },
                 h("div", { className: "flex flex-col gap-1" },
                     h("span", { className: "text-[10px] text-muted-foreground" }, t('rf7.intake.labelName')),
                     h("input", { className: "flex h-9 w-full rounded-md border border-input bg-secondary px-3 py-1 text-xs text-foreground", value: state.projectName ?? '', placeholder: t('rf7.intake.namePlaceholder'), onChange: (event) => state.setProjectName(event?.target?.value ?? '') })),
@@ -8678,23 +8616,23 @@ attachReelforgeUi(RF);
                     t('rf7.intake.style3d'),
                     t('rf7.intake.styleSuspense'),
                 ], state.projectStyleIndex ?? 0, index => state.setProjectStyleIndex(index))),
-            h(RF.ui.Card, null,
+            h(Card, { ...RF.workbenchCard() },
                 h("textarea", { className: RF.tw.textarea, value: state.novelText ?? '', placeholder: t('rf7.intake.textPlaceholder'), onChange: (event) => state.setNovelText(event?.target?.value ?? '') }),
                 h("div", { className: RF.tw.rowSub }, t('rf7.intake.textHint'))),
-            h(RF.ui.Card, { className: RF.tw.hubstrip },
+            h(Card, { ...RF.workbenchCard({ className: RF.tw.hubstrip }) },
                 RF.ui.Stat(t('rf7.intake.specResolution'), String(project.settings?.resolution ?? '') || t('rf7.settings.unset'), ''),
                 h("div", { className: RF.tw.divider }),
                 RF.ui.Stat(t('rf7.intake.specAspect'), String(project.settings?.aspectRatio ?? '') || t('rf7.settings.unset'), ''),
                 h("div", { className: RF.tw.divider }),
                 RF.ui.Stat(t('rf7.intake.specMusic'), project.settings?.enableBgm === true ? t('rf7.intake.on') : t('rf7.intake.off'), '')),
             RF.ui.SectionHead(t('rf7.intake.sectionReferences'), t('rf7.intake.sectionReferencesSub')),
-            h(RF.ui.Card, null,
+            h(Card, { ...RF.workbenchCard() },
                 h("div", { className: RF.tw.row },
                     RF.ui.Thumb(t('rf7.intake.refThumb'), { size: 48 }),
                     h("div", { className: RF.tw.rowMain },
                         h("div", { className: RF.tw.rowTitle }, t('rf7.intake.refName')),
                         h("div", { className: RF.tw.rowSub }, t('rf7.intake.refUse'))),
-                    h(RF.ui.Button, { label: t('rf7.intake.actRemove'), variant: "secondary", disabled: true, title: t('rf7.intake.actRemoveDisabled') })),
+                    h(Button, { type: "button", variant: "secondary", size: "sm", className: "h-7 text-[10px]", disabled: true, title: t('rf7.intake.actRemoveDisabled') }, t('rf7.intake.actRemove'))),
                 h("div", { className: `flex min-h-10 items-center justify-center rounded-lg border border-dashed border-border text-[11px] text-muted-foreground` }, t('rf7.intake.actAddReference'))),
             RF.ui.SectionHead(t('rf7.intake.sectionChapters'), t('rf7.intake.sectionChaptersSub', {
                 count: headings.length,
@@ -8702,13 +8640,13 @@ attachReelforgeUi(RF);
             })),
             h("div", { className: RF.tw.stack }, headings.length === 0
                 ? (h(RF.ui.EmptyState, { title: t('rf7.intake.noChapters'), hint: t('rf7.intake.noChaptersHint') }))
-                : headings.slice(0, 4).map(heading => (h(RF.ui.Card, { key: heading.seq ?? heading.title },
+                : headings.slice(0, 4).map(heading => (h(Card, { key: heading.seq ?? heading.title, ...RF.workbenchCard() },
                     h("div", { className: RF.tw.row },
                         h("span", { className: RF.tw.rowSub }, String(heading.seq ?? 0).padStart(2, '0')),
                         h("div", { className: RF.tw.rowMain },
                             h("div", { className: RF.tw.rowTitle }, heading.title),
                             h("div", { className: RF.tw.rowSub }, t('rf7.intake.chapterMeta'))),
-                        h(RF.ui.Button, { label: t('rf7.intake.actImport'), variant: "secondary", disabled: true, title: t('rf7.intake.actImportDisabled') })))))),
+                        h(Button, { type: "button", variant: "secondary", size: "sm", className: "h-7 text-[10px]", disabled: true, title: t('rf7.intake.actImportDisabled') }, t('rf7.intake.actImport'))))))),
             RF.ui.ChatSync({ t, project })));
     };
     // ══════════════════════════════════════════════════════════════
@@ -8719,25 +8657,25 @@ attachReelforgeUi(RF);
         const settings = props.project?.settings ?? {};
         return (h("div", { className: RF.tw.stack },
             RF.ui.SectionHead(t('rf7.projectSettings.sectionSpec')),
-            h(RF.ui.Card, null,
+            h(Card, { ...RF.workbenchCard() },
                 h("div", { className: RF.tw.gridTwo },
                     RF.ui.Stat(t('rf7.projectSettings.rowResolution'), String(settings.resolution ?? '') || t('rf7.settings.unset'), ''),
                     RF.ui.Stat(t('rf7.projectSettings.rowAspect'), String(settings.aspectRatio ?? '') || t('rf7.settings.unset'), ''),
                     RF.ui.Stat(t('rf7.projectSettings.rowStyle'), t('rf7.projectSettings.styleDefault'), ''))),
             RF.ui.SectionHead(t('rf7.projectSettings.sectionSubtitles')),
-            h(RF.ui.Card, null,
+            h(Card, { ...RF.workbenchCard() },
                 RF.ui.KvRow(t('rf7.projectSettings.rowAutoSub'), settings.enableSubtitles === true ? t('rf7.intake.on') : t('rf7.intake.off'), '', 'muted'),
                 RF.ui.KvRow(t('rf7.projectSettings.rowPosition'), t('rf7.projectSettings.bottomCenter'), '', 'muted'),
                 RF.ui.KvRow(t('rf7.projectSettings.rowHideName'), t('rf7.intake.on'), '', 'muted'),
                 h("div", { className: "text-[10px] text-muted-foreground" }, t('rf7.projectSettings.subtitleNote'))),
             RF.ui.SectionHead(t('rf7.projectSettings.sectionSound')),
-            h(RF.ui.Card, null,
+            h(Card, { ...RF.workbenchCard() },
                 RF.ui.KvRow(t('rf7.projectSettings.rowBgm'), settings.enableBgm === true ? t('rf7.intake.on') : t('rf7.intake.off'), '', 'muted'),
                 RF.ui.KvRow(t('rf7.projectSettings.rowVoice'), t('rf7.projectSettings.voiceH3'), '', 'muted')),
             RF.ui.SectionHead(t('rf7.projectSettings.sectionDanger')),
-            h(RF.ui.Card, { tone: "error" },
+            h(Card, { ...RF.workbenchCard({ tone: "error" }) },
                 h("div", { className: "text-[11px] text-muted-foreground" }, t('rf7.projectSettings.dangerText')),
-                h(RF.ui.Button, { label: t('rf7.projectSettings.dangerAction'), variant: "danger", disabled: true, title: t('rf7.projectSettings.dangerDisabled') }))));
+                h(Button, { type: "button", variant: "destructive", size: "sm", className: "h-7 text-[10px]", disabled: true, title: t('rf7.projectSettings.dangerDisabled') }, t('rf7.projectSettings.dangerAction')))));
     };
     // ══════════════════════════════════════════════════════════════
     // 06 生成执行（Stages）
@@ -8756,31 +8694,31 @@ attachReelforgeUi(RF);
             { key: 'rf7.stages.legendVideo', tone: 'muted' },
         ];
         return (h("div", { className: RF.tw.stack },
-            h(RF.ui.Card, null,
+            h(Card, { ...RF.workbenchCard() },
                 h("div", { className: `flex gap-1` }, RF.STAGES.map(stageId => (h("span", { key: stageId, className: `h-1.5 flex-1 rounded-sm bg-secondary ${globalStages.includes(stageId)
                         ? `bg-primary`
                         : `h-1.5 flex-1 rounded-sm bg-secondary--off`}` })))),
                 h("div", { className: RF.tw.row }, legend.map(item => (h("span", { key: item.key, className: `text-[10px] text-muted-foreground text-[10px] text-muted-foreground--${item.tone}` }, t(item.key)))))),
-            h(RF.ui.Card, null,
+            h(Card, { ...RF.workbenchCard() },
                 h("div", { className: RF.tw.row },
                     h("div", { className: RF.tw.rowMain },
                         h("div", { className: RF.tw.rowTitle }, t('rf7.stages.currentTitle', { kind: kind === '' ? '-' : kind })),
                         h("div", { className: RF.tw.rowSub }, t('rf7.stages.currentSub'))),
-                    h(RF.ui.Pill, { label: kind === '' ? t('rf7.stages.stateUnset') : kind, tone: kind === '' ? 'queued' : 'running' })),
+                    h(Badge, { variant: "outline", className: RF.cn("rounded-md px-2.5 py-1 text-[10px] font-normal", RF.statusToneClass(kind === '' ? 'queued' : 'running')) }, kind === '' ? t('rf7.stages.stateUnset') : kind)),
                 RF.ui.Track(0.25),
                 h("div", { className: RF.tw.row },
                     h("span", { className: RF.tw.rowSub }, t('rf7.stages.metaGpu')),
                     h("span", { className: RF.tw.rowSub }, t('rf7.stages.metaVram')),
                     h("span", { className: RF.tw.rowSub }, t('rf7.stages.metaEta')))),
             RF.ui.SectionHead(t('rf7.stages.sectionQueue'), t('rf7.stages.sectionQueueSub')),
-            h(RF.ui.Card, null, (state.queue ?? []).length === 0
+            h(Card, { ...RF.workbenchCard() }, (state.queue ?? []).length === 0
                 ? (h("div", { className: RF.tw.rowSub }, t('rf7.stages.queueEmpty')))
                 : state.queue.map((item, index) => (h("div", { key: index, className: RF.tw.row },
                     h("span", { className: "h-1.5 w-1.5 shrink-0 rounded-full bg-primary" }),
                     h("span", { className: RF.tw.rowMain }, item.title),
                     h("span", { className: RF.tw.rowSub }, item.meta))))),
             RF.ui.SectionHead(t('rf7.stages.sectionPicker')),
-            h(RF.ui.Card, null, RF.STAGES.map(stageId => (h("div", { key: stageId, className: RF.tw.row },
+            h(Card, { ...RF.workbenchCard() }, RF.STAGES.map(stageId => (h("div", { key: stageId, className: RF.tw.row },
                 RF.ui.CheckboxIndicator(globalStages.includes(stageId)),
                 h("div", { className: RF.tw.rowMain },
                     h("div", { className: RF.tw.rowTitle }, t(`stages.${stageId}`)),
@@ -8799,11 +8737,11 @@ attachReelforgeUi(RF);
         const shot = RF.currentShot(props.project, props.state.selectedShotId);
         if (shot === null) {
             return (h("div", { className: RF.tw.stack },
-                h(RF.ui.EmptyState, { title: t('rf7.shotDetail.empty.title'), hint: t('rf7.shotDetail.empty.hint'), action: (h(RF.ui.Button, { label: t('rf7.shotDetail.empty.action'), variant: "primary", onClick: () => props.state.goTab('shots') })) })));
+                h(RF.ui.EmptyState, { title: t('rf7.shotDetail.empty.title'), hint: t('rf7.shotDetail.empty.hint'), action: (h(Button, { type: "button", variant: "default", size: "lg", className: "h-10 font-semibold", onClick: () => props.state.goTab('shots') }, t('rf7.shotDetail.empty.action'))) })));
         }
         const references = Array.isArray(shot.references) ? shot.references : [];
         return (h("div", { className: RF.tw.stack },
-            h(RF.ui.Card, null,
+            h(Card, { ...RF.workbenchCard() },
                 h("div", { className: RF.tw.rowTitle }, t('rf7.shotDetail.headTitle', {
                     chapter: Number(shot.seq) || 1,
                     idx: Number(shot.idx) || 1,
@@ -8814,7 +8752,7 @@ attachReelforgeUi(RF);
                     ratio: shot.aspectRatio === '' ? '-' : shot.aspectRatio,
                 }))),
             RF.ui.SectionHead(t('rf7.shotDetail.sectionReferences'), t('rf7.shotDetail.sectionReferencesSub')),
-            h(RF.ui.Card, null,
+            h(Card, { ...RF.workbenchCard() },
                 h("div", { className: RF.tw.row },
                     references.length === 0
                         ? (h("span", { className: RF.tw.rowSub }, t('rf7.shotDetail.noReferences')))
@@ -8822,11 +8760,11 @@ attachReelforgeUi(RF);
                     h("div", { style: { flex: '1 1 auto' } }),
                     RF.ui.PlayerBar(t('rf7.shotDetail.duration', { seconds: shot.duration ?? 0 })))),
             RF.ui.SectionHead(t('rf7.shotDetail.sectionScript')),
-            h(RF.ui.Card, null,
+            h(Card, { ...RF.workbenchCard() },
                 h("div", { className: RF.tw.rowTitle }, t('rf7.shotDetail.scriptLens', { size: shot.shotSize === '' ? '-' : shot.shotSize })),
                 h("div", { className: RF.tw.rowSub }, t('rf7.shotDetail.scriptMissing'))),
             RF.ui.SectionHead(t('rf7.shotDetail.sectionPrompt')),
-            h(RF.ui.Card, { tone: "warn" },
+            h(Card, { ...RF.workbenchCard({ tone: "warn" }) },
                 h("div", { className: "text-[11px] text-muted-foreground" }, t('rf7.shotDetail.promptMissing')),
                 h("div", { className: "text-[10px] text-muted-foreground" }, t('rf7.shotDetail.promptMissingSub')))));
     };
@@ -8842,7 +8780,7 @@ attachReelforgeUi(RF);
         //   应用 —— `set_chapter_music` 要工作区相对路径，投影里没有。
         // ⇒ 一律禁用 + 说清缺什么、给什么替代（见屏内 notice）。
         return (h("div", { className: RF.tw.stack },
-            h(RF.ui.Card, null,
+            h(Card, { ...RF.workbenchCard() },
                 h("div", { className: RF.tw.rowTitle }, t('rf7.music.generateTitle')),
                 RF.ui.FieldBox(t('rf7.music.generatePlaceholder'), 'placeholder'),
                 h("div", { className: RF.tw.row },
@@ -8853,22 +8791,22 @@ attachReelforgeUi(RF);
                         t('rf7.music.chipStrings'),
                     ], 0, undefined, t('rf7.music.chipsDisabled')),
                     h("div", { style: { flex: '1 1 auto' } }),
-                    h(RF.ui.Button, { label: t('rf7.music.actGenerate'), variant: "primary", disabled: true, title: t('rf7.music.actGenerateDisabled') }))),
+                    h(Button, { type: "button", variant: "default", size: "lg", className: "h-10 font-semibold", disabled: true, title: t('rf7.music.actGenerateDisabled') }, t('rf7.music.actGenerate')))),
             RF.ui.SectionHead(t('rf7.music.sectionLibrary'), t('rf7.music.sectionLibrarySub')),
             tracks.length === 0
-                ? (h(RF.ui.Card, { tone: "warn" },
+                ? (h(Card, { ...RF.workbenchCard({ tone: "warn" }) },
                     h("div", { className: "text-[11px] text-muted-foreground" }, t('rf7.music.emptyTitle')),
                     h("div", { className: "text-[10px] text-muted-foreground" }, t('rf7.music.emptySub'))))
-                : (h("div", { className: RF.tw.stack }, tracks.map(track => (h(RF.ui.Card, { key: track.name },
+                : (h("div", { className: RF.tw.stack }, tracks.map(track => (h(Card, { key: track.name, ...RF.workbenchCard() },
                     h("div", { className: RF.tw.row },
                         h("div", { className: RF.tw.rowMain },
                             h("div", { className: RF.tw.rowTitle }, track.name),
                             h("div", { className: RF.tw.rowSub }, track.description)),
-                        h(RF.ui.Pill, { label: t('rf7.music.stateApplied'), tone: "done" })),
+                        h(Badge, { variant: "outline", className: RF.cn("rounded-md px-2.5 py-1 text-[10px] font-normal", RF.statusToneClass("done")) }, t('rf7.music.stateApplied'))),
                     RF.ui.PlayerBar('-'),
                     h("div", { className: RF.tw.row },
-                        h(RF.ui.Button, { label: t('rf7.music.actPreview'), variant: "secondary", disabled: true, title: t('rf7.music.actPreviewDisabled') }),
-                        h(RF.ui.Button, { label: t('rf7.music.actApply'), variant: "secondary", disabled: true, title: t('rf7.music.actApplyDisabled') }))))))),
+                        h(Button, { type: "button", variant: "secondary", size: "sm", className: "h-7 text-[10px]", disabled: true, title: t('rf7.music.actPreviewDisabled') }, t('rf7.music.actPreview')),
+                        h(Button, { type: "button", variant: "secondary", size: "sm", className: "h-7 text-[10px]", disabled: true, title: t('rf7.music.actApplyDisabled') }, t('rf7.music.actApply')))))))),
             RF.ui.Notice(t('rf7.music.note'), '')));
     };
     // ══════════════════════════════════════════════════════════════
@@ -8882,15 +8820,15 @@ attachReelforgeUi(RF);
             RF.ui.SectionHead(t('rf7.skills.sectionInstalled'), t('rf7.skills.sectionInstalledSub', {
                 count: skills.length,
             })),
-            h(RF.ui.Card, null, skills.length === 0
+            h(Card, { ...RF.workbenchCard() }, skills.length === 0
                 ? (h(RF.ui.EmptyState, { title: t('rf7.skills.empty.title'), hint: t('rf7.skills.empty.hint') }))
                 : skills.map(skill => (h("div", { key: skill.name, className: RF.tw.row },
                     h("div", { className: RF.tw.rowMain },
                         h("div", { className: RF.tw.rowTitle }, skill.name),
                         h("div", { className: RF.tw.rowSub }, t(`rf7.skills.source.${skill.source ?? 'bundled'}`))),
-                    h(RF.ui.Pill, { label: t('rf7.skills.stateReady'), tone: "done" }))))),
+                    h(Badge, { variant: "outline", className: RF.cn("rounded-md px-2.5 py-1 text-[10px] font-normal", RF.statusToneClass("done")) }, t('rf7.skills.stateReady')))))),
             RF.ui.SectionHead(t('rf7.skills.sectionIterate'), t('rf7.skills.sectionIterateSub')),
-            h(RF.ui.Card, null,
+            h(Card, { ...RF.workbenchCard() },
                 h("div", { className: RF.tw.row },
                     h("span", { className: `inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-accent text-[10px] text-primary` }, "1"),
                     h("span", { className: RF.tw.rowSub }, t('rf7.skills.step1'))),
@@ -8899,7 +8837,7 @@ attachReelforgeUi(RF);
                     h("span", { className: RF.tw.rowSub }, t('rf7.skills.step2'))),
                 h("div", { className: `flex min-h-10 items-center justify-center rounded-lg border border-dashed border-border text-[11px] text-muted-foreground` }, t('rf7.skills.dropHint')),
                 analysis === null
-                    ? (h(RF.ui.Button, { label: t('rf7.skills.actAnalyze'), variant: "primary", disabled: true, title: t('rf7.skills.actAnalyzeDisabled') }))
+                    ? (h(Button, { type: "button", variant: "default", size: "lg", className: "h-10 font-semibold", disabled: true, title: t('rf7.skills.actAnalyzeDisabled') }, t('rf7.skills.actAnalyze')))
                     : RF.ui.Notice(String(analysis.summary ?? t('rf7.skills.analyzed')), '')),
             RF.ui.Notice(t('rf7.skills.note'), '')));
     };
@@ -8929,7 +8867,7 @@ attachReelforgeUi(RF);
             grid.push(h("div", { key: index, className: RF.tw.gridThree }, slice.map(asset => (h("button", { key: String(asset.id), type: "button", className: RF.cn(RF.tw.pickerItem, picked.includes(String(asset.id)) && RF.tw.pickerItemOn), onClick: () => state.togglePicker(String(asset.id)) }, RF.ui.Thumb(asset.name, { size: 76, picked: picked.includes(String(asset.id)) }))))));
         }
         return (h("div", { className: RF.tw.stack },
-            h(RF.ui.Card, null,
+            h(Card, { ...RF.workbenchCard() },
                 RF.ui.FieldBox(t('rf7.picker.searchPlaceholder'), 'placeholder'),
                 RF.ui.ChipRow(chipItems.map(item => t(item.key)), activeIndex, index => state.setAssetCategory(chipItems[index]?.id ?? 'all')),
                 grid,
@@ -8940,7 +8878,7 @@ attachReelforgeUi(RF);
                         limit,
                     })),
                     h("div", { style: { flex: '1 1 auto' } }),
-                    h(RF.ui.Button, { label: t('rf7.picker.actClear'), variant: "secondary", onClick: () => state.clearPicker() }))),
+                    h(Button, { type: "button", variant: "secondary", size: "sm", className: "h-7 text-[10px]", onClick: () => state.clearPicker() }, t('rf7.picker.actClear')))),
             RF.ui.Notice(t('rf7.picker.note'), '')));
     };
     // ══════════════════════════════════════════════════════════════
@@ -8957,7 +8895,7 @@ attachReelforgeUi(RF);
         // 缺料 / 软降级：**实算**，不许写死数字（写死 = 面板在骗人）。
         const missing = RF.shotsMissingReferences(project);
         const noVoice = RF.charactersWithoutVoice(project);
-        const stateCard = (titleKey, metaKey, tone) => (h(RF.ui.Card, { tone: tone },
+        const stateCard = (titleKey, metaKey, tone) => (h(Card, { ...RF.workbenchCard({ tone: tone }) },
             h("div", { className: "text-[11px] text-muted-foreground" }, t(titleKey)),
             h("div", { className: "text-[10px] text-muted-foreground" }, t(metaKey))));
         const missingShots = missing
@@ -8967,22 +8905,22 @@ attachReelforgeUi(RF);
             RF.ui.SectionHead(t('rf7.degraded.sectionBlocked'), t('rf7.degraded.sectionBlockedSub')),
             degradations.length === 0
                 ? stateCard('rf7.degraded.noneTitle', 'rf7.degraded.noneSub', 'warn-border')
-                : degradations.map((item, index) => (h(RF.ui.Card, { key: index, tone: "error" },
+                : degradations.map((item, index) => (h(Card, { key: index, ...RF.workbenchCard({ tone: "error" }) },
                     h("div", { className: "text-[11px] text-muted-foreground" }, String(item.message ?? item.kind ?? '')),
                     h("div", { className: "text-[10px] text-muted-foreground" }, t('rf7.degraded.blockedHint'))))),
             RF.ui.SectionHead(t('rf7.degraded.sectionWarning'), t('rf7.degraded.sectionWarningSub')),
             notices.length === 0
                 ? stateCard('rf7.degraded.noWarningTitle', 'rf7.degraded.noWarningSub', 'warn-border')
-                : notices.map((item, index) => (h(RF.ui.Card, { key: index, tone: "warn" },
+                : notices.map((item, index) => (h(Card, { key: index, ...RF.workbenchCard({ tone: "warn" }) },
                     h("div", { className: "text-[11px] text-muted-foreground" }, String(item.message ?? item.kind ?? '')),
                     h("div", { className: "text-[10px] text-muted-foreground" }, t('rf7.degraded.warningHint'))))),
             RF.ui.SectionHead(t('rf7.degraded.sectionMissing'), t('rf7.degraded.sectionMissingSub')),
             missing.length === 0
                 ? stateCard('rf7.degraded.noMissingTitle', 'rf7.degraded.noMissingSub', 'warn-border')
-                : (h(RF.ui.Card, { tone: "warn" },
+                : (h(Card, { ...RF.workbenchCard({ tone: "warn" }) },
                     h("div", { className: "text-[11px] text-muted-foreground" }, t('rf7.degraded.missingTitle', { count: missing.length })),
                     h("div", { className: "text-[10px] text-muted-foreground" }, t('rf7.degraded.missingSub', { shots: missingShots })),
-                    h(RF.ui.Button, { label: t('rf7.degraded.actFill'), variant: "secondary", onClick: () => state.goTab('assets') }))),
+                    h(Button, { type: "button", variant: "secondary", size: "sm", className: "h-7 text-[10px]", onClick: () => state.goTab('assets') }, t('rf7.degraded.actFill')))),
             chapters.length === 0
                 ? (h("div", { className: RF.tw.stack },
                     RF.ui.SectionHead(t('rf7.degraded.sectionEmpty'), t('rf7.degraded.sectionEmptySub')),
@@ -8990,7 +8928,7 @@ attachReelforgeUi(RF);
                 : null,
             noVoice.length === 0
                 ? null
-                : (h(RF.ui.Card, { tone: "warn" },
+                : (h(Card, { ...RF.workbenchCard({ tone: "warn" }) },
                     h("div", { className: "text-[11px] text-muted-foreground" }, t('rf7.degraded.softTitle', { count: noVoice.length })),
                     h("div", { className: "text-[10px] text-muted-foreground" }, t('rf7.degraded.softSub'))))));
     };
@@ -9418,7 +9356,7 @@ attachReelforgeUi(RF);
                 h("div", { className: RF.tw.headerText },
                     h("div", { className: RF.tw.headerTitle }, chromeTitle),
                     h("div", { className: RF.tw.headerSubtitle }, chromeSubtitle)),
-                h(RF.ui.Pill, { label: chromeCapsule, tone: capsuleTone })),
+                h(Badge, { variant: "outline", className: RF.cn("rounded-md px-2.5 py-1 text-[10px] font-normal", RF.statusToneClass(capsuleTone)) }, chromeCapsule)),
             h("nav", { className: RF.tw.stagebar, "aria-label": t('title') },
                 RF.STAGE_STEPS.map((step, index) => {
                     const tone = index === currentIndex ? 'current' : passedIndex.indexOf(index) >= 0 ? 'passed' : 'upcoming';
@@ -9439,7 +9377,7 @@ attachReelforgeUi(RF);
                 h("div", { className: RF.tw.footerText },
                     h("div", { className: RF.tw.footerLabel }, chromeLabel),
                     h("div", { className: RF.tw.footerValue }, chromeValue)),
-                h(RF.ui.Button, { label: t(chromeAction.key), variant: "primary", disabled: chromeDisabled, title: chromeDisabled && chromeHintKey !== undefined ? t(chromeHintKey) : undefined, onClick: () => runChromeAction() }))));
+                h(Button, { type: "button", variant: "default", size: "lg", className: "h-10 font-semibold", disabled: chromeDisabled, title: chromeDisabled && chromeHintKey !== undefined ? t(chromeHintKey) : undefined, onClick: () => runChromeAction() }, t(chromeAction.key)))));
     };
 })(RF);
 
@@ -9531,7 +9469,7 @@ attachReelforgeUi(RF);
                 h("div", { className: RF.tw.rowMain },
                     h("div", { className: RF.tw.rowTitle }, chapter.title ?? ''),
                     h("div", { className: RF.tw.rowSub }, `${chapter.shotCount ?? 0} ${RF.chatRows.t('unit.shot')} · ${RF.formatDuration(chapter.durationSec ?? 0)}`)),
-                h(RF.ui.Pill, { label: RF.labelOf('chapter.status', chapter.status, RF.chatRows.t), tone: chapter.tone ?? 'queued' })))))),
+                h(Badge, { variant: "outline", className: RF.cn('rounded-md px-2.5 py-1 text-[10px] font-normal', RF.statusToneClass(chapter.tone ?? 'queued')) }, RF.labelOf('chapter.status', chapter.status, RF.chatRows.t))))))),
         });
     };
     /**
@@ -9552,7 +9490,7 @@ attachReelforgeUi(RF);
                 h("div", { className: RF.tw.rowMain },
                     h("div", { className: RF.tw.rowTitle }, shot.label ?? shot.id),
                     h("div", { className: RF.tw.rowSub }, `${RF.formatDuration(shot.duration ?? 0)} · ${shot.dialogue ?? ''}`)),
-                h(RF.ui.Pill, { label: RF.labelOf('shot.status', shot.status, RF.chatRows.t), tone: shot.tone ?? 'queued' })))))),
+                h(Badge, { variant: "outline", className: RF.cn('rounded-md px-2.5 py-1 text-[10px] font-normal', RF.statusToneClass(shot.tone ?? 'queued')) }, RF.labelOf('shot.status', shot.status, RF.chatRows.t))))))),
         });
     };
     /**
@@ -9573,7 +9511,10 @@ attachReelforgeUi(RF);
                     h("div", { className: RF.tw.rowMain },
                         h("div", { className: RF.tw.rowTitle }, RF.chatRows.t('chat.summary.plan', { kind: data.kind ?? '', position: data.position ?? '' })),
                         h("div", { className: RF.tw.rowSub }, data.provider ?? ''))),
-                h("div", { className: RF.tw.row }, candidates.map(candidate => (h(RF.ui.Button, { key: `${candidate.kind}-${candidate.position}`, label: candidate.label ?? `${candidate.kind} · ${candidate.position}`, variant: candidate.kind === data.kind && candidate.position === data.position ? 'primary' : 'secondary', onClick: () => patch(candidate.kind, candidate.position) })))))));
+                h("div", { className: RF.tw.row }, candidates.map(candidate => {
+                    const selected = candidate.kind === data.kind && candidate.position === data.position;
+                    return (h(Button, { key: `${candidate.kind}-${candidate.position}`, type: "button", variant: selected ? 'default' : 'secondary', size: selected ? 'lg' : 'sm', className: selected ? 'h-10 font-semibold' : 'h-7 text-[10px]', onClick: () => patch(candidate.kind, candidate.position) }, candidate.label ?? `${candidate.kind} · ${candidate.position}`));
+                })))));
     };
     /**
      * 资产卡行：人物 / 场景 / 道具 + 变体挂载关系。
@@ -9591,7 +9532,7 @@ attachReelforgeUi(RF);
                 h("div", { className: RF.tw.rowMain },
                     h("div", { className: RF.tw.rowTitle }, asset.name ?? ''),
                     h("div", { className: RF.tw.rowSub }, asset.description ?? '')),
-                h(RF.ui.Pill, { label: RF.labelOf('asset.category', asset.category, RF.chatRows.t), tone: "queued" })))))));
+                h(Badge, { variant: "outline", className: RF.cn('rounded-md px-2.5 py-1 text-[10px] font-normal', RF.statusToneClass('queued')) }, RF.labelOf('asset.category', asset.category, RF.chatRows.t))))))));
     };
     /**
      * 成片行：播放器 + 交付物列表，可单章下载。
@@ -9616,7 +9557,7 @@ attachReelforgeUi(RF);
                             h("div", { className: RF.tw.rowSub }, `${item.label ?? item.kind} · ${RF.formatBytes(item.bytes ?? 0)}`)),
                         item.path
                             ? (h("a", { className: "inline-flex h-7 items-center rounded-md bg-secondary px-2.5 text-[10px] text-muted-foreground no-underline", href: RF.deliverableUrl(item.path), download: item.label ?? item.kind }, RF.chatRows.t('common.download')))
-                            : (h(RF.ui.Button, { label: RF.chatRows.t('common.download'), variant: "secondary" }))))),
+                            : (h(Button, { type: "button", variant: "secondary", size: "sm", className: "h-7 text-[10px]" }, RF.chatRows.t('common.download')))))),
                     videoPath === '' ? null : (h("video", { className: `block object-contain`, controls: true, preload: "metadata", src: RF.deliverableUrl(videoPath) }))));
             }))));
     };
@@ -9649,17 +9590,17 @@ attachReelforgeUi(RF);
                 h("span", { className: RF.tw.chatrowKind }, "reelforge-changelog"),
                 h("span", { className: RF.tw.chatrowTitle }, RF.chatRows.t('chat.changelog'))),
             h("div", { className: RF.tw.chatrowBody },
-                h("div", { className: RF.tw.row }, modes.map(mode => (h(RF.ui.Button, { key: mode, label: RF.chatRows.t(`log.${mode}`), variant: "secondary", onClick: () => {
+                h("div", { className: RF.tw.row }, modes.map(mode => (h(Button, { key: mode, type: "button", variant: "secondary", size: "sm", className: "h-7 text-[10px]", onClick: () => {
                         const args = rollbackArgs(mode);
                         if (args === null)
                             return;
                         RF.actions?.callTool?.(RF.TOOL_IDS.rollback, args);
-                    } })))),
+                    } }, RF.chatRows.t(`log.${mode}`))))),
                 entries.map(entry => (h("div", { key: entry.id, className: RF.tw.row },
                     h("div", { className: RF.tw.rowMain },
                         h("div", { className: RF.tw.rowSub }, entry.at ?? ''),
                         h("div", { className: RF.tw.rowTitle }, entry.summary ?? '')),
-                    entry.drifted === true ? (h(RF.ui.Pill, { label: RF.chatRows.t('log.drifted'), tone: "failed" })) : null))))));
+                    entry.drifted === true ? (h(Badge, { variant: "outline", className: RF.cn('rounded-md px-2.5 py-1 text-[10px] font-normal', RF.statusToneClass('failed')) }, RF.chatRows.t('log.drifted'))) : null))))));
     };
 })(RF);
 
@@ -10231,6 +10172,17 @@ attachReelforgeUi(RF);
     };
 })(RF);
 
+
+    // shadcn 原语：页签/流程 JSX 编译成 h(Button, …)，与 RF.Button 同一引用。
+    var Button = RF.Button;
+    var Input = RF.Input;
+    var Label = RF.Label;
+    var Card = RF.Card;
+    var Badge = RF.Badge;
+    var Progress = RF.Progress;
+    var Alert = RF.Alert;
+    var AlertDescription = RF.AlertDescription;
+    var cn = RF.cn;
 
     // ⚠️ `inject` 不能少：宿主把模块导出当对象插件传给 Loader，
     // 不声明宿主服务，客户端整条 fiber 会失败（cordis 的 inject 守卫）。

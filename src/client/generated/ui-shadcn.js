@@ -364,6 +364,9 @@ var require_react_dom = __commonJS({
   }
 });
 
+// src/client/ui/components/ui/card.jsx
+init_react_shim();
+
 // node_modules/clsx/dist/clsx.mjs
 function r(e) {
   var t, f, n = "";
@@ -3349,6 +3352,39 @@ function jsxs(type, props, key) {
   return jsx(type, props, key);
 }
 
+// src/client/ui/components/ui/card.jsx
+var Card = forwardRef(function Card2({ className, ...props }, ref) {
+  return /* @__PURE__ */ jsx(
+    "div",
+    {
+      ref,
+      className: cn("rounded-lg border border-border bg-card text-card-foreground shadow-sm", className),
+      ...props
+    }
+  );
+});
+Card.displayName = "Card";
+var CardHeader = forwardRef(function CardHeader2({ className, ...props }, ref) {
+  return /* @__PURE__ */ jsx("div", { ref, className: cn("flex flex-col space-y-1.5 p-4", className), ...props });
+});
+CardHeader.displayName = "CardHeader";
+var CardTitle = forwardRef(function CardTitle2({ className, ...props }, ref) {
+  return /* @__PURE__ */ jsx("div", { ref, className: cn("font-semibold leading-none tracking-tight", className), ...props });
+});
+CardTitle.displayName = "CardTitle";
+var CardDescription = forwardRef(function CardDescription2({ className, ...props }, ref) {
+  return /* @__PURE__ */ jsx("div", { ref, className: cn("text-sm text-muted-foreground", className), ...props });
+});
+CardDescription.displayName = "CardDescription";
+var CardContent = forwardRef(function CardContent2({ className, ...props }, ref) {
+  return /* @__PURE__ */ jsx("div", { ref, className: cn("p-4 pt-0", className), ...props });
+});
+CardContent.displayName = "CardContent";
+var CardFooter = forwardRef(function CardFooter2({ className, ...props }, ref) {
+  return /* @__PURE__ */ jsx("div", { ref, className: cn("flex items-center p-4 pt-0", className), ...props });
+});
+CardFooter.displayName = "CardFooter";
+
 // src/client/ui/workbench-ui.jsx
 function attachWorkbenchUi(RF) {
   const { tw: tw2 } = RF;
@@ -3466,7 +3502,7 @@ function attachWorkbenchUi(RF) {
   };
   RF.ui.ShotChip = function ShotChip(id, size, state, tone) {
     const dotClass = tone === "ok" ? "bg-[var(--rf-ok)]" : tone === "accent" ? "bg-primary" : "bg-border";
-    return /* @__PURE__ */ jsxs(RF.ui.Card, { className: "gap-1.5 p-3", children: [
+    return /* @__PURE__ */ jsxs(Card, { ...RF.workbenchCard({ className: "gap-1.5 p-3" }), children: [
       /* @__PURE__ */ jsx("div", { className: "text-[10px] text-muted-foreground", children: id }),
       /* @__PURE__ */ jsx("div", { className: "text-xs font-semibold text-foreground", children: size }),
       /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-1.5", children: [
@@ -3491,6 +3527,23 @@ function attachWorkbenchUi(RF) {
       message = t("rf7.chatSync.captured");
     }
     return /* @__PURE__ */ jsx("div", { className: "flex items-center gap-1.5 text-[10px] text-muted-foreground", children: message });
+  };
+  RF.ui.EmptyState = function EmptyState(props) {
+    const isError = props.tone === "error";
+    return /* @__PURE__ */ jsxs(
+      "div",
+      {
+        className: cn(
+          "rounded-lg border border-dashed p-4 text-center",
+          isError ? "border-destructive" : "border-border"
+        ),
+        children: [
+          /* @__PURE__ */ jsx("div", { className: "text-xs font-medium text-foreground", children: props.title }),
+          props.hint === void 0 ? null : /* @__PURE__ */ jsx("div", { className: "mt-1 text-[11px] text-muted-foreground", children: props.hint }),
+          props.action === void 0 || props.action === null ? null : /* @__PURE__ */ jsx("div", { className: "mt-3 flex justify-center", children: props.action })
+        ]
+      }
+    );
   };
   RF.ui.FieldBox = function FieldBox(text, kind) {
     const muted = kind === "placeholder" || kind === "masked";
@@ -3765,40 +3818,6 @@ var Button = forwardRef(function Button2({ className, variant, size, asChild = f
   );
 });
 Button.displayName = "Button";
-
-// src/client/ui/components/ui/card.jsx
-init_react_shim();
-var Card = forwardRef(function Card2({ className, ...props }, ref) {
-  return /* @__PURE__ */ jsx(
-    "div",
-    {
-      ref,
-      className: cn("rounded-lg border border-border bg-card text-card-foreground shadow-sm", className),
-      ...props
-    }
-  );
-});
-Card.displayName = "Card";
-var CardHeader = forwardRef(function CardHeader2({ className, ...props }, ref) {
-  return /* @__PURE__ */ jsx("div", { ref, className: cn("flex flex-col space-y-1.5 p-4", className), ...props });
-});
-CardHeader.displayName = "CardHeader";
-var CardTitle = forwardRef(function CardTitle2({ className, ...props }, ref) {
-  return /* @__PURE__ */ jsx("div", { ref, className: cn("font-semibold leading-none tracking-tight", className), ...props });
-});
-CardTitle.displayName = "CardTitle";
-var CardDescription = forwardRef(function CardDescription2({ className, ...props }, ref) {
-  return /* @__PURE__ */ jsx("div", { ref, className: cn("text-sm text-muted-foreground", className), ...props });
-});
-CardDescription.displayName = "CardDescription";
-var CardContent = forwardRef(function CardContent2({ className, ...props }, ref) {
-  return /* @__PURE__ */ jsx("div", { ref, className: cn("p-4 pt-0", className), ...props });
-});
-CardContent.displayName = "CardContent";
-var CardFooter = forwardRef(function CardFooter2({ className, ...props }, ref) {
-  return /* @__PURE__ */ jsx("div", { ref, className: cn("flex items-center p-4 pt-0", className), ...props });
-});
-CardFooter.displayName = "CardFooter";
 
 // src/client/ui/components/ui/input.jsx
 init_react_shim();
@@ -4126,52 +4145,16 @@ function attachReelforgeUi(RF) {
   RF.cn = cn;
   RF.tw = tw;
   RF.stageStepClass = stageStepClass;
-  const mapButtonVariant = (variant) => {
-    if (variant === "danger") return "destructive";
-    if (variant === "secondary") return "secondary";
-    if (variant === "ghost") return "ghost";
-    return "default";
-  };
-  RF.Button = function Button3(props) {
-    const disabled = props.disabled === true;
-    return /* @__PURE__ */ jsx(
-      Button,
-      {
-        type: "button",
-        variant: mapButtonVariant(props.variant),
-        size: props.variant === "primary" || props.variant === void 0 ? "lg" : "sm",
-        className: cn(
-          props.variant === "primary" || props.variant === void 0 ? "h-10 font-semibold" : "h-7 text-[10px]",
-          disabled && "pointer-events-none opacity-50"
-        ),
-        disabled,
-        title: props.title,
-        onClick: disabled ? void 0 : props.onClick,
-        children: props.label
-      }
-    );
-  };
-  RF.Input = function InputField(props) {
-    const state = props.state === "error" ? "error" : "default";
-    return /* @__PURE__ */ jsxs("div", { className: "flex flex-col gap-1", children: [
-      props.label === void 0 ? null : /* @__PURE__ */ jsx(Label2, { className: "text-[10px] text-muted-foreground", children: props.label }),
-      /* @__PURE__ */ jsx(
-        Input,
-        {
-          className: cn(
-            "h-9 bg-secondary text-xs",
-            state === "error" && "border-destructive text-destructive focus-visible:ring-destructive"
-          ),
-          value: props.value ?? "",
-          placeholder: props.placeholder ?? "",
-          onChange: props.onChange
-        }
-      )
-    ] });
-  };
-  RF.Pill = function Pill(props) {
-    const tone = props.tone ?? "queued";
-    const toneClass = {
+  RF.Button = Button;
+  RF.Input = Input;
+  RF.Label = Label2;
+  RF.Card = Card;
+  RF.Badge = Badge;
+  RF.Progress = Progress2;
+  RF.Alert = Alert;
+  RF.AlertDescription = AlertDescription;
+  RF.statusToneClass = function statusToneClass(tone) {
+    const map = {
       accent: "border-transparent bg-accent text-primary",
       running: "border-transparent bg-accent text-primary",
       ok: "border-transparent bg-secondary text-[var(--rf-ok)]",
@@ -4181,93 +4164,47 @@ function attachReelforgeUi(RF) {
       failed: "border-transparent bg-secondary text-destructive",
       neutral: "border-transparent bg-secondary text-muted-foreground",
       queued: "border-transparent bg-secondary text-muted-foreground"
-    }[tone] ?? "border-transparent bg-secondary text-muted-foreground";
-    return /* @__PURE__ */ jsx(Badge, { variant: "outline", className: cn("rounded-md px-2.5 py-1 text-[10px] font-normal", toneClass), children: props.label });
+    };
+    return map[tone ?? "queued"] ?? map.queued;
   };
-  RF.Progress = function ProgressBar(props) {
-    const ratio = Math.max(0, Math.min(1, Number(props.value ?? 0)));
-    const value = Math.round(ratio * 100);
-    const indicatorClass = props.tone === "done" ? "[&>div]:bg-[var(--rf-ok)]" : props.tone === "failed" ? "[&>div]:bg-destructive" : "";
-    return /* @__PURE__ */ jsxs("div", { className: "relative", children: [
-      /* @__PURE__ */ jsx(Progress2, { value, className: cn("h-1.5", indicatorClass) }),
-      props.label === void 0 ? null : /* @__PURE__ */ jsx("span", { className: "absolute inset-0 flex items-center justify-center text-[10px] text-muted-foreground", children: props.label })
-    ] });
-  };
-  RF.EmptyState = function EmptyState(props) {
-    const isError = props.tone === "error";
-    return /* @__PURE__ */ jsxs(
-      "div",
-      {
-        className: cn(
-          "rounded-lg border border-dashed p-4 text-center",
-          isError ? "border-destructive" : "border-border"
-        ),
-        children: [
-          /* @__PURE__ */ jsx("div", { className: "text-xs font-medium text-foreground", children: props.title }),
-          props.hint === void 0 ? null : /* @__PURE__ */ jsx("div", { className: "mt-1 text-[11px] text-muted-foreground", children: props.hint }),
-          props.action === void 0 || props.action === null ? null : /* @__PURE__ */ jsx("div", { className: "mt-3 flex justify-center", children: props.action })
-        ]
-      }
-    );
-  };
-  RF.Toast = function Toast(props) {
-    const tone = props.tone ?? "info";
-    const variant = tone === "error" ? "destructive" : "default";
-    return /* @__PURE__ */ jsxs(Alert, { variant, className: "flex flex-row items-center justify-between gap-2 py-2", children: [
-      /* @__PURE__ */ jsx(AlertDescription, { className: "text-xs", children: props.message }),
-      props.onDismiss === void 0 ? null : /* @__PURE__ */ jsx(Button, { type: "button", variant: "ghost", size: "icon", className: "h-7 w-7 shrink-0", onClick: props.onDismiss, children: "\xD7" })
-    ] });
-  };
-  RF.Card = function CardWrap(props) {
+  RF.workbenchCard = function workbenchCard(options) {
+    const props = options ?? {};
     const state = props.state === "selected" || props.state === "disabled" ? props.state : "default";
     const clickable = state !== "disabled" && typeof props.onClick === "function";
-    return /* @__PURE__ */ jsx(
-      Card,
-      {
-        className: cn(
-          "rf-ui-card flex flex-col gap-2.5 rounded-[10px] border bg-card p-3.5 shadow-none",
-          state === "selected" && "border-primary",
-          props.accent === true && "border-l-4 border-l-primary",
-          props.tone === "warn" && "border-[var(--rf-warn)] bg-[color-mix(in_srgb,var(--rf-warn)_10%,var(--card))]",
-          props.tone === "error" && "border-destructive bg-destructive/10",
-          props.tone === "warn-border" && "border-[var(--rf-warn)]",
-          state === "disabled" && "pointer-events-none border-border/60 bg-muted text-muted-foreground",
-          clickable && "cursor-pointer",
-          props.className
-        ),
-        onClick: clickable ? props.onClick : void 0,
-        role: clickable ? "button" : void 0,
-        tabIndex: clickable ? 0 : void 0,
-        onKeyDown: clickable ? (event) => {
-          if (event?.target !== event?.currentTarget) return;
-          const key = event?.key;
-          if (key !== "Enter" && key !== " " && key !== "Spacebar") return;
-          if (event?.preventDefault) event.preventDefault();
-          props.onClick(event);
-        } : void 0,
-        children: props.children
-      }
-    );
+    return {
+      className: cn(
+        "rf-ui-card flex flex-col gap-2.5 rounded-[10px] border bg-card p-3.5 shadow-none",
+        state === "selected" && "border-primary",
+        props.accent === true && "border-l-4 border-l-primary",
+        props.tone === "warn" && "border-[var(--rf-warn)] bg-[color-mix(in_srgb,var(--rf-warn)_10%,var(--card))]",
+        props.tone === "error" && "border-destructive bg-destructive/10",
+        props.tone === "warn-border" && "border-[var(--rf-warn)]",
+        state === "disabled" && "pointer-events-none border-border/60 bg-muted text-muted-foreground",
+        clickable && "cursor-pointer",
+        props.className
+      ),
+      onClick: clickable ? props.onClick : void 0,
+      role: clickable ? "button" : void 0,
+      tabIndex: clickable ? 0 : void 0,
+      onKeyDown: clickable ? (event) => {
+        if (event?.target !== event?.currentTarget) return;
+        const key = event?.key;
+        if (key !== "Enter" && key !== " " && key !== "Spacebar") return;
+        if (event?.preventDefault) event.preventDefault();
+        props.onClick(event);
+      } : void 0
+    };
   };
-  RF.SectionLabel = function SectionLabel(props) {
+  RF.ui.SectionLabel = function SectionLabel(props) {
     return /* @__PURE__ */ jsx("div", { className: "my-1 text-xs text-muted-foreground", children: props.children });
   };
-  RF.MetaRow = function MetaRow(props) {
+  RF.ui.MetaRow = function MetaRow(props) {
     return /* @__PURE__ */ jsxs("div", { className: "flex gap-2 py-0.5 text-[11px]", children: [
       /* @__PURE__ */ jsx("span", { className: "shrink-0 text-muted-foreground", children: props.label }),
       /* @__PURE__ */ jsx("span", { className: "min-w-0 text-foreground/80", children: props.value })
     ] });
   };
   attachWorkbenchUi(RF);
-  RF.ui.Button = RF.Button;
-  RF.ui.Input = RF.Input;
-  RF.ui.Pill = RF.Pill;
-  RF.ui.Progress = RF.Progress;
-  RF.ui.EmptyState = RF.EmptyState;
-  RF.ui.Toast = RF.Toast;
-  RF.ui.Card = RF.Card;
-  RF.ui.SectionLabel = RF.SectionLabel;
-  RF.ui.MetaRow = RF.MetaRow;
 }
 
 /*! Bundled license information:
